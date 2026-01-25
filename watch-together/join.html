@@ -48,6 +48,85 @@
             overflow: hidden;
         }
 
+        .sidebar {
+            width: 280px;
+            background: #2d2d2d;
+            border-right: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .sidebar-section h2 {
+            font-size: 1em;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .room-id-display {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #4a9eff;
+            word-break: break-all;
+        }
+
+        .members-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .member-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #3a3a3a;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .member-item:hover {
+            background: #444;
+        }
+
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4a9eff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: 600;
+            font-size: 0.85em;
+            flex-shrink: 0;
+        }
+
+        .member-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .members-empty {
+            color: #888;
+            font-size: 0.9em;
+            text-align: center;
+            padding: 20px 0;
+        }
+
         .browser-area {
             flex: 1;
             display: flex;
@@ -106,6 +185,18 @@
     </div>
     
     <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <h2>房间信息</h2>
+                <div class="room-id-display" id="sidebarRoomId">加载中...</div>
+            </div>
+            <div class="sidebar-section" style="flex: 1; overflow-y: auto;">
+                <h2>成员列表</h2>
+                <ul class="members-list" id="membersList">
+                    <li class="members-empty">暂无成员</li>
+                </ul>
+            </div>
+        </div>
         <div class="browser-area">
             <div class="iframe-container">
                 <div class="loading" id="loading">正在加载网页...</div>

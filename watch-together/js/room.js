@@ -2,6 +2,83 @@
  * 房间页面功能
  */
 
+// 成员列表数据
+let membersList = [];
+
+/**
+ * 生成成员头像的首字母
+ */
+function getMemberInitial(name) {
+    if (!name || name.length === 0) return '?';
+    return name.charAt(0).toUpperCase();
+}
+
+/**
+ * 添加成员到列表
+ */
+function addMember(memberId, memberName) {
+    // 检查成员是否已存在
+    const existingIndex = membersList.findIndex(m => m.id === memberId);
+    if (existingIndex >= 0) {
+        // 如果已存在，更新名称
+        membersList[existingIndex].name = memberName;
+    } else {
+        // 添加新成员
+        membersList.push({
+            id: memberId,
+            name: memberName || `成员${memberId.substring(0, 8)}`
+        });
+    }
+    updateMembersDisplay();
+}
+
+/**
+ * 从列表中移除成员
+ */
+function removeMember(memberId) {
+    membersList = membersList.filter(m => m.id !== memberId);
+    updateMembersDisplay();
+}
+
+/**
+ * 更新成员列表显示
+ */
+function updateMembersDisplay() {
+    if (typeof document === 'undefined') return;
+    const membersListEl = document.getElementById('membersList');
+    if (!membersListEl) return;
+
+    // 清空现有列表
+    membersListEl.innerHTML = '';
+
+    if (membersList.length === 0) {
+        // 如果没有成员，显示空状态
+        const emptyItem = document.createElement('li');
+        emptyItem.className = 'members-empty';
+        emptyItem.textContent = '暂无成员';
+        membersListEl.appendChild(emptyItem);
+    } else {
+        // 显示成员列表
+        membersList.forEach(member => {
+            const memberItem = document.createElement('li');
+            memberItem.className = 'member-item';
+            memberItem.setAttribute('data-member-id', member.id);
+
+            const avatar = document.createElement('div');
+            avatar.className = 'member-avatar';
+            avatar.textContent = getMemberInitial(member.name);
+
+            const name = document.createElement('div');
+            name.className = 'member-name';
+            name.textContent = member.name;
+
+            memberItem.appendChild(avatar);
+            memberItem.appendChild(name);
+            membersListEl.appendChild(memberItem);
+        });
+    }
+}
+
 /**
  * 从 URL 获取参数
  */
@@ -96,6 +173,16 @@ function updateRoomInfo(roomId) {
     } else {
         roomInfoEl.textContent = '房间';
     }
+
+    // 同时更新侧边栏的房间号显示
+    const sidebarRoomIdEl = document.getElementById('sidebarRoomId');
+    if (sidebarRoomIdEl) {
+        if (roomId) {
+            sidebarRoomIdEl.textContent = roomId;
+        } else {
+            sidebarRoomIdEl.textContent = '未知房间';
+        }
+    }
 }
 
 /**
@@ -105,6 +192,15 @@ function init() {
     // 获取房间ID
     const roomId = getRoomIdFromPath();
     updateRoomInfo(roomId);
+
+    // 初始化成员列表显示
+    updateMembersDisplay();
+
+    // 模拟添加当前用户（在实际应用中，这应该从服务器获取）
+    // 这里使用一个简单的用户ID生成方式
+    const currentUserId = 'user-' + Date.now();
+    const currentUserName = '我';
+    addMember(currentUserId, currentUserName);
 
     // 从 URL 参数获取要加载的网页地址
     const url = getUrlParameter('url');
@@ -138,5 +234,10 @@ if (typeof module !== 'undefined' && module.exports) {
         isValidUrl,
         loadUrlIntoIframe,
         updateRoomInfo,
+        addMember,
+        removeMember,
+        updateMembersDisplay,
+        getMemberInitial,
+        getMembersList: () => membersList,
     };
 }
