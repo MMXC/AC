@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一起看 - 房间</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d2d2d;
+            padding: 15px 20px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .room-info {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .browser-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1a1a1a;
+            overflow: hidden;
+        }
+
+        .iframe-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #aaa;
+            font-size: 1em;
+        }
+
+        .error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #e74c3c;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .error h3 {
+            margin-bottom: 10px;
+        }
+
+        .error p {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>一起看</h1>
+        <div class="room-info" id="roomInfo">房间加载中...</div>
+    </div>
+    
+    <div class="main-container">
+        <div class="browser-area">
+            <div class="iframe-container">
+                <div class="loading" id="loading">正在加载网页...</div>
+                <div class="error" id="error" style="display: none;">
+                    <h3>加载失败</h3>
+                    <p id="errorMessage"></p>
+                </div>
+                <iframe id="browserFrame" style="display: none;"></iframe>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/room.js"></script>
+</body>
+</html>

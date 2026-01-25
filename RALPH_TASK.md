@@ -14,8 +14,8 @@ test_command: "npm test -- --testNamePattern='共享浏览区域'"
 
 ## Success Criteria
 
-- [ ] 房间页面可以正常加载
-- [ ] 中间区域显示 iframe
-- [ ] 可以通过 URL 参数加载指定网页
-- [ ] iframe 可以正常显示外部网页
-- [ ] 支持常见网站的加载
+- [x] 房间页面可以正常加载
+- [x] 中间区域显示 iframe
+- [x] 可以通过 URL 参数加载指定网页
+- [x] iframe 可以正常显示外部网页
+- [x] 支持常见网站的加载
