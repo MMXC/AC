@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一起看 - 创建房间</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .create-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .create-btn:active {
+            transform: translateY(0);
+        }
+
+        .create-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .room-info {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .room-info-item {
+            margin-bottom: 10px;
+        }
+
+        .room-info-label {
+            font-weight: 600;
+            color: #666;
+            margin-right: 8px;
+        }
+
+        .room-info-value {
+            color: #333;
+            word-break: break-all;
+        }
+
+        .room-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .room-link input {
+            flex: 1;
+            background: white;
+            font-size: 14px;
+        }
+
+        .copy-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 10px;
+            color: #667eea;
+        }
+
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>一起看</h1>
+        <p class="subtitle">创建房间，与朋友一起观看</p>
+        
+        <form id="createRoomForm">
+            <div class="form-group">
+                <label for="roomName">房间名称（可选）</label>
+                <input type="text" id="roomName" placeholder="例如：电影之夜">
+            </div>
+            
+            <div class="form-group">
+                <label for="hostNickname">您的昵称（可选）</label>
+                <input type="text" id="hostNickname" placeholder="例如：房主">
+            </div>
+            
+            <button type="submit" class="create-btn" id="createBtn">创建房间</button>
+            
+            <div class="loading" id="loading">正在创建房间...</div>
+            <div class="error" id="error"></div>
+        </form>
+        
+        <div class="result" id="result">
+            <h3>房间创建成功！</h3>
+            <div class="room-info">
+                <div class="room-info-item">
+                    <span class="room-info-label">房间号：</span>
+                    <span class="room-info-value" id="roomId"></span>
+                </div>
+                <div class="room-info-item">
+                    <span class="room-info-label">房间名称：</span>
+                    <span class="room-info-value" id="roomNameDisplay"></span>
+                </div>
+            </div>
+            <div class="room-link">
+                <input type="text" id="roomLink" readonly>
+                <button class="copy-btn" id="copyBtn">复制链接</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/create-room.js"></script>
+</body>
+</html>
