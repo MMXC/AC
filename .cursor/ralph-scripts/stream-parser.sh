@@ -375,9 +375,24 @@ main() {
   # Track last token log time
   local last_token_log=$(date +%s)
   local line_count=0
+  local empty_reads=0
+  local max_empty_reads=10  # If we get 10 empty reads in a row, something is wrong
+  
+  # Debug: log that we're starting to read
+  echo "[$(date '+%H:%M:%S')] Starting to read from stdin..." >> "$DEBUG_LOG" 2>&1
   
   # Read all lines until EOF (important: don't exit early)
   while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ -z "$line" ]]; then
+      empty_reads=$((empty_reads + 1))
+      if [[ $empty_reads -ge $max_empty_reads ]]; then
+        echo "[$(date '+%H:%M:%S')] Warning: Received $max_empty_reads empty lines, stopping read loop" >> "$DEBUG_LOG" 2>&1
+        break
+      fi
+      continue
+    fi
+    
+    empty_reads=0
     line_count=$((line_count + 1))
     
     # Debug: log first few lines and result messages
@@ -401,6 +416,12 @@ main() {
       last_token_log=$now
     fi
   done
+  
+  # Debug: log if we got no input
+  if [[ $line_count -eq 0 ]]; then
+    echo "[$(date '+%H:%M:%S')] WARNING: Parser received 0 lines from stdin!" >> "$DEBUG_LOG" 2>&1
+    echo "[$(date '+%H:%M:%S')] This might indicate cursor-agent is not outputting JSON or there's a pipe issue" >> "$DEBUG_LOG" 2>&1
+  fi
   
   # Final token status
   log_token_status

@@ -466,6 +466,10 @@ run_iteration() {
   
   local prompt=$(build_prompt "$workspace" "$iteration")
   local signal_file="$workspace/.ralph/.parser_signal"
+  local prompt_file="$workspace/.ralph/.prompt_$$"
+  
+  # Write prompt to temporary file to avoid shell parsing issues
+  echo "$prompt" > "$prompt_file"
   
   # Use temporary file instead of named pipe (Windows/WSL compatibility)
   rm -f "$signal_file"
@@ -516,9 +520,19 @@ run_iteration() {
   # Parser now writes signals directly to signal file (no pipe needed)
   # Separate stderr from stdout: cursor-agent stdout (JSON) goes to parser, stderr goes to log
   echo "[$(date '+%H:%M:%S')] Starting agent with parser, signal_file=$signal_file" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+  echo "[$(date '+%H:%M:%S')] Command: $cmd" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
   (
     # Redirect stderr to log file, stdout (JSON stream) to parser
-    eval "$cmd \"$prompt\"" 2>> "$workspace/.ralph/parser_stderr.log" | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
+    # Pass prompt via file to avoid shell parsing issues with special characters
+    # cursor-agent reads prompt from stdin or can take it as argument
+    # Use process substitution to pipe prompt file to cursor-agent
+    if command -v stdbuf &> /dev/null; then
+      eval "$cmd" < "$prompt_file" 2>> "$workspace/.ralph/parser_stderr.log" | stdbuf -oL -eL "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
+    else
+      eval "$cmd" < "$prompt_file" 2>> "$workspace/.ralph/parser_stderr.log" | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
+    fi
+    # Cleanup prompt file
+    rm -f "$prompt_file"
   ) &
   local agent_pid=$!
   echo "[$(date '+%H:%M:%S')] Agent started with PID: $agent_pid" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
@@ -679,6 +693,7 @@ run_iteration() {
   
   # Cleanup
   rm -f "$signal_file"
+  rm -f "$prompt_file"
   
   echo "$signal"
 }
