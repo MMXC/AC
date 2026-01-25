@@ -206,17 +206,57 @@ def generate_ralph_task(task):
                     "checked": checked
                 })
     
+    # Try to get project context from backlog.md
+    project_context = ""
+    workspace = os.getcwd()
+    backlog_file = Path(workspace) / "backlog.md"
+    if backlog_file.exists():
+        try:
+            with open(backlog_file, 'r', encoding='utf-8') as f:
+                backlog_content = f.read()
+            
+            # Look for project description or requirement at the top
+            # Check if there's a "## Project" or "## Requirement" section
+            project_match = re.search(r'##\s+(?:Project|Requirement|Overview)\s*\n(.*?)(?=\n##|\Z)', backlog_content, re.DOTALL | re.IGNORECASE)
+            if project_match:
+                project_context = project_match.group(1).strip()
+            
+            # If no project section, try to extract from first task's description if it's a high-level task
+            # Look for tasks that might contain the overall requirement
+            if not project_context:
+                # Check if there's a task with "watch-together" or similar that might have the full requirement
+                full_req_match = re.search(r'网页版一起看功能.*?(?=\n###|\Z)', backlog_content, re.DOTALL)
+                if full_req_match:
+                    project_context = full_req_match.group(0).strip()
+        except:
+            pass
+    
     # Build RALPH_TASK.md
     backlog_id = task.get("id", "")
     title = task.get("title", "Untitled Task")
+    test_command = task.get("test_command", "")
     
     frontmatter = f"""---
 task: {title}
 backlog_id: "{backlog_id}"
----
 """
+    if test_command:
+        frontmatter += f'test_command: "{test_command}"\n'
+    frontmatter += "---\n"
     
     body = f"""# Task: {title}
+
+"""
+    
+    # Add project context if available
+    if project_context:
+        body += f"""## Project Context
+
+{project_context}
+
+"""
+    
+    body += f"""## Task Description
 
 {description}
 

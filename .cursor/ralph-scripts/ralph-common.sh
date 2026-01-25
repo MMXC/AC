@@ -385,14 +385,17 @@ If you get rotated, the next agent picks up from your last commit. Your commits 
 
 ## Task Execution
 
-1. Work on the next unchecked criterion in RALPH_TASK.md (look for \`[ ]\`)
-2. Run tests after changes (check RALPH_TASK.md for test_command)
-3. **Mark completed criteria**: Edit RALPH_TASK.md and change \`[ ]\` to \`[x]\`
+1. **Read the full RALPH_TASK.md** - understand the project context and task description
+2. **Check project structure** - if the project is empty, you may need to initialize it first (create package.json, directory structure, etc.)
+3. Work on the next unchecked criterion in RALPH_TASK.md (look for \`[ ]\`)
+4. **Actually write code** - don't just read files, you must create/modify files to complete the task
+5. Run tests after changes (check RALPH_TASK.md for test_command)
+6. **Mark completed criteria**: Edit RALPH_TASK.md and change \`[ ]\` to \`[x]\`
    - Example: \`- [ ] Implement parser\` becomes \`- [x] Implement parser\`
    - This is how progress is tracked - YOU MUST update the file
-4. Update \`.ralph/progress.md\` with what you accomplished
-5. When ALL criteria show \`[x]\`: output \`<ralph>COMPLETE</ralph>\`
-6. If stuck 3+ times on same issue: output \`<ralph>GUTTER</ralph>\`
+7. Update \`.ralph/progress.md\` with what you accomplished
+8. When ALL criteria show \`[x]\`: output \`<ralph>COMPLETE</ralph>\`
+9. If stuck 3+ times on same issue: output \`<ralph>GUTTER</ralph>\`
 
 ## Learning from Failures
 

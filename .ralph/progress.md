@@ -165,3 +165,9 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-25 20:47:01
 **Session 20 started** (model: opus-4.5-thinking)
+
+### 2026-01-25 20:47:11
+**Session 20 ended** - Agent finished naturally (6 criteria remaining)
+
+### 2026-01-25 20:47:13
+**Loop ended** - ⚠️ Max iterations (20) reached
