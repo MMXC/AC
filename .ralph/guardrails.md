@@ -23,5 +23,8 @@
 
 ## Learned Signs
 
-(Signs added from observed failures will appear below)
+### Sign: No Interactive Commands
+- **Trigger**: Before running any command that might require user input
+- **Instruction**: NEVER run commands that require interactive input (git push, npm login, password prompts, etc.). These will block execution indefinitely. Only commit locally, never push.
+- **Added after**: Session blocking on git push authentication (2026-01-25)
 
