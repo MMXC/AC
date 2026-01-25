@@ -514,9 +514,11 @@ run_iteration() {
   
   # Start parser in background, reading from cursor-agent
   # Parser now writes signals directly to signal file (no pipe needed)
+  # Separate stderr from stdout: cursor-agent stdout (JSON) goes to parser, stderr goes to log
   echo "[$(date '+%H:%M:%S')] Starting agent with parser, signal_file=$signal_file" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
   (
-    eval "$cmd \"$prompt\"" 2>&1 | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
+    # Redirect stderr to log file, stdout (JSON stream) to parser
+    eval "$cmd \"$prompt\"" 2>> "$workspace/.ralph/parser_stderr.log" | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
   ) &
   local agent_pid=$!
   echo "[$(date '+%H:%M:%S')] Agent started with PID: $agent_pid" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true

@@ -197,6 +197,19 @@ process_line() {
   # Skip empty lines
   [[ -z "$line" ]] && return
   
+  # Skip obvious shell error messages (they're not JSON)
+  # Check for common shell error patterns
+  if [[ "$line" =~ ^(.*:.*:.*command not found|.*:.*:.*No such file|.*:.*:.*syntax error) ]]; then
+    # This is a shell error, not JSON - skip it
+    return
+  fi
+  
+  # Try to parse as JSON - if it fails, it's not JSON
+  if ! echo "$line" | jq -e . > /dev/null 2>&1; then
+    # Not valid JSON, skip it (might be shell output, error message, etc.)
+    return
+  fi
+  
   # Parse JSON type
   local type=$(echo "$line" | jq -r '.type // empty' 2>/dev/null) || return
   local subtype=$(echo "$line" | jq -r '.subtype // empty' 2>/dev/null) || true

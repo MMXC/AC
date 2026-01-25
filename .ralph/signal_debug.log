@@ -79,3 +79,10 @@
 [21:51:13] Parse error on line 4, full line: .ralph/guardrails.md: line 9: -: command not found
 [21:51:13] Line 5, type=parse_error, preview='.ralph/guardrails.md: line 10: -: command not found...'
 [21:51:13] Parse error on line 5, full line: .ralph/guardrails.md: line 10: -: command not found
+[21:51:26] Parser finished, processed 49 lines
+[21:51:26] Signal written: FINISHED (at parser exit, no result message received)
+[21:51:27] Final check found: FINISHED
+[21:51:28] After agent wait, checking signal file: /mnt/c/project/AC/.ralph/.parser_signal
+[21:51:28] Signal file exists: yes
+[21:51:28] Signal file size: 9
+[21:51:28] Returning signal: 'FINISHED'
