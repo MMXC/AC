@@ -16,7 +16,9 @@ ROTATE_THRESHOLD="${ROTATE_THRESHOLD:-80000}"
 MAX_ITERATIONS="${MAX_ITERATIONS:-20}"
 
 # Model selection
-DEFAULT_MODEL="opus-4.5-thinking"
+# Default to 'auto' if opus-4.5-thinking is not available
+# Available models: auto, composer-1, grok
+DEFAULT_MODEL="auto"
 MODEL="${RALPH_MODEL:-$DEFAULT_MODEL}"
 
 # Feature flags (set by caller)
@@ -760,12 +762,16 @@ run_iteration() {
   # Log session start to progress.md
   log_progress "$workspace" "**Session $iteration started** (model: $MODEL)"
   
-  # Build cursor-agent command
-  local cmd="cursor-agent -p --force --output-format stream-json --model $MODEL"
-  
-  if [[ -n "$session_id" ]]; then
-    echo "Resuming session: $session_id" >&2
-    cmd="$cmd --resume=\"$session_id\""
+  # Find cursor-agent executable
+  local cursor_agent_cmd=""
+  if command -v cursor-agent &> /dev/null; then
+    cursor_agent_cmd="cursor-agent"
+  elif [[ -n "${CURSOR_AGENT_PATH:-}" ]] && [[ -x "$CURSOR_AGENT_PATH" ]]; then
+    cursor_agent_cmd="$CURSOR_AGENT_PATH"
+  else
+    echo "❌ cursor-agent not found in PATH and CURSOR_AGENT_PATH not set" >&2
+    echo "   Please install cursor-agent or set CURSOR_AGENT_PATH environment variable" >&2
+    return 1
   fi
   
   # Change to workspace
@@ -779,16 +785,45 @@ run_iteration() {
   # Parser now writes signals directly to signal file (no pipe needed)
   # Separate stderr from stdout: cursor-agent stdout (JSON) goes to parser, stderr goes to log
   echo "[$(date '+%H:%M:%S')] Starting agent with parser, signal_file=$signal_file" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
-  echo "[$(date '+%H:%M:%S')] Command: $cmd" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+  echo "[$(date '+%H:%M:%S')] Command: $cursor_agent_cmd -p --force --output-format stream-json --model $MODEL${session_id:+ --resume=$session_id}" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
   (
     # Redirect stderr to log file, stdout (JSON stream) to parser
     # Pass prompt via file to avoid shell parsing issues with special characters
     # cursor-agent reads prompt from stdin or can take it as argument
     # Use process substitution to pipe prompt file to cursor-agent
+    
+    # Test if cursor-agent actually works before piping
+    if ! $cursor_agent_cmd --version &> /dev/null && ! $cursor_agent_cmd --help &> /dev/null; then
+      echo "[$(date '+%H:%M:%S')] ERROR: cursor-agent command failed to execute" >> "$workspace/.ralph/parser_stderr.log" 2>&1
+      echo "[$(date '+%H:%M:%S')] Attempted command: $cursor_agent_cmd" >> "$workspace/.ralph/parser_stderr.log" 2>&1
+      echo "[$(date '+%H:%M:%S')] PATH: $PATH" >> "$workspace/.ralph/parser_stderr.log" 2>&1
+      rm -f "$prompt_file"
+      exit 1
+    fi
+    
+    # Use array to avoid eval issues with special characters
+    # Split command into array for safer execution
+    local cmd_parts=()
+    cmd_parts+=("$cursor_agent_cmd")
+    cmd_parts+=("-p")
+    cmd_parts+=("--force")
+    cmd_parts+=("--output-format")
+    cmd_parts+=("stream-json")
+    cmd_parts+=("--model")
+    cmd_parts+=("$MODEL")
+    
+    if [[ -n "$session_id" ]]; then
+      cmd_parts+=("--resume=$session_id")
+    fi
+    
     if command -v stdbuf &> /dev/null; then
-      eval "$cmd" < "$prompt_file" 2>> "$workspace/.ralph/parser_stderr.log" | stdbuf -oL -eL "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
+      "${cmd_parts[@]}" < "$prompt_file" 2>> "$workspace/.ralph/parser_stderr.log" | stdbuf -oL -eL "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
     else
-      eval "$cmd" < "$prompt_file" 2>> "$workspace/.ralph/parser_stderr.log" | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
+      "${cmd_parts[@]}" < "$prompt_file" 2>> "$workspace/.ralph/parser_stderr.log" | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
+    fi
+    local exit_code=${PIPESTATUS[0]}
+    if [[ $exit_code -ne 0 ]]; then
+      echo "[$(date '+%H:%M:%S')] cursor-agent exited with code: $exit_code" >> "$workspace/.ralph/parser_stderr.log" 2>&1
     fi
     # Cleanup prompt file
     rm -f "$prompt_file"
@@ -1145,12 +1180,30 @@ check_prerequisites() {
   fi
   
   # Check for cursor-agent CLI
-  if ! command -v cursor-agent &> /dev/null; then
+  local cursor_agent_cmd=""
+  if command -v cursor-agent &> /dev/null; then
+    cursor_agent_cmd="cursor-agent"
+  elif [[ -n "${CURSOR_AGENT_PATH:-}" ]] && [[ -x "$CURSOR_AGENT_PATH" ]]; then
+    cursor_agent_cmd="$CURSOR_AGENT_PATH"
+  else
     echo "❌ cursor-agent CLI not found"
     echo ""
-    echo "Install via:"
-    echo "  curl https://cursor.com/install -fsS | bash"
+    echo "Options:"
+    echo "  1. Install via: curl https://cursor.com/install -fsS | bash"
+    echo "  2. Or set CURSOR_AGENT_PATH environment variable to point to cursor-agent executable"
+    echo ""
+    echo "Current PATH: $PATH"
+    if [[ -n "${CURSOR_AGENT_PATH:-}" ]]; then
+      echo "CURSOR_AGENT_PATH: $CURSOR_AGENT_PATH (not executable or not found)"
+    fi
     return 1
+  fi
+  
+  # Test if cursor-agent actually works
+  if ! $cursor_agent_cmd --version &> /dev/null && ! $cursor_agent_cmd --help &> /dev/null 2>&1; then
+    echo "⚠️  cursor-agent found but may not be working correctly"
+    echo "   Command: $cursor_agent_cmd"
+    echo "   This may cause issues during execution"
   fi
   
   # Check for git repo
