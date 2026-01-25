@@ -510,20 +510,9 @@ run_iteration() {
   local spinner_pid=$!
   
   # Start parser in background, reading from cursor-agent
-  # Parser outputs signals to signal file, we read signals from file
-  # Use append mode to avoid overwriting signals
+  # Parser now writes signals directly to signal file (no pipe needed)
   (
-    # Redirect cursor-agent stderr to stderr, stdout to parser
-    # Parser outputs signals to stdout, filter and append to signal file
-    eval "$cmd \"$prompt\"" 2>&1 | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log" | while IFS= read -r line; do
-      case "$line" in
-        ROTATE|WARN|GUTTER|COMPLETE)
-          echo "$line" >> "$signal_file"
-          # Debug: log signal write
-          echo "[$(date '+%H:%M:%S')] Signal written: $line" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
-          ;;
-      esac
-    done
+    eval "$cmd \"$prompt\"" 2>&1 | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
   ) &
   local agent_pid=$!
   
