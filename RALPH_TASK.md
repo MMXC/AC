@@ -34,14 +34,42 @@ test_command: "npm test -- --testNamePattern='Mock数据'"
 - Mock 数据可以放在 `mock/` 或 `__mocks__/` 目录
 - API Mock 服务可以放在 `mock-server/` 目录
 
+## Implementation Steps
+
+**第一步：初始化项目结构**
+1. 检查项目是否已有 package.json，如果没有则创建
+2. 创建必要的目录结构（mock/, src/, 等）
+3. 安装必要的依赖（如果使用 MSW，安装 msw；如果使用 Express，安装 express）
+
+**第二步：创建 Mock 数据**
+1. 定义房间数据结构（房间号、成员列表、创建时间等）
+2. 创建示例房间数据（至少 2-3 个示例房间）
+3. 定义 API 响应格式（与真实 API 保持一致）
+
+**第三步：实现 API Mock**
+1. 实现 POST /api/rooms - 创建房间 API Mock
+2. 实现 GET /api/rooms/:roomId - 获取房间信息 API Mock
+3. 确保返回的数据结构正确
+
+**第四步：实现 WebSocket Mock**
+1. 创建 WebSocket Mock 服务（可以使用 EventEmitter 或简单的模拟）
+2. 实现消息广播功能
+3. 实现成员加入/离开事件
+
+**第五步：测试和文档**
+1. 创建简单的测试文件验证 Mock 功能
+2. 添加使用说明文档
+3. 确保可以轻松切换到真实 API
+
 ## Success Criteria
 
-1. [ ] 创建房间 API Mock 返回正确的数据结构
-2. [ ] 获取房间信息 API Mock 返回房间数据和成员列表
-3. [ ] WebSocket 连接 Mock 可以模拟实时消息
-4. [ ] Mock 数据格式与真实 API 一致
-5. [ ] 前端可以正常使用 Mock 数据进行开发
-6. [ ] 可以轻松切换到真实 API
+1. [ ] 项目已初始化（有 package.json 和基础目录结构）
+2. [ ] 创建房间 API Mock 返回正确的数据结构（POST /api/rooms）
+3. [ ] 获取房间信息 API Mock 返回房间数据和成员列表（GET /api/rooms/:roomId）
+4. [ ] WebSocket 连接 Mock 可以模拟实时消息（成员加入、消息发送等）
+5. [ ] Mock 数据格式与真实 API 一致（数据结构匹配）
+6. [ ] 有简单的测试或示例代码验证 Mock 功能
+7. [ ] 有文档说明如何使用 Mock 数据
 
 ---
 
