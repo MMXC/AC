@@ -1,9 +1,10 @@
 ---
-id: task-3
+id: TASK-3
 title: 房间页面布局 - 侧边栏信息
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-25 16:56'
+updated_date: '2026-01-25 19:04'
 labels: []
 dependencies: []
 ---
