@@ -1,9 +1,10 @@
 ---
-id: task-2
+id: TASK-2
 title: 房间页面布局 - 共享浏览区域
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-25 16:56'
+updated_date: '2026-01-25 18:59'
 labels: []
 dependencies: []
 ---

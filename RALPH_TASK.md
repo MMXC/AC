@@ -1,21 +1,21 @@
 ---
-backlog_id: backlog-1
-task: 创建首页 - 房间创建功能
-test_command: "npm test -- --testNamePattern='首页创建房间'"
+backlog_id: backlog-2
+task: 房间页面布局 - 共享浏览区域
+test_command: "npm test -- --testNamePattern='共享浏览区域'"
 ---
 
-# Task: 创建首页 - 房间创建功能
+# Task: 房间页面布局 - 共享浏览区域
 
 ## Description
 
-实现首页，包含创建房间功能，生成唯一房间号和房间链接
+实现房间主界面，中间显示共享的网页地址（iframe），支持加载任意网页
 
-**Test Command**: `npm test -- --testNamePattern='首页创建房间'`
+**Test Command**: `npm test -- --testNamePattern='共享浏览区域'`
 
 ## Success Criteria
 
-- [x] 首页可以正常访问
-- [x] 点击创建房间按钮可以创建新房间
-- [x] 生成唯一的房间号
-- [x] 生成可分享的房间链接
-- [x] 房间链接格式正确
+- [ ] 房间页面可以正常加载
+- [ ] 中间区域显示 iframe
+- [ ] 可以通过 URL 参数加载指定网页
+- [ ] iframe 可以正常显示外部网页
+- [ ] 支持常见网站的加载
