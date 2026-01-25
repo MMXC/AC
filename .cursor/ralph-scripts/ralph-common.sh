@@ -600,7 +600,7 @@ run_iteration() {
   # Cleanup
   rm -f "$signal_file"
   
-  echo "$signal"
+  echo "signal: $signal"
 }
 
 # =============================================================================
