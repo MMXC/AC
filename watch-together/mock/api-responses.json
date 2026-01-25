@@ -1,0 +1,107 @@
+{
+  "createRoom": {
+    "success": {
+      "success": true,
+      "data": {
+        "id": "room-new-xxx",
+        "name": "新房间",
+        "hostId": "user-xxx",
+        "currentUrl": "",
+        "createdAt": "2026-01-25T12:00:00Z",
+        "inviteLink": "https://watch-together.app/join/room-new-xxx",
+        "members": []
+      },
+      "message": "房间创建成功"
+    },
+    "error": {
+      "success": false,
+      "error": {
+        "code": "CREATE_ROOM_FAILED",
+        "message": "创建房间失败，请稍后重试"
+      }
+    }
+  },
+  "getRoom": {
+    "success": {
+      "success": true,
+      "data": {
+        "id": "room-001",
+        "name": "示例房间",
+        "hostId": "user-host-001",
+        "currentUrl": "https://example.com",
+        "createdAt": "2026-01-25T10:00:00Z",
+        "members": []
+      }
+    },
+    "notFound": {
+      "success": false,
+      "error": {
+        "code": "ROOM_NOT_FOUND",
+        "message": "房间不存在或已关闭"
+      }
+    }
+  },
+  "joinRoom": {
+    "success": {
+      "success": true,
+      "data": {
+        "roomId": "room-001",
+        "userId": "user-new-xxx",
+        "nickname": "新成员"
+      },
+      "message": "加入房间成功"
+    },
+    "roomFull": {
+      "success": false,
+      "error": {
+        "code": "ROOM_FULL",
+        "message": "房间已满，无法加入"
+      }
+    }
+  },
+  "websocket": {
+    "memberJoined": {
+      "type": "MEMBER_JOINED",
+      "data": {
+        "userId": "user-xxx",
+        "nickname": "新成员",
+        "joinedAt": "2026-01-25T12:00:00Z"
+      }
+    },
+    "memberLeft": {
+      "type": "MEMBER_LEFT",
+      "data": {
+        "userId": "user-xxx",
+        "nickname": "离开的成员"
+      }
+    },
+    "chatMessage": {
+      "type": "CHAT_MESSAGE",
+      "data": {
+        "id": "msg-xxx",
+        "userId": "user-xxx",
+        "nickname": "发送者",
+        "content": "消息内容",
+        "timestamp": "2026-01-25T12:00:00Z"
+      }
+    },
+    "urlChanged": {
+      "type": "URL_CHANGED",
+      "data": {
+        "url": "https://new-url.com",
+        "changedBy": "user-xxx"
+      }
+    },
+    "syncState": {
+      "type": "SYNC_STATE",
+      "data": {
+        "currentUrl": "https://example.com",
+        "members": [],
+        "playState": {
+          "isPlaying": true,
+          "currentTime": 120
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "rooms": [
+    {
+      "id": "room-001",
+      "name": "示例房间1",
+      "hostId": "user-host-001",
+      "currentUrl": "https://www.bilibili.com/video/BV1xx411c7mD",
+      "createdAt": "2026-01-25T10:00:00Z",
+      "members": [
+        {
+          "id": "user-host-001",
+          "nickname": "房主小明",
+          "isHost": true,
+          "joinedAt": "2026-01-25T10:00:00Z"
+        },
+        {
+          "id": "user-002",
+          "nickname": "观众小红",
+          "isHost": false,
+          "joinedAt": "2026-01-25T10:05:00Z"
+        }
+      ],
+      "messages": [
+        {
+          "id": "msg-001",
+          "userId": "user-host-001",
+          "nickname": "房主小明",
+          "content": "欢迎来到一起看房间！",
+          "timestamp": "2026-01-25T10:00:30Z"
+        },
+        {
+          "id": "msg-002",
+          "userId": "user-002",
+          "nickname": "观众小红",
+          "content": "大家好！",
+          "timestamp": "2026-01-25T10:05:30Z"
+        }
+      ]
+    },
+    {
+      "id": "room-002",
+      "name": "电影之夜",
+      "hostId": "user-host-002",
+      "currentUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "createdAt": "2026-01-25T14:00:00Z",
+      "members": [
+        {
+          "id": "user-host-002",
+          "nickname": "电影达人",
+          "isHost": true,
+          "joinedAt": "2026-01-25T14:00:00Z"
+        },
+        {
+          "id": "user-003",
+          "nickname": "影迷A",
+          "isHost": false,
+          "joinedAt": "2026-01-25T14:10:00Z"
+        },
+        {
+          "id": "user-004",
+          "nickname": "影迷B",
+          "isHost": false,
+          "joinedAt": "2026-01-25T14:15:00Z"
+        }
+      ],
+      "messages": []
+    },
+    {
+      "id": "room-003",
+      "name": "学习小组",
+      "hostId": "user-host-003",
+      "currentUrl": "https://www.coursera.org/",
+      "createdAt": "2026-01-25T09:00:00Z",
+      "members": [
+        {
+          "id": "user-host-003",
+          "nickname": "学霸组长",
+          "isHost": true,
+          "joinedAt": "2026-01-25T09:00:00Z"
+        }
+      ],
+      "messages": [
+        {
+          "id": "msg-003",
+          "userId": "user-host-003",
+          "nickname": "学霸组长",
+          "content": "今天我们一起学习编程！",
+          "timestamp": "2026-01-25T09:00:30Z"
+        }
+      ]
+    }
+  ]
+}

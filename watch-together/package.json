@@ -1,0 +1,27 @@
+{
+  "name": "watch-together",
+  "version": "0.1.0",
+  "description": "网页版一起看功能 - 支持多人同时观看任意网页并实时聊天",
+  "main": "mock-server/server.js",
+  "scripts": {
+    "start": "node mock-server/server.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "mock": "node mock-server/server.js"
+  },
+  "keywords": [
+    "watch-together",
+    "websocket",
+    "real-time",
+    "collaboration"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "uuid": "^9.0.1"
+  }
+}
