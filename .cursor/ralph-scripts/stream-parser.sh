@@ -110,6 +110,8 @@ check_gutter() {
   if [[ $tokens -ge $ROTATE_THRESHOLD ]]; then
     log_activity "ROTATE: Token threshold reached ($tokens >= $ROTATE_THRESHOLD)"
     echo "ROTATE" >&1  # Explicitly to stdout
+    # Force flush stdout (important for Windows/WSL)
+    exec 1>&1
     return
   fi
   
@@ -118,6 +120,8 @@ check_gutter() {
     log_activity "WARN: Approaching token limit ($tokens >= $WARN_THRESHOLD)"
     WARN_SENT=1
     echo "WARN" >&1  # Explicitly to stdout
+    # Force flush stdout (important for Windows/WSL)
+    exec 1>&1
   fi
 }
 
@@ -138,6 +142,8 @@ track_shell_failure() {
     if [[ $count -ge 3 ]]; then
       log_error "⚠️ GUTTER: same command failed ${count}x"
       echo "GUTTER" >&1  # Explicitly to stdout
+      # Force flush stdout (important for Windows/WSL)
+      exec 1>&1
     fi
   fi
 }
@@ -161,6 +167,8 @@ track_file_write() {
   if [[ $count -ge 5 ]]; then
     log_error "⚠️ THRASHING: $path written ${count}x in 10 min"
     echo "GUTTER" >&1  # Explicitly to stdout
+    # Force flush stdout (important for Windows/WSL)
+    exec 1>&1
   fi
 }
 
@@ -194,12 +202,16 @@ process_line() {
         if [[ "$text" == *"<ralph>COMPLETE</ralph>"* ]]; then
           log_activity "✅ Agent signaled COMPLETE"
           echo "COMPLETE" >&1  # Explicitly to stdout
+          # Force flush stdout (important for Windows/WSL)
+          exec 1>&1
         fi
         
         # Check for gutter sigil
         if [[ "$text" == *"<ralph>GUTTER</ralph>"* ]]; then
           log_activity "🚨 Agent signaled GUTTER (stuck)"
           echo "GUTTER" >&1  # Explicitly to stdout
+          # Force flush stdout (important for Windows/WSL)
+          exec 1>&1
         fi
       fi
       ;;

@@ -510,9 +510,20 @@ run_iteration() {
   local spinner_pid=$!
   
   # Start parser in background, reading from cursor-agent
-  # Parser outputs to signal file, we read signals from file
+  # Parser outputs signals to signal file, we read signals from file
+  # Use append mode to avoid overwriting signals
   (
-    eval "$cmd \"$prompt\"" 2>&1 | "$script_dir/stream-parser.sh" "$workspace" > "$signal_file"
+    # Redirect cursor-agent stderr to stderr, stdout to parser
+    # Parser outputs signals to stdout, filter and append to signal file
+    eval "$cmd \"$prompt\"" 2>&1 | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log" | while IFS= read -r line; do
+      case "$line" in
+        ROTATE|WARN|GUTTER|COMPLETE)
+          echo "$line" >> "$signal_file"
+          # Debug: log signal write
+          echo "[$(date '+%H:%M:%S')] Signal written: $line" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+          ;;
+      esac
+    done
   ) &
   local agent_pid=$!
   
@@ -548,51 +559,72 @@ run_iteration() {
   else
     # Use file polling (Windows/WSL fallback)
     # Read signals while agent is running
+    local last_size=0
     while kill -0 $agent_pid 2>/dev/null; do
-      if [[ -s "$signal_file" ]]; then
-        # Read all lines from signal file
-        while IFS= read -r line || [[ -n "$line" ]]; do
-          [[ -z "$line" ]] && continue
-          case "$line" in
-            "ROTATE")
-              printf "\r\033[K" >&2
-              echo "🔄 Context rotation triggered - stopping agent..." >&2
-              kill $agent_pid 2>/dev/null || true
-              signal="ROTATE"
-              break 2  # Break both loops
-              ;;
-            "WARN")
-              printf "\r\033[K" >&2
-              echo "⚠️  Context warning - agent should wrap up soon..." >&2
-              ;;
-            "GUTTER")
-              printf "\r\033[K" >&2
-              echo "🚨 Gutter detected - agent may be stuck..." >&2
-              signal="GUTTER"
-              ;;
-            "COMPLETE")
-              printf "\r\033[K" >&2
-              echo "✅ Agent signaled completion!" >&2
-              signal="COMPLETE"
-              ;;
-          esac
-        done < "$signal_file" 2>/dev/null || true
-        # Clear the signal file after reading
-        > "$signal_file"
+      if [[ -f "$signal_file" ]]; then
+        local current_size=$(wc -c < "$signal_file" 2>/dev/null || echo 0)
+        # Only read if file has grown (new signals)
+        if [[ $current_size -gt $last_size ]]; then
+          # Read only new lines
+          tail -c +$((last_size + 1)) "$signal_file" 2>/dev/null | while IFS= read -r line || [[ -n "$line" ]]; do
+            [[ -z "$line" ]] && continue
+            # Strip whitespace and newlines
+            line=$(echo "$line" | tr -d '\r\n' | xargs)
+            case "$line" in
+              "ROTATE")
+                printf "\r\033[K" >&2
+                echo "🔄 Context rotation triggered - stopping agent..." >&2
+                kill $agent_pid 2>/dev/null || true
+                signal="ROTATE"
+                echo "[$(date '+%H:%M:%S')] Signal detected: ROTATE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+                break 2  # Break both loops
+                ;;
+              "WARN")
+                printf "\r\033[K" >&2
+                echo "⚠️  Context warning - agent should wrap up soon..." >&2
+                ;;
+              "GUTTER")
+                printf "\r\033[K" >&2
+                echo "🚨 Gutter detected - agent may be stuck..." >&2
+                signal="GUTTER"
+                echo "[$(date '+%H:%M:%S')] Signal detected: GUTTER" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+                ;;
+              "COMPLETE")
+                printf "\r\033[K" >&2
+                echo "✅ Agent signaled completion!" >&2
+                signal="COMPLETE"
+                echo "[$(date '+%H:%M:%S')] Signal detected: COMPLETE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+                ;;
+            esac
+          done
+          last_size=$current_size
+        fi
       fi
       sleep 0.1
     done
     
     # After agent finishes, wait a bit and check for final signals
     # (signals might be written after agent process ends)
-    sleep 0.5
-    if [[ -s "$signal_file" ]] && [[ -z "$signal" ]]; then
+    sleep 1.0
+    if [[ -f "$signal_file" ]] && [[ -z "$signal" ]]; then
+      # Read all signals from file (check all lines, not just new ones)
       while IFS= read -r line || [[ -n "$line" ]]; do
         [[ -z "$line" ]] && continue
+        # Strip whitespace
+        line=$(echo "$line" | tr -d '\r\n' | xargs)
         case "$line" in
-          "ROTATE") signal="ROTATE" ;;
-          "GUTTER") signal="GUTTER" ;;
-          "COMPLETE") signal="COMPLETE" ;;
+          "ROTATE") 
+            signal="ROTATE"
+            echo "[$(date '+%H:%M:%S')] Final check found: ROTATE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+            ;;
+          "GUTTER") 
+            signal="GUTTER"
+            echo "[$(date '+%H:%M:%S')] Final check found: GUTTER" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+            ;;
+          "COMPLETE") 
+            signal="COMPLETE"
+            echo "[$(date '+%H:%M:%S')] Final check found: COMPLETE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+            ;;
         esac
         [[ -n "$signal" ]] && break
       done < "$signal_file" 2>/dev/null || true
@@ -603,14 +635,29 @@ run_iteration() {
   wait $agent_pid 2>/dev/null || true
   
   # Final check for signals after agent finishes (important for Windows/WSL)
-  if [[ -z "$signal" ]] && [[ -s "$signal_file" ]]; then
-    local line=$(head -n 1 "$signal_file" 2>/dev/null || echo "")
+  # Wait a bit more for parser to flush output
+  sleep 0.5
+  if [[ -z "$signal" ]] && [[ -f "$signal_file" ]] && [[ -s "$signal_file" ]]; then
+    # Read the last line (most recent signal)
+    local line=$(tail -n 1 "$signal_file" 2>/dev/null | tr -d '\r\n' | xargs || echo "")
     case "$line" in
-      "ROTATE") signal="ROTATE" ;;
-      "GUTTER") signal="GUTTER" ;;
-      "COMPLETE") signal="COMPLETE" ;;
+      "ROTATE") 
+        signal="ROTATE"
+        echo "[$(date '+%H:%M:%S')] Very final check found: ROTATE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+        ;;
+      "GUTTER") 
+        signal="GUTTER"
+        echo "[$(date '+%H:%M:%S')] Very final check found: GUTTER" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+        ;;
+      "COMPLETE") 
+        signal="COMPLETE"
+        echo "[$(date '+%H:%M:%S')] Very final check found: COMPLETE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+        ;;
     esac
   fi
+  
+  # Log final signal value for debugging
+  echo "[$(date '+%H:%M:%S')] Returning signal: '${signal:-empty}'" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
   
   # Stop spinner and clear line
   kill $spinner_pid 2>/dev/null || true
