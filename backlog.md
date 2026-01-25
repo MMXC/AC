@@ -11,7 +11,7 @@
 
 ## Tasks
 
-### [ ] Build CLI Todo App (TypeScript)
+### [ ]] Build CLI Todo App (TypeScript)
 
 **ID**: todo-app-typescript  
 **Status**: To Do
@@ -256,5 +256,101 @@ Build a simple command-line todo application in TypeScript.
 3. [ ] 可以查询历史聊天记录
 4. [ ] 数据可以正确恢复
 5. [ ] 支持数据清理策略
+
+---
+### [ ] 我想做一个网页版一起看功能，大致功能是中间是任意网页地址，外面是房间号及成员聊天信息
+
+**ID**: task-001  
+**Status**: To Do
+
+**Description**:  
+我想做一个网页版一起看功能，大致功能是中间是任意网页地址，外面是房间号及成员聊天信息
+
+**Test Command**: `echo 'Test command needed'`
+
+**Success Criteria**:
+1. [ ] 功能按描述实现
+2. [ ] 代码通过测试
+3. [ ] 符合代码规范
+
+---
+### [ ] 需要包含首页（创建房间并生成房间链接邀请成员），邀请成功后进入主功能界面（成员可一起操作中间共...
+
+**ID**: task-002  
+**Status**: To Do
+
+**Description**:  
+需要包含首页（创建房间并生成房间链接邀请成员），邀请成功后进入主功能界面（成员可一起操作中间共享区域，最好无需成员进行登录等操作）
+
+**Test Command**: `echo 'Test command needed'`
+
+**Success Criteria**:
+1. [ ] 功能按描述实现
+2. [ ] 代码通过测试
+3. [ ] 符合代码规范
+
+---
+### [ ] 我想做一个网页版一起看功能...
+
+**ID**: task-001  
+**Status**: To Do
+
+**Description**:  
+我想做一个网页版一起看功能...
+
+**Test Command**: `npm test`
+
+**Success Criteria**:
+1. [ ] 功能按描述实现
+2. [ ] 代码通过测试
+3. [ ] 符合代码规范
+
+---
+### [ ] 我想做一个网页版一起看功能...
+
+**ID**: task-001  
+**Status**: To Do
+
+**Description**:  
+我想做一个网页版一起看功能...
+
+**Test Command**: `npm test`
+
+**Success Criteria**:
+1. [ ] 功能按描述实现
+2. [ ] 代码通过测试
+3. [ ] 符合代码规范
+
+---
+### [ ] 我想做一个网页版一起看功能...
+
+**ID**: task-001  
+**Status**: To Do
+
+**Description**:  
+我想做一个网页版一起看功能...
+
+**Test Command**: `npm test`
+
+**Success Criteria**:
+1. [ ] 功能按描述实现
+2. [ ] 代码通过测试
+3. [ ] 符合代码规范
+
+---
+### [ ] 我想做一个网页版一起看功能...
+
+**ID**: task-001  
+**Status**: To Do
+
+**Description**:  
+我想做一个网页版一起看功能...
+
+**Test Command**: `npm test`
+
+**Success Criteria**:
+1. [ ] 功能按描述实现
+2. [ ] 代码通过测试
+3. [ ] 符合代码规范
 
 ---

@@ -23,15 +23,49 @@ def call_mcp_tool(tool_name, arguments=None):
         print(f"Error calling MCP tool {tool_name}: {e}", file=sys.stderr)
         return None
 
+def call_backlog_cli(command, *args):
+    """Call backlog.md CLI command"""
+    try:
+        cmd = ["backlog"] + command.split() + list(args)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            # Don't print error if CLI is not installed (fallback to file-based)
+            if "not found" not in result.stderr.lower() and "command not found" not in result.stderr.lower():
+                print(f"Backlog CLI error: {result.stderr}", file=sys.stderr)
+            return None
+    except FileNotFoundError:
+        # backlog CLI not installed, fallback to file-based
+        return None
+    except Exception as e:
+        print(f"Error calling backlog CLI: {e}", file=sys.stderr)
+        return None
+
 def search_backlog_tasks(query="status:To Do OR status:In Progress"):
     """
-    Search for tasks in backlog
+    Search for tasks in backlog using backlog.md CLI or fallback to file
     Returns list of tasks matching the query
     """
-    # Try MCP first
-    result = call_mcp_tool("backlog.search_tasks", {"query": query})
-    if result:
-        return result
+    # Try backlog.md CLI first
+    # Parse query to extract status
+    statuses = []
+    if "To Do" in query or "todo" in query.lower():
+        statuses.append("To Do")
+    if "In Progress" in query or "in progress" in query.lower():
+        statuses.append("In Progress")
+    
+    # Try using backlog CLI to list tasks
+    if statuses:
+        all_tasks = []
+        for status in statuses:
+            result = call_backlog_cli("task", "list", "-s", status, "--plain")
+            if result:
+                # Parse CLI output and convert to our format
+                tasks = parse_backlog_cli_output(result)
+                all_tasks.extend(tasks)
+        if all_tasks:
+            return all_tasks
     
     # Fallback: try to read from backlog.md if it exists
     workspace = os.getcwd()
@@ -52,6 +86,86 @@ def search_backlog_tasks(query="status:To Do OR status:In Progress"):
         return tasks
     
     return []
+
+def parse_backlog_cli_output(cli_output):
+    """Parse backlog CLI output and convert to our task format"""
+    tasks = []
+    try:
+        lines = cli_output.split('\n')
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            # Try to extract task ID and title
+            match = re.match(r'^\s*(\d+)\.\s+(.+?)(?:\s+\(.*?\))?$', line)
+            if match:
+                task_id = match.group(1)
+                title = match.group(2).strip()
+                # Fetch full task details
+                task_details = call_backlog_cli("task", task_id, "--plain")
+                if task_details:
+                    task = parse_backlog_cli_task_details(task_id, title, task_details)
+                    if task:
+                        tasks.append(task)
+    except Exception as e:
+        print(f"Error parsing backlog CLI output: {e}", file=sys.stderr)
+    
+    return tasks
+
+def parse_backlog_cli_task_details(task_id, title, details):
+    """Parse detailed task information from backlog CLI output"""
+    try:
+        task = {
+            "id": f"backlog-{task_id}",
+            "backlog_task_id": task_id,
+            "title": title,
+            "status": "To Do",
+            "description": "",
+            "test_command": "",
+            "success_criteria": []
+        }
+        
+        # Parse details to extract description, status, acceptance criteria
+        lines = details.split('\n')
+        current_section = None
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Check for status
+            if re.match(r'Status:\s*(.+)', line, re.IGNORECASE):
+                match = re.match(r'Status:\s*(.+)', line, re.IGNORECASE)
+                task["status"] = match.group(1).strip()
+            
+            # Check for description
+            elif re.match(r'Description:', line, re.IGNORECASE):
+                current_section = "description"
+            elif current_section == "description" and line:
+                task["description"] += line + "\n"
+            
+            # Check for acceptance criteria
+            elif re.match(r'Acceptance\s+Criteria:', line, re.IGNORECASE) or re.match(r'ACs?:', line, re.IGNORECASE):
+                current_section = "ac"
+            elif current_section == "ac":
+                # Parse AC line: "1. [ ] Criterion text" or "1. Criterion text"
+                ac_match = re.match(r'^\d+\.\s+(?:\[([ x])\]\s+)?(.+)$', line)
+                if ac_match:
+                    criterion_text = ac_match.group(2).strip()
+                    task["success_criteria"].append(criterion_text)
+        
+        task["description"] = task["description"].strip()
+        
+        # Extract test command from description if present
+        test_match = re.search(r'\*\*Test Command\*\*:\s*`([^`]+)`', task["description"])
+        if test_match:
+            task["test_command"] = test_match.group(1)
+        
+        return task
+    except Exception as e:
+        print(f"Error parsing task details: {e}", file=sys.stderr)
+        return None
 
 def parse_backlog_md(backlog_file):
     """Parse a backlog.md file and extract tasks"""
@@ -180,17 +294,32 @@ def generate_ralph_task(task):
     criteria = []
     description = task.get("description", "") or task.get("content", "")
     
-    # Extract checkboxes or numbered items
-    criteria_pattern = r'(?:^|\n)\s*(?:[-*]|\d+\.)\s+\[([ x])\]\s+(.+?)(?=\n(?:[-*]|\d+\.)|$)'
-    criteria_matches = re.finditer(criteria_pattern, description, re.MULTILINE)
+    # Extract checkboxes or numbered items from Success Criteria section
+    success_criteria_section = re.search(r'\*\*Success\s+Criteria\*\*:\s*\n(.*?)(?=\n\*\*|\n---|\Z)', description, re.DOTALL | re.IGNORECASE)
+    if success_criteria_section:
+        criteria_text = success_criteria_section.group(1)
+        criteria_pattern = r'^\s*(\d+)\.\s+\[([ x])\]\s+(.+?)(?=\n\d+\.|\n\*\*|\Z)'
+        criteria_matches = re.finditer(criteria_pattern, criteria_text, re.MULTILINE)
+        for match in criteria_matches:
+            checked = match.group(2) == "x"
+            criterion_text = match.group(3).strip()
+            criteria.append({
+                "text": criterion_text,
+                "checked": checked
+            })
     
-    for match in criteria_matches:
-        checked = match.group(1) == "x"
-        criterion_text = match.group(2).strip()
-        criteria.append({
-            "text": criterion_text,
-            "checked": checked
-        })
+    # If no criteria found, try alternative patterns
+    if not criteria:
+        criteria_pattern = r'(?:^|\n)\s*(?:[-*]|\d+\.)\s+\[([ x])\]\s+(.+?)(?=\n(?:[-*]|\d+\.)|$)'
+        criteria_matches = re.finditer(criteria_pattern, description, re.MULTILINE)
+        
+        for match in criteria_matches:
+            checked = match.group(1) == "x"
+            criterion_text = match.group(2).strip()
+            criteria.append({
+                "text": criterion_text,
+                "checked": checked
+            })
     
     # If no criteria found, try to extract from "Success Criteria" section
     if not criteria:
@@ -273,86 +402,213 @@ backlog_id: "{backlog_id}"
     if not criteria:
         body += "1. [ ] Complete the task\n"
     
+    # 添加测试用例信息（如果存在）
+    # 尝试从任务描述中提取测试用例信息
+    test_cases_match = re.search(r'\*\*测试用例\*\*:(.*?)(?=\n\*\*|\n---|\Z)', description, re.DOTALL)
+    if test_cases_match:
+        test_cases_content = test_cases_match.group(1).strip()
+        body += "\n## Test Cases\n\n"
+        
+        # 提取测试数据
+        test_data_match = re.search(r'\*\*测试数据\*\*:(.*?)(?=\n\*\*|\Z)', test_cases_content, re.DOTALL)
+        if test_data_match:
+            body += "### Test Data\n\n"
+            body += test_data_match.group(1).strip()
+            body += "\n\n"
+        
+        # 提取测试场景
+        test_scenarios_match = re.search(r'\*\*测试场景\*\*:(.*?)(?=\n\*\*|\Z)', test_cases_content, re.DOTALL)
+        if test_scenarios_match:
+            body += "### Test Scenarios\n\n"
+            body += test_scenarios_match.group(1).strip()
+            body += "\n\n"
+        
+        # 提取断言
+        assertions_match = re.search(r'\*\*断言示例\*\*:(.*?)(?=\n\*\*|\Z)', test_cases_content, re.DOTALL)
+        if assertions_match:
+            body += "### Assertions\n\n"
+            body += assertions_match.group(1).strip()
+            body += "\n\n"
+    
     body += """
 ---
 
 ## Ralph Instructions
 
-1. Work on the next incomplete criterion (marked [ ])
-2. Check off completed criteria (change [ ] to [x])
-3. Run tests after changes
-4. Commit your changes frequently
-5. When ALL criteria are [x], output: `<ralph>COMPLETE</ralph>`
-6. If stuck on the same issue 3+ times, output: `<ralph>GUTTER</ralph>`
-"""
+1. **Write test cases first** - Use the test cases and assertions provided above
+2. Work on the next incomplete criterion (marked [ ])
+3. Check off completed criteria (change [ ] to [x])
+4. **Run tests after changes** - Execute the test command to verify: `{test_command}`
+5. Commit your changes frequently
+6. When ALL criteria are [x] and tests pass, output: `<ralph>COMPLETE</ralph>`
+7. If stuck on the same issue 3+ times, output: `<ralph>GUTTER</ralph>`
+""".format(test_command=test_command or "npm test")
     
     return frontmatter + body
 
+def update_backlog_file_status(backlog_id, new_status, backlog_file):
+    """Update status in backlog.md file"""
+    if not backlog_file or not backlog_file.exists():
+        return False
+    
+    try:
+        with open(backlog_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Update task status in markdown
+        # Find the task by ID and update both checkbox and Status field
+        # Pattern: ### [x] Title ... **ID**: backlog_id ... **Status**: ...
+        pattern = rf'(###\s+\[)([ x])(\]\s+.*?\*\*ID\*\*:\s*{re.escape(backlog_id)}[^\n]*\n.*?\*\*Status\*\*:\s*)([^\n]+)'
+        
+        def replace_status(m):
+            checkbox = m.group(1)
+            old_checkbox = m.group(2)
+            status_prefix = m.group(3)
+            old_status = m.group(4)
+            
+            # Update checkbox
+            if new_status == "Done":
+                new_checkbox = "x"
+            elif new_status == "In Progress":
+                new_checkbox = " "
+            else:
+                new_checkbox = " "
+            
+            return f"{checkbox}{new_checkbox}]{status_prefix}{new_status}"
+        
+        updated_content = re.sub(pattern, replace_status, content, flags=re.DOTALL)
+        
+        # Also update just the checkbox if Status field doesn't exist
+        if updated_content == content:
+            pattern2 = rf'(###\s+\[)([ x])(\]\s+.*?\*\*ID\*\*:\s*{re.escape(backlog_id)}[^\n]*)'
+            if new_status == "Done":
+                replacement2 = r'\1x\2\3'
+            elif new_status == "In Progress":
+                replacement2 = r'\1 \2\3'
+            else:
+                replacement2 = r'\1 \2\3'
+            updated_content = re.sub(pattern2, replacement2, content, flags=re.DOTALL)
+        
+        if updated_content != content:
+            with open(backlog_file, 'w', encoding='utf-8') as f:
+                f.write(updated_content)
+            return True
+    except Exception as e:
+        print(f"Error updating backlog.md: {e}", file=sys.stderr)
+    
+    return False
+
 def update_backlog_status(backlog_id, new_status):
-    """Update the status of a task in backlog"""
-    # Try MCP first
-    result = call_mcp_tool("backlog.update_task", {
-        "task_id": backlog_id,
-        "status": new_status
-    })
-    
-    if result:
-        return True
-    
-    # Fallback: update backlog.md file
+    """Update the status of a task using backlog.md CLI or fallback to file"""
+    # Try backlog.md CLI first
     workspace = os.getcwd()
     backlog_file = Path(workspace) / "backlog.md"
     
+    backlog_task_id = None
     if backlog_file.exists():
         try:
             with open(backlog_file, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Update task status in markdown
-            # Find the task by ID and update both checkbox and Status field
-            # Pattern: ### [x] Title ... **ID**: backlog_id ... **Status**: ...
-            pattern = rf'(###\s+\[)([ x])(\]\s+.*?\*\*ID\*\*:\s*{re.escape(backlog_id)}[^\n]*\n.*?\*\*Status\*\*:\s*)([^\n]+)'
-            
-            def replace_status(m):
-                checkbox = m.group(1)
-                old_checkbox = m.group(2)
-                status_prefix = m.group(3)
-                old_status = m.group(4)
-                
-                # Update checkbox
-                if new_status == "Done":
-                    new_checkbox = "x"
-                elif new_status == "In Progress":
-                    new_checkbox = " "
-                else:
-                    new_checkbox = " "
-                
-                return f"{checkbox}{new_checkbox}]{status_prefix}{new_status}"
-            
-            updated_content = re.sub(pattern, replace_status, content, flags=re.DOTALL)
-            
-            # Also update just the checkbox if Status field doesn't exist
-            if updated_content == content:
-                pattern2 = rf'(###\s+\[)([ x])(\]\s+.*?\*\*ID\*\*:\s*{re.escape(backlog_id)}[^\n]*)'
-                if new_status == "Done":
-                    replacement2 = r'\1x\2\3'
-                elif new_status == "In Progress":
-                    replacement2 = r'\1 \2\3'
-                else:
-                    replacement2 = r'\1 \2\3'
-                updated_content = re.sub(pattern2, replacement2, content, flags=re.DOTALL)
-            
-            if updated_content != content:
-                with open(backlog_file, 'w', encoding='utf-8') as f:
-                    f.write(updated_content)
-                return True
-        except Exception as e:
-            print(f"Error updating backlog.md: {e}", file=sys.stderr)
+            # Check if backlog_id is already a numeric ID
+            if backlog_id.isdigit():
+                backlog_task_id = backlog_id
+            elif backlog_id.startswith("backlog-") and backlog_id[8:].isdigit():
+                backlog_task_id = backlog_id[8:]
+            else:
+                # Look for mapping comment
+                mapping_pattern = rf'<!-- Task mapping: {re.escape(backlog_id)} -> backlog-(\d+) -->'
+                mapping_match = re.search(mapping_pattern, content)
+                if mapping_match:
+                    backlog_task_id = mapping_match.group(1)
+        except:
+            pass
+    
+    # If we found a backlog task ID, try using CLI
+    if backlog_task_id:
+        # Map our status to backlog CLI status
+        status_map = {
+            "To Do": "To Do",
+            "In Progress": "In Progress",
+            "Done": "Done"
+        }
+        backlog_status = status_map.get(new_status, new_status)
+        
+        result = call_backlog_cli("task", "edit", backlog_task_id, "-s", backlog_status)
+        if result:
+            # Also update the file for consistency
+            if backlog_file.exists():
+                update_backlog_file_status(backlog_id, new_status, backlog_file)
+            return True
+    
+    # Fallback: update backlog.md file directly
+    if backlog_file.exists():
+        return update_backlog_file_status(backlog_id, new_status, backlog_file)
     
     return False
 
 def create_backlog_task(task_data):
-    """Create a new task in backlog.md"""
+    """Create a new task using backlog.md CLI or fallback to file"""
+    # Extract task fields
+    task_id = task_data.get('id', '')
+    title = task_data.get('title', 'Untitled Task')
+    description = task_data.get('description', '')
+    test_command = task_data.get('test_command', '')
+    success_criteria = task_data.get('success_criteria', [])
+    test_cases = task_data.get('test_cases', {})
+    
+    # Try using backlog.md CLI first
+    # Build acceptance criteria string (包含测试用例信息)
+    ac_args = []
+    for criterion in success_criteria:
+        ac_args.extend(["--ac", criterion])
+    
+    # 添加测试用例相关的 Acceptance Criteria
+    if test_cases:
+        if test_cases.get('test_scenarios'):
+            for scenario in test_cases['test_scenarios']:
+                ac_args.extend(["--ac", f"测试场景: {scenario}"])
+    
+    # Build description with test command and test cases if available
+    full_description = description
+    if test_command:
+        full_description += f"\n\n**Test Command**: `{test_command}`"
+    
+    # 添加测试用例详细信息到描述中
+    if test_cases:
+        full_description += "\n\n**测试用例**:\n"
+        
+        if test_cases.get('test_data'):
+            full_description += "\n**测试数据**:\n"
+            for i, test_data in enumerate(test_cases['test_data'], 1):
+                full_description += f"{i}. 输入: {test_data.get('input', 'N/A')}\n"
+                full_description += f"   预期输出: {test_data.get('expected_output', 'N/A')}\n"
+        
+        if test_cases.get('assertions'):
+            full_description += "\n**断言示例**:\n"
+            for i, assertion in enumerate(test_cases['assertions'], 1):
+                full_description += f"{i}. `{assertion}`\n"
+    
+    # Try backlog CLI
+    result = call_backlog_cli("task", "create", title, "-d", full_description, *ac_args)
+    if result:
+        # Extract task ID from result (backlog CLI returns task info)
+        # Format: "Created task 42: Title"
+        match = re.search(r'Created task (\d+):', result)
+        if match:
+            created_id = match.group(1)
+            # Store the mapping in backlog.md for later reference
+            workspace = os.getcwd()
+            backlog_file = Path(workspace) / "backlog.md"
+            if backlog_file.exists():
+                try:
+                    with open(backlog_file, 'a', encoding='utf-8') as f:
+                        f.write(f"\n<!-- Task mapping: {task_id} -> backlog-{created_id} -->\n")
+                except:
+                    pass
+            return True
+    
+    # Fallback to file-based approach
     workspace = os.getcwd()
     backlog_file = Path(workspace) / "backlog.md"
     
@@ -365,13 +621,6 @@ def create_backlog_task(task_data):
     try:
         with open(backlog_file, 'r', encoding='utf-8') as f:
             content = f.read()
-        
-        # Extract task fields
-        task_id = task_data.get('id', '')
-        title = task_data.get('title', 'Untitled Task')
-        description = task_data.get('description', '')
-        test_command = task_data.get('test_command', '')
-        success_criteria = task_data.get('success_criteria', [])
         
         # Build task markdown
         task_md = f"\n### [ ] {title}\n\n"
@@ -389,6 +638,29 @@ def create_backlog_task(task_data):
             for i, criterion in enumerate(success_criteria, 1):
                 task_md += f"{i}. [ ] {criterion}\n"
             task_md += "\n"
+        
+        # 添加测试用例信息
+        if test_cases:
+            task_md += "**测试用例**:\n\n"
+            
+            if test_cases.get('test_data'):
+                task_md += "**测试数据**:\n"
+                for i, test_data in enumerate(test_cases['test_data'], 1):
+                    task_md += f"{i}. 输入: `{test_data.get('input', 'N/A')}`\n"
+                    task_md += f"   预期输出: `{test_data.get('expected_output', 'N/A')}`\n"
+                task_md += "\n"
+            
+            if test_cases.get('test_scenarios'):
+                task_md += "**测试场景**:\n"
+                for i, scenario in enumerate(test_cases['test_scenarios'], 1):
+                    task_md += f"{i}. {scenario}\n"
+                task_md += "\n"
+            
+            if test_cases.get('assertions'):
+                task_md += "**断言示例**:\n"
+                for i, assertion in enumerate(test_cases['assertions'], 1):
+                    task_md += f"{i}. `{assertion}`\n"
+                task_md += "\n"
         
         task_md += "---\n"
         

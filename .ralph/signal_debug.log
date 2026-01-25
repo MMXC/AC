@@ -484,3 +484,20 @@
 [23:09:15] Signal file exists: yes
 [23:09:15] Signal file size: 0
 [23:09:15] Returning signal: 'empty'
+[23:33:37] Initialized signal_file: /mnt/c/project/AC/.ralph/.parser_signal
+[23:33:37] Starting agent with parser, signal_file=/mnt/c/project/AC/.ralph/.parser_signal
+[23:33:37] Command: cursor-agent -p --force --output-format stream-json --model opus-4.5-thinking
+[23:33:37] Agent started with PID: 165061
+[23:33:37] Parser initialized: WORKSPACE=/mnt/c/project/AC
+[23:33:37] SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[23:33:37] Testing write to signal file...
+[23:33:37] Signal file exists and is writable
+[23:33:37] Parser started, SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[23:33:37] Starting to read from stdin...
+[23:36:03] WARNING: Parser received 0 lines from stdin!
+[23:36:03] This might indicate cursor-agent is not outputting JSON or there's a pipe issue
+[23:36:03] Parser finished, processed 0 lines
+[23:36:05] After agent wait, checking signal file: /mnt/c/project/AC/.ralph/.parser_signal
+[23:36:05] Signal file exists: yes
+[23:36:05] Signal file size: 0
+[23:36:05] Returning signal: 'empty'
