@@ -300,6 +300,30 @@ process_line() {
       local duration=$(echo "$line" | jq -r '.duration_ms // 0' 2>/dev/null) || duration=0
       local tokens=$(calc_tokens)
       log_activity "SESSION END: ${duration}ms, ~$tokens tokens used"
+      
+      # If no signal was sent during the session, emit a default "FINISHED" signal
+      # This helps distinguish between "no signal" and "agent finished normally"
+      local has_signal=false
+      if [[ -f "$SIGNAL_FILE" ]] && [[ -s "$SIGNAL_FILE" ]]; then
+        # Check if file contains any valid signal
+        while IFS= read -r sig_line || [[ -n "$sig_line" ]]; do
+          sig_line=$(echo "$sig_line" | tr -d '\r\n' | xargs)
+          case "$sig_line" in
+            ROTATE|WARN|GUTTER|COMPLETE|FINISHED)
+              has_signal=true
+              break
+              ;;
+          esac
+        done < "$SIGNAL_FILE" 2>/dev/null || true
+      fi
+      
+      if [[ "$has_signal" == "false" ]]; then
+        echo "FINISHED" >> "$SIGNAL_FILE" 2>&1
+        echo "[$(date '+%H:%M:%S')] Signal written: FINISHED (agent finished normally, no explicit signal)" >> "$DEBUG_LOG" 2>&1
+        log_activity "Agent finished normally (no explicit signal)"
+      else
+        echo "[$(date '+%H:%M:%S')] Agent finished, signal already present in file" >> "$DEBUG_LOG" 2>&1
+      fi
       ;;
   esac
 }

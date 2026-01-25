@@ -589,6 +589,12 @@ run_iteration() {
                 signal="COMPLETE"
                 echo "[$(date '+%H:%M:%S')] Signal detected: COMPLETE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
                 ;;
+              "FINISHED")
+                printf "\r\033[K" >&2
+                echo "✓ Agent finished normally" >&2
+                signal="FINISHED"
+                echo "[$(date '+%H:%M:%S')] Signal detected: FINISHED" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+                ;;
             esac
           done
           last_size=$current_size
@@ -619,6 +625,10 @@ run_iteration() {
             signal="COMPLETE"
             echo "[$(date '+%H:%M:%S')] Final check found: COMPLETE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
             ;;
+          "FINISHED") 
+            signal="FINISHED"
+            echo "[$(date '+%H:%M:%S')] Final check found: FINISHED" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+            ;;
         esac
         [[ -n "$signal" ]] && break
       done < "$signal_file" 2>/dev/null || true
@@ -646,6 +656,10 @@ run_iteration() {
       "COMPLETE") 
         signal="COMPLETE"
         echo "[$(date '+%H:%M:%S')] Very final check found: COMPLETE" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+        ;;
+      "FINISHED") 
+        signal="FINISHED"
+        echo "[$(date '+%H:%M:%S')] Very final check found: FINISHED" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
         ;;
     esac
   fi
