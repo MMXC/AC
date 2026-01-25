@@ -10,3 +10,11 @@
 [21:46:00] Parser started, SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
 [21:46:11] Parser finished
 [21:46:13] Returning signal: 'empty'
+[21:47:13] Initialized signal_file: /mnt/c/project/AC/.ralph/.parser_signal
+[21:47:13] Starting agent with parser, signal_file=/mnt/c/project/AC/.ralph/.parser_signal
+[21:47:13] Agent started with PID: 42084
+[21:47:13] Parser initialized: WORKSPACE=/mnt/c/project/AC
+[21:47:13] SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[21:47:13] Testing write to signal file...
+[21:47:13] Signal file exists and is writable
+[21:47:13] Parser started, SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
