@@ -176,6 +176,9 @@ main() {
   echo "═══════════════════════════════════════════════════════════════════"
   echo ""
   
+
+  echo "Signal: $signal"
+  
   case "$signal" in
     "COMPLETE")
       if [[ "$task_status" == "COMPLETE" ]]; then
