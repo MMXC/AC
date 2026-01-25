@@ -18,3 +18,5 @@
 [21:47:13] Testing write to signal file...
 [21:47:13] Signal file exists and is writable
 [21:47:13] Parser started, SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[21:47:24] Parser finished
+[21:47:26] Returning signal: 'empty'
