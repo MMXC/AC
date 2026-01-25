@@ -213,49 +213,293 @@ load_task_from_backlog() {
   local script_dir="${2:-$(dirname "${BASH_SOURCE[0]}")}"
   local task_file="$workspace/RALPH_TASK.md"
   
-  # Check if backlog integration script exists
-  local backlog_script="$script_dir/backlog-integration.py"
-  if [[ ! -f "$backlog_script" ]]; then
-    echo "⚠️  Backlog integration script not found: $backlog_script" >&2
-    return 1
+  # Check if backlog CLI is available and working
+  local backlog_available=false
+  if command -v backlog &> /dev/null; then
+    # Test if backlog CLI actually works (not just exists)
+    if backlog --version &>/dev/null || backlog --help &>/dev/null || backlog task list --plain &>/dev/null 2>&1; then
+      backlog_available=true
+    fi
   fi
   
-  # Get next task from backlog
-  echo "📋 Loading next task from backlog..." >&2
-  local task_json
-  task_json=$(python3 "$backlog_script" get-next-task 2>/dev/null)
-  
-  if [[ -z "$task_json" ]] || [[ "$task_json" == "{}" ]]; then
+  if [[ "$backlog_available" != "true" ]]; then
+    echo "⚠️  backlog.md CLI not available or not working, trying Python fallback..." >&2
+    # Fallback to Python script
+    local backlog_script="$script_dir/backlog-integration.py"
+    if [[ -f "$backlog_script" ]]; then
+      local task_json
+      task_json=$(python3 "$backlog_script" get-next-task 2>/dev/null)
+      if [[ -n "$task_json" ]] && [[ "$task_json" != "{}" ]]; then
+        local backlog_id
+        backlog_id=$(echo "$task_json" | python3 -c "import sys, json; print(json.load(sys.stdin).get('id', ''))" 2>/dev/null)
+        if [[ -n "$backlog_id" ]]; then
+          local ralph_task_content
+          ralph_task_content=$(python3 "$backlog_script" generate-task 2>/dev/null)
+          if [[ -n "$ralph_task_content" ]]; then
+            echo "$ralph_task_content" > "$task_file"
+            python3 "$backlog_script" update-status "$backlog_id" "In Progress" >/dev/null 2>&1 || true
+            echo "✅ Loaded task from backlog: $backlog_id" >&2
+            return 0
+          fi
+        fi
+      fi
+    fi
     echo "ℹ️  No uncompleted tasks found in backlog" >&2
     return 1
   fi
   
-  # Extract backlog_id
-  local backlog_id
-  backlog_id=$(echo "$task_json" | python3 -c "import sys, json; print(json.load(sys.stdin).get('id', ''))" 2>/dev/null)
+  # Use backlog CLI to search for uncompleted tasks
+  echo "📋 Loading next task from backlog..." >&2
   
-  if [[ -z "$backlog_id" ]]; then
-    echo "⚠️  Could not extract backlog_id from task" >&2
+  # Try to get "In Progress" task first, then "To Do"
+  local task_id=""
+  local task_status=""
+  local task_output=""
+  
+  # Method 1: Try status filter
+  # Format: "To Do:\n  TASK-1 - Title\n  TASK-2 - Title"
+  for status in "In Progress" "To Do"; do
+    local task_list
+    task_list=$(backlog task list -s "$status" --plain 2>&1 || echo "")
+    
+    if [[ -n "$task_list" ]] && [[ "$task_list" != *"error"* ]] && [[ "$task_list" != *"not found"* ]] && [[ "$task_list" != *"This: not found"* ]] && [[ "$task_list" != *"No tasks found"* ]]; then
+      # Extract first task ID from list
+      # Format: "  TASK-1 - Title" or "TASK-1 - Title"
+      # Try to extract TASK-1 or just 1
+      local first_task_line
+      first_task_line=$(echo "$task_list" | grep -E '^\s*TASK-[0-9]+' | head -1)
+      
+      if [[ -n "$first_task_line" ]]; then
+        # Extract task ID: TASK-1 -> 1
+        task_id=$(echo "$first_task_line" | sed -E 's/.*TASK-([0-9]+).*/\1/' 2>/dev/null)
+        
+        if [[ -n "$task_id" ]] && [[ "$task_id" =~ ^[0-9]+$ ]]; then
+          task_output=$(backlog task "$task_id" --plain 2>&1 || echo "")
+          if [[ -n "$task_output" ]] && [[ "$task_output" != *"error"* ]] && [[ "$task_output" != *"not found"* ]] && [[ "$task_output" != *"This: not found"* ]]; then
+            # Verify status matches (format: "Status: ○ To Do")
+            local output_status
+            output_status=$(echo "$task_output" | grep -i "^Status:" | sed -E 's/^Status:\s*○?\s*//' | head -1 | tr -d '[:space:]')
+            # Normalize status
+            if [[ "$output_status" == "ToDo" ]] || [[ "$output_status" == "To Do" ]]; then
+              output_status="To Do"
+            elif [[ "$output_status" == "InProgress" ]] || [[ "$output_status" == "In Progress" ]]; then
+              output_status="In Progress"
+            fi
+            
+            if [[ "$output_status" == "$status" ]]; then
+              task_status="$status"
+              break
+            fi
+          fi
+          task_id=""
+          task_output=""
+        fi
+      fi
+    fi
+  done
+  
+  # Method 2: If status filter didn't work, list all tasks and filter manually
+  if [[ -z "$task_id" ]] || [[ -z "$task_output" ]]; then
+    local all_list
+    all_list=$(backlog task list --plain 2>&1 || echo "")
+    
+    if [[ -n "$all_list" ]] && [[ "$all_list" != *"error"* ]] && [[ "$all_list" != *"not found"* ]] && [[ "$all_list" != *"This: not found"* ]]; then
+      # Process each line to find uncompleted tasks
+      # Format: "  TASK-1 - Title" or "To Do:\n  TASK-1 - Title"
+      while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        # Skip section headers like "To Do:" or "In Progress:"
+        if [[ "$line" =~ ^(To Do|In Progress|Done): ]]; then
+          continue
+        fi
+        
+        # Extract task ID from line (format: "  TASK-1 - Title")
+        local candidate_id
+        if [[ "$line" =~ TASK-([0-9]+) ]]; then
+          candidate_id="${BASH_REMATCH[1]}"
+        else
+          # Try other patterns
+          candidate_id=$(echo "$line" | sed -E 's/.*TASK-([0-9]+).*/\1/' 2>/dev/null)
+        fi
+        
+        if [[ -n "$candidate_id" ]] && [[ "$candidate_id" =~ ^[0-9]+$ ]]; then
+          # Get task details to check status
+          local candidate_output
+          candidate_output=$(backlog task "$candidate_id" --plain 2>&1 || echo "")
+          
+          if [[ -n "$candidate_output" ]] && [[ "$candidate_output" != *"error"* ]] && [[ "$candidate_output" != *"not found"* ]] && [[ "$candidate_output" != *"This: not found"* ]]; then
+            # Parse status (format: "Status: ○ To Do")
+            local candidate_status
+            candidate_status=$(echo "$candidate_output" | grep -i "^Status:" | sed -E 's/^Status:\s*○?\s*//' | head -1 | tr -d '[:space:]')
+            # Normalize status
+            if [[ "$candidate_status" == "ToDo" ]] || [[ "$candidate_status" == "To Do" ]]; then
+              candidate_status="To Do"
+            elif [[ "$candidate_status" == "InProgress" ]] || [[ "$candidate_status" == "In Progress" ]]; then
+              candidate_status="In Progress"
+            fi
+            
+            if [[ "$candidate_status" == "To Do" ]] || [[ "$candidate_status" == "In Progress" ]]; then
+              task_id="$candidate_id"
+              task_status="$candidate_status"
+              task_output="$candidate_output"
+              break
+            fi
+          fi
+        fi
+      done <<< "$all_list"
+    fi
+  fi
+  
+  if [[ -z "$task_id" ]] || [[ -z "$task_output" ]]; then
+    echo "ℹ️  No uncompleted tasks found in backlog" >&2
     return 1
   fi
+  
+  # Parse task output and generate RALPH_TASK.md
+  echo "📝 Generating RALPH_TASK.md from backlog task: $task_id" >&2
+  
+  # Extract task information
+  local title=""
+  local description=""
+  local success_criteria=()
+  local test_command=""
+  
+  # Parse title (format: "Task TASK-1 - 创建首页 - 房间创建功能")
+  title=$(echo "$task_output" | grep -E '^Task TASK-' | sed -E 's/^Task TASK-[0-9]+\s*-\s*//' | head -1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  if [[ -z "$title" ]]; then
+    # Fallback: try "Title:" line
+    title=$(echo "$task_output" | grep -i "^Title:" | sed 's/^Title:\s*//' | head -1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  fi
+  if [[ -z "$title" ]]; then
+    title="Task $task_id"
+  fi
+  
+  # Parse description (format: "Description:\n--------------------------------------------------\ncontent\n\n**Test Command**: ...")
+  description=$(echo "$task_output" | awk '
+    /^Description:/ { 
+      in_desc=1
+      skip_separator=1
+      next 
+    }
+    skip_separator && /^-+$/ { 
+      skip_separator=0
+      next 
+    }
+    /^Acceptance Criteria:/ || /^Definition of Done:/ || /^Plan:/ || /^Notes:/ { 
+      if (in_desc) exit 
+    }
+    in_desc && !skip_separator { 
+      print 
+    }
+  ')
+  
+  # If awk didn't work, try sed fallback
+  if [[ -z "$description" ]]; then
+    description=$(echo "$task_output" | sed -n '/^Description:/,/^Acceptance Criteria:/p' | sed '1d;$d' | sed '/^--------------------------------------------------$/d' | sed '/^Acceptance Criteria:/d')
+  fi
+  
+  # Parse acceptance criteria (format: "Acceptance Criteria:\n--------------------------------------------------\n- [ ] #1 ...")
+  while IFS= read -r line; do
+    # Skip separator lines
+    [[ "$line" =~ ^-+$ ]] && continue
+    [[ -z "$line" ]] && continue
+    
+    # Extract criterion text (remove checkboxes, numbering, and # markers)
+    # Format: "- [ ] #1 首页可以正常访问"
+    local criterion
+    criterion=$(echo "$line" | sed -E 's/^[-*]\s+\[([ x])\]\s*//' | sed -E 's/^#\s*[0-9]+\s*//' | sed -E 's/^[-*]\s*//')
+    
+    if [[ -n "$criterion" ]] && [[ "$criterion" != "Acceptance Criteria" ]] && [[ "$criterion" != "ACs" ]] && [[ "$criterion" != "AC" ]]; then
+      success_criteria+=("$criterion")
+    fi
+  done < <(echo "$task_output" | awk '
+    /^Acceptance Criteria:/ { 
+      in_ac=1
+      skip_separator=1
+      next 
+    }
+    skip_separator && /^-+$/ { 
+      skip_separator=0
+      next 
+    }
+    /^Definition of Done:/ || /^Plan:/ || /^Notes:/ || /^Description:/ { 
+      if (in_ac) exit 
+    }
+    in_ac && !skip_separator && NF > 0 { 
+      print 
+    }
+  ')
+  
+  # If awk didn't work, try manual parsing
+  if [[ ${#success_criteria[@]} -eq 0 ]]; then
+    local in_ac=false
+    local skip_separator=false
+    while IFS= read -r line; do
+      if [[ "$line" =~ ^Acceptance\s+Criteria: ]]; then
+        in_ac=true
+        skip_separator=true
+        continue
+      fi
+      if [[ "$skip_separator" == "true" ]] && [[ "$line" =~ ^-+$ ]]; then
+        skip_separator=false
+        continue
+      fi
+      if [[ "$in_ac" == "true" ]] && [[ "$skip_separator" != "true" ]]; then
+        # Stop at next section
+        if [[ "$line" =~ ^Definition\s+of\s+Done: ]] || [[ "$line" =~ ^Plan: ]] || [[ "$line" =~ ^Notes: ]]; then
+          break
+        fi
+        # Skip separator lines
+        [[ "$line" =~ ^-+$ ]] && continue
+        [[ -z "$line" ]] && continue
+        
+        # Extract criterion text (format: "- [ ] #1 首页可以正常访问")
+        local criterion
+        criterion=$(echo "$line" | sed -E 's/^[-*]\s+\[([ x])\]\s*//' | sed -E 's/^#\s*[0-9]+\s*//' | sed -E 's/^[-*]\s*//')
+        if [[ -n "$criterion" ]]; then
+          success_criteria+=("$criterion")
+        fi
+      fi
+    done <<< "$task_output"
+  fi
+  
+  # Extract test command from description
+  test_command=$(echo "$description" | grep -oE '\*\*Test Command\*\*:\s*`([^`]+)`' | sed -E 's/\*\*Test Command\*\*:\s*`([^`]+)`/\1/')
   
   # Generate RALPH_TASK.md
-  echo "📝 Generating RALPH_TASK.md from backlog task: $backlog_id" >&2
-  local ralph_task_content
-  ralph_task_content=$(python3 "$backlog_script" generate-task 2>/dev/null)
+  cat > "$task_file" << EOF
+---
+backlog_id: backlog-$task_id
+task: $title
+test_command: "$test_command"
+---
+
+# Task: $title
+
+## Description
+
+$description
+
+## Success Criteria
+
+EOF
   
-  if [[ -z "$ralph_task_content" ]]; then
-    echo "⚠️  Failed to generate RALPH_TASK.md from backlog" >&2
-    return 1
+  # Add success criteria
+  for criterion in "${success_criteria[@]}"; do
+    echo "- [ ] $criterion" >> "$task_file"
+  done
+  
+  # If no criteria found, add a default one
+  if [[ ${#success_criteria[@]} -eq 0 ]]; then
+    echo "- [ ] Complete the task: $title" >> "$task_file"
   fi
   
-  # Write to RALPH_TASK.md
-  echo "$ralph_task_content" > "$task_file"
+  # Update backlog status to "In Progress" if it's "To Do"
+  if [[ "$task_status" == "To Do" ]]; then
+    backlog task edit "$task_id" -s "In Progress" >/dev/null 2>&1 || true
+  fi
   
-  # Update backlog status to "In Progress"
-  python3 "$backlog_script" update-status "$backlog_id" "In Progress" >/dev/null 2>&1 || true
-  
-  echo "✅ Loaded task from backlog: $backlog_id" >&2
+  echo "✅ Loaded task from backlog: backlog-$task_id" >&2
   return 0
 }
 
@@ -283,14 +527,29 @@ update_backlog_status() {
     return 1  # No backlog_id found
   fi
   
-  # Update status via backlog integration script
-  local backlog_script="$script_dir/backlog-integration.py"
-  if [[ ! -f "$backlog_script" ]]; then
-    return 1
+  # Extract numeric task ID from backlog-<id> format
+  local task_id
+  task_id=$(echo "$backlog_id" | sed -E 's/^backlog-([0-9]+)$/\1/')
+  if [[ -z "$task_id" ]]; then
+    task_id="$backlog_id"
   fi
   
-  python3 "$backlog_script" update-status "$backlog_id" "$new_status" >/dev/null 2>&1
-  return $?
+  # Try backlog CLI first (check if it actually works)
+  if command -v backlog &> /dev/null; then
+    if backlog task edit "$task_id" -s "$new_status" &>/dev/null 2>&1; then
+      return 0
+    fi
+    # If CLI failed, fall through to Python fallback
+  fi
+  
+  # Fallback to Python script
+  local backlog_script="$script_dir/backlog-integration.py"
+  if [[ -f "$backlog_script" ]]; then
+    python3 "$backlog_script" update-status "$backlog_id" "$new_status" >/dev/null 2>&1
+    return $?
+  fi
+  
+  return 1
 }
 
 # Check if task is complete

@@ -164,11 +164,16 @@ fi
 echo ""
 echo -e "${YELLOW}步骤 4/4: 创建 backlog 任务...${NC}"
 
-# Check if backlog CLI is available
+# Check if backlog CLI is available and working
 USE_CLI=false
 if command -v backlog &> /dev/null; then
-    USE_CLI=true
-    echo "（使用 backlog.md CLI 创建任务）"
+    # Test if backlog CLI actually works
+    if backlog --version &>/dev/null || backlog --help &>/dev/null || backlog task list --plain &>/dev/null 2>&1; then
+        USE_CLI=true
+        echo "（使用 backlog.md CLI 创建任务）"
+    else
+        echo "（backlog.md CLI 存在但无法正常工作，使用文件模式）"
+    fi
 else
     echo "（backlog.md CLI 不可用，使用文件模式）"
 fi

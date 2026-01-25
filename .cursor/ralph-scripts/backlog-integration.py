@@ -60,12 +60,25 @@ def search_backlog_tasks(query="status:To Do OR status:In Progress"):
         all_tasks = []
         for status in statuses:
             result = call_backlog_cli("task", "list", "-s", status, "--plain")
-            if result:
+            if result and result.strip():
                 # Parse CLI output and convert to our format
                 tasks = parse_backlog_cli_output(result)
-                all_tasks.extend(tasks)
+                if tasks:
+                    all_tasks.extend(tasks)
+        
+        # If we got tasks from CLI, return them
         if all_tasks:
             return all_tasks
+        
+        # If CLI returned empty but didn't fail, try listing all tasks
+        # (maybe status filter didn't match format)
+        result = call_backlog_cli("task", "list", "--plain")
+        if result and result.strip():
+            tasks = parse_backlog_cli_output(result)
+            # Filter by status manually
+            filtered_tasks = [t for t in tasks if t.get("status") in statuses]
+            if filtered_tasks:
+                return filtered_tasks
     
     # Fallback: try to read from backlog.md if it exists
     workspace = os.getcwd()
@@ -74,16 +87,36 @@ def search_backlog_tasks(query="status:To Do OR status:In Progress"):
     if backlog_file.exists():
         return parse_backlog_md(backlog_file)
     
-    # Try backlog directory
+    # Try backlog directory (backlog.md format)
     backlog_dir = Path(workspace) / "backlog"
     if backlog_dir.exists():
-        # Look for task files
+        # Look for task files in backlog/tasks/ subdirectory
+        tasks_dir = backlog_dir / "tasks"
+        if tasks_dir.exists() and tasks_dir.is_dir():
+            tasks = []
+            for task_file in sorted(tasks_dir.glob("*.md")):
+                task = parse_task_file(task_file)
+                if task:
+                    task_status = task.get("status", "To Do")
+                    print(f"Parsed task {task.get('id')}: status={task_status}", file=sys.stderr)
+                    if task_status in ["To Do", "In Progress"]:
+                        tasks.append(task)
+            if tasks:
+                print(f"Found {len(tasks)} uncompleted tasks in backlog/tasks/", file=sys.stderr)
+                return tasks
+        
+        # Also check for task files directly in backlog/ directory
         tasks = []
         for task_file in backlog_dir.glob("*.md"):
-            task = parse_task_file(task_file)
-            if task and task.get("status") in ["To Do", "In Progress"]:
-                tasks.append(task)
-        return tasks
+            if task_file.name != "backlog.md":  # Skip backlog.md if it exists
+                task = parse_task_file(task_file)
+                if task:
+                    task_status = task.get("status", "To Do")
+                    if task_status in ["To Do", "In Progress"]:
+                        tasks.append(task)
+        if tasks:
+            print(f"Found {len(tasks)} uncompleted tasks in backlog/", file=sys.stderr)
+            return tasks
     
     return []
 
@@ -91,16 +124,40 @@ def parse_backlog_cli_output(cli_output):
     """Parse backlog CLI output and convert to our task format"""
     tasks = []
     try:
+        if not cli_output or not cli_output.strip():
+            return tasks
+        
         lines = cli_output.split('\n')
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            # Try to extract task ID and title
+            
+            # Try multiple patterns to extract task ID and title
+            # Pattern 1: "1. Title" or "1. Title (status)"
             match = re.match(r'^\s*(\d+)\.\s+(.+?)(?:\s+\(.*?\))?$', line)
+            if not match:
+                # Pattern 2: "ID: Title" or "#ID Title"
+                match = re.match(r'^\s*(?:#)?(\d+)[:：]\s*(.+)$', line)
+            if not match:
+                # Pattern 3: Just task ID (if line is just a number)
+                match = re.match(r'^\s*(\d+)\s*$', line)
+                if match:
+                    task_id = match.group(1)
+                    # Fetch task details to get title
+                    task_details = call_backlog_cli("task", task_id, "--plain")
+                    if task_details:
+                        # Extract title from task details
+                        title_match = re.search(r'Title:\s*(.+)', task_details, re.IGNORECASE)
+                        title = title_match.group(1).strip() if title_match else f"Task {task_id}"
+                        task = parse_backlog_cli_task_details(task_id, title, task_details)
+                        if task:
+                            tasks.append(task)
+                    continue
+            
             if match:
                 task_id = match.group(1)
-                title = match.group(2).strip()
+                title = match.group(2).strip() if len(match.groups()) > 1 else f"Task {task_id}"
                 # Fetch full task details
                 task_details = call_backlog_cli("task", task_id, "--plain")
                 if task_details:
@@ -109,6 +166,8 @@ def parse_backlog_cli_output(cli_output):
                         tasks.append(task)
     except Exception as e:
         print(f"Error parsing backlog CLI output: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
     
     return tasks
 
@@ -125,35 +184,74 @@ def parse_backlog_cli_task_details(task_id, title, details):
             "success_criteria": []
         }
         
+        # If title wasn't provided, try to extract from details
+        if not title or title == f"Task {task_id}":
+            title_match = re.search(r'Title:\s*(.+)', details, re.IGNORECASE)
+            if title_match:
+                task["title"] = title_match.group(1).strip()
+            else:
+                task["title"] = title if title else f"Task {task_id}"
+        
         # Parse details to extract description, status, acceptance criteria
         lines = details.split('\n')
         current_section = None
+        in_description = False
         
         for line in lines:
+            original_line = line
             line = line.strip()
             if not line:
+                # Empty line might end a section
+                if current_section == "description":
+                    in_description = False
                 continue
             
-            # Check for status
-            if re.match(r'Status:\s*(.+)', line, re.IGNORECASE):
-                match = re.match(r'Status:\s*(.+)', line, re.IGNORECASE)
-                task["status"] = match.group(1).strip()
+            # Check for status (various formats)
+            status_match = re.match(r'Status:\s*(.+)', line, re.IGNORECASE)
+            if status_match:
+                task["status"] = status_match.group(1).strip()
+                current_section = None
+                continue
             
-            # Check for description
-            elif re.match(r'Description:', line, re.IGNORECASE):
+            # Check for title (if not already set)
+            title_match = re.match(r'Title:\s*(.+)', line, re.IGNORECASE)
+            if title_match and (not task["title"] or task["title"] == f"Task {task_id}"):
+                task["title"] = title_match.group(1).strip()
+                current_section = None
+                continue
+            
+            # Check for description section start
+            if re.match(r'Description:', line, re.IGNORECASE) or re.match(r'^Description\s*$', line, re.IGNORECASE):
                 current_section = "description"
-            elif current_section == "description" and line:
-                task["description"] += line + "\n"
+                in_description = True
+                continue
+            elif in_description or current_section == "description":
+                # Continue reading description until we hit another section
+                if re.match(r'^(Acceptance|AC|Test|Status|Title|Plan|Notes):', line, re.IGNORECASE):
+                    # Hit a new section, stop description
+                    in_description = False
+                    current_section = None
+                    # Process this line as the new section
+                else:
+                    task["description"] += original_line + "\n"
+                    continue
             
-            # Check for acceptance criteria
-            elif re.match(r'Acceptance\s+Criteria:', line, re.IGNORECASE) or re.match(r'ACs?:', line, re.IGNORECASE):
+            # Check for acceptance criteria section
+            if re.match(r'Acceptance\s+Criteria:', line, re.IGNORECASE) or re.match(r'^ACs?:', line, re.IGNORECASE):
                 current_section = "ac"
+                continue
             elif current_section == "ac":
-                # Parse AC line: "1. [ ] Criterion text" or "1. Criterion text"
-                ac_match = re.match(r'^\d+\.\s+(?:\[([ x])\]\s+)?(.+)$', line)
+                # Parse AC line: "1. [ ] Criterion text" or "1. Criterion text" or "- [ ] Criterion"
+                ac_match = re.match(r'^[-*]?\s*\d+\.\s+(?:\[([ x])\]\s+)?(.+)$', line)
+                if not ac_match:
+                    # Try bullet format: "- [ ] Criterion" or "* Criterion"
+                    ac_match = re.match(r'^[-*]\s+(?:\[([ x])\]\s+)?(.+)$', line)
                 if ac_match:
-                    criterion_text = ac_match.group(2).strip()
+                    criterion_text = ac_match.group(2).strip() if len(ac_match.groups()) >= 2 else line
                     task["success_criteria"].append(criterion_text)
+                elif not re.match(r'^(Description|Status|Title|Plan|Notes|Test):', line, re.IGNORECASE):
+                    # If it doesn't look like a new section, treat as AC continuation
+                    task["success_criteria"][-1] += " " + line if task["success_criteria"] else line
         
         task["description"] = task["description"].strip()
         
@@ -165,6 +263,8 @@ def parse_backlog_cli_task_details(task_id, title, details):
         return task
     except Exception as e:
         print(f"Error parsing task details: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
         return None
 
 def parse_backlog_md(backlog_file):
@@ -233,55 +333,126 @@ def parse_backlog_md(backlog_file):
     return tasks
 
 def parse_task_file(task_file):
-    """Parse a single task file from backlog directory"""
+    """Parse a single task file from backlog/tasks/ directory"""
     try:
         with open(task_file, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # Extract frontmatter if present
+        task = {
+            "id": task_file.stem,
+            "title": task_file.stem.replace('-', ' ').title(),
+            "description": "",
+            "status": "To Do",
+            "test_command": "",
+            "success_criteria": [],
+            "content": content
+        }
+        
+        # Parse frontmatter (YAML-like format)
         if content.startswith('---'):
             parts = content.split('---', 2)
             if len(parts) >= 3:
-                import yaml
-                try:
-                    frontmatter = yaml.safe_load(parts[1])
-                    body = parts[2].strip()
-                    
-                    return {
-                        "id": frontmatter.get("id") or task_file.stem,
-                        "title": frontmatter.get("title", task_file.stem),
-                        "description": body,
-                        "status": frontmatter.get("status", "To Do"),
-                        "content": content
-                    }
-                except:
-                    pass
+                frontmatter_text = parts[1].strip()
+                body = parts[2].strip()
+                
+                # Parse YAML-like frontmatter (simple key: value format)
+                frontmatter = {}
+                for line in frontmatter_text.split('\n'):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    if ':' in line:
+                        key, value = line.split(':', 1)
+                        key = key.strip()
+                        value = value.strip().strip('"\'[]')
+                        frontmatter[key] = value
+                
+                # Extract fields from frontmatter
+                if "id" in frontmatter:
+                    task["id"] = frontmatter["id"]
+                if "title" in frontmatter:
+                    task["title"] = frontmatter["title"]
+                if "status" in frontmatter:
+                    status_value = frontmatter["status"].strip()
+                    # Normalize status values
+                    if status_value.lower() in ["todo", "to do", "待办"]:
+                        task["status"] = "To Do"
+                    elif status_value.lower() in ["in progress", "进行中"]:
+                        task["status"] = "In Progress"
+                    elif status_value.lower() in ["done", "完成"]:
+                        task["status"] = "Done"
+                    else:
+                        task["status"] = status_value
+        else:
+            body = content
         
-        # Fallback: use filename and content
-        return {
-            "id": task_file.stem,
-            "title": task_file.stem.replace('-', ' ').title(),
-            "description": content,
-            "status": "To Do",
-            "content": content
-        }
+        # Parse body for description and acceptance criteria
+        # Extract description section
+        desc_match = re.search(r'##\s+Description\s*\n(.*?)(?=\n##|\Z)', body, re.DOTALL | re.IGNORECASE)
+        if desc_match:
+            desc_text = desc_match.group(1).strip()
+            # Remove HTML comments
+            desc_text = re.sub(r'<!--.*?-->', '', desc_text, flags=re.DOTALL)
+            task["description"] = desc_text.strip()
+        else:
+            # Use entire body as description if no section found
+            task["description"] = body.strip()
+        
+        # Extract test command from description
+        test_match = re.search(r'\*\*Test Command\*\*:\s*`([^`]+)`', task["description"])
+        if test_match:
+            task["test_command"] = test_match.group(1)
+        
+        # Extract acceptance criteria
+        ac_match = re.search(r'##\s+Acceptance\s+Criteria\s*\n(.*?)(?=\n##|\Z)', body, re.DOTALL | re.IGNORECASE)
+        if ac_match:
+            ac_text = ac_match.group(1).strip()
+            # Remove HTML comments
+            ac_text = re.sub(r'<!--.*?-->', '', ac_text, flags=re.DOTALL)
+            # Parse AC lines
+            for line in ac_text.split('\n'):
+                line = line.strip()
+                if not line:
+                    continue
+                # Extract criterion text (remove checkboxes, numbering, and # markers)
+                criterion = re.sub(r'^[-*]?\s*#?\d+\.?\s*', '', line)  # Remove numbering
+                criterion = re.sub(r'^\[([ x])\]\s*', '', criterion)  # Remove checkbox
+                criterion = re.sub(r'^[-*]\s*', '', criterion)  # Remove bullet
+                if criterion and not criterion.startswith('<!--'):
+                    task["success_criteria"].append(criterion.strip())
+        
+        return task
     except Exception as e:
         print(f"Error parsing task file {task_file}: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
         return None
 
 def get_next_task():
     """Get the next uncompleted task from backlog"""
     tasks = search_backlog_tasks()
     
+    if not tasks:
+        print("No tasks found in backlog", file=sys.stderr)
+        return None
+    
+    # Debug: print found tasks
+    print(f"Found {len(tasks)} tasks in backlog", file=sys.stderr)
+    for t in tasks[:3]:
+        print(f"  - {t.get('id')}: {t.get('title')} (status: {t.get('status')})", file=sys.stderr)
+    
     # Prioritize "In Progress" tasks, then "To Do"
     in_progress = [t for t in tasks if t.get("status") == "In Progress"]
     to_do = [t for t in tasks if t.get("status") == "To Do"]
     
     if in_progress:
+        print(f"Returning In Progress task: {in_progress[0].get('id')}", file=sys.stderr)
         return in_progress[0]
     elif to_do:
+        print(f"Returning To Do task: {to_do[0].get('id')}", file=sys.stderr)
         return to_do[0]
     
+    print("No uncompleted tasks found (all tasks are Done)", file=sys.stderr)
     return None
 
 def generate_ralph_task(task):
@@ -289,44 +460,38 @@ def generate_ralph_task(task):
     if not task:
         return None
     
-    # Extract success criteria from task description
-    # Look for numbered lists or checkboxes
+    # Use success_criteria from task if available (from parse_task_file)
     criteria = []
-    description = task.get("description", "") or task.get("content", "")
-    
-    # Extract checkboxes or numbered items from Success Criteria section
-    success_criteria_section = re.search(r'\*\*Success\s+Criteria\*\*:\s*\n(.*?)(?=\n\*\*|\n---|\Z)', description, re.DOTALL | re.IGNORECASE)
-    if success_criteria_section:
-        criteria_text = success_criteria_section.group(1)
-        criteria_pattern = r'^\s*(\d+)\.\s+\[([ x])\]\s+(.+?)(?=\n\d+\.|\n\*\*|\Z)'
-        criteria_matches = re.finditer(criteria_pattern, criteria_text, re.MULTILINE)
-        for match in criteria_matches:
-            checked = match.group(2) == "x"
-            criterion_text = match.group(3).strip()
+    if task.get("success_criteria"):
+        # Already parsed by parse_task_file
+        for criterion in task.get("success_criteria", []):
             criteria.append({
-                "text": criterion_text,
-                "checked": checked
+                "text": criterion,
+                "checked": False
             })
-    
-    # If no criteria found, try alternative patterns
-    if not criteria:
-        criteria_pattern = r'(?:^|\n)\s*(?:[-*]|\d+\.)\s+\[([ x])\]\s+(.+?)(?=\n(?:[-*]|\d+\.)|$)'
-        criteria_matches = re.finditer(criteria_pattern, description, re.MULTILINE)
+    else:
+        # Fallback: extract from description
+        description = task.get("description", "") or task.get("content", "")
         
-        for match in criteria_matches:
-            checked = match.group(1) == "x"
-            criterion_text = match.group(2).strip()
-            criteria.append({
-                "text": criterion_text,
-                "checked": checked
-            })
-    
-    # If no criteria found, try to extract from "Success Criteria" section
-    if not criteria:
-        success_section = re.search(r'##\s+Success\s+Criteria\s*\n(.*?)(?=\n##|\Z)', description, re.DOTALL | re.IGNORECASE)
-        if success_section:
-            criteria_text = success_section.group(1)
+        # Extract checkboxes or numbered items from Success Criteria section
+        success_criteria_section = re.search(r'\*\*Success\s+Criteria\*\*:\s*\n(.*?)(?=\n\*\*|\n---|\Z)', description, re.DOTALL | re.IGNORECASE)
+        if success_criteria_section:
+            criteria_text = success_criteria_section.group(1)
+            criteria_pattern = r'^\s*(\d+)\.\s+\[([ x])\]\s+(.+?)(?=\n\d+\.|\n\*\*|\Z)'
             criteria_matches = re.finditer(criteria_pattern, criteria_text, re.MULTILINE)
+            for match in criteria_matches:
+                checked = match.group(2) == "x"
+                criterion_text = match.group(3).strip()
+                criteria.append({
+                    "text": criterion_text,
+                    "checked": checked
+                })
+        
+        # If no criteria found, try alternative patterns
+        if not criteria:
+            criteria_pattern = r'(?:^|\n)\s*(?:[-*]|\d+\.)\s+\[([ x])\]\s+(.+?)(?=\n(?:[-*]|\d+\.)|$)'
+            criteria_matches = re.finditer(criteria_pattern, description, re.MULTILINE)
+            
             for match in criteria_matches:
                 checked = match.group(1) == "x"
                 criterion_text = match.group(2).strip()
@@ -334,6 +499,26 @@ def generate_ralph_task(task):
                     "text": criterion_text,
                     "checked": checked
                 })
+        
+        # If no criteria found, try to extract from "Acceptance Criteria" section
+        if not criteria:
+            success_section = re.search(r'##\s+Acceptance\s+Criteria\s*\n(.*?)(?=\n##|\Z)', description, re.DOTALL | re.IGNORECASE)
+            if success_section:
+                criteria_text = success_section.group(1)
+                # Remove HTML comments
+                criteria_text = re.sub(r'<!--.*?-->', '', criteria_text, flags=re.DOTALL)
+                criteria_pattern = r'(?:^|\n)\s*(?:[-*]|\d+\.)\s+\[([ x])\]\s+(.+?)(?=\n(?:[-*]|\d+\.)|$)'
+                criteria_matches = re.finditer(criteria_pattern, criteria_text, re.MULTILINE)
+                for match in criteria_matches:
+                    checked = match.group(1) == "x"
+                    criterion_text = match.group(2).strip()
+                    # Remove # markers
+                    criterion_text = re.sub(r'^#\d+\s*', '', criterion_text)
+                    if criterion_text:
+                        criteria.append({
+                            "text": criterion_text,
+                            "checked": checked
+                        })
     
     # Try to get project context from backlog.md
     project_context = ""

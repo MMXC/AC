@@ -1,9 +1,10 @@
 ---
-id: task-1
+id: TASK-1
 title: 创建首页 - 房间创建功能
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-25 16:56'
+updated_date: '2026-01-25 17:32'
 labels: []
 dependencies: []
 ---
