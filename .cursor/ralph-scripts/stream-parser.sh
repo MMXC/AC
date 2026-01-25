@@ -109,7 +109,7 @@ check_gutter() {
   # Check rotation threshold
   if [[ $tokens -ge $ROTATE_THRESHOLD ]]; then
     log_activity "ROTATE: Token threshold reached ($tokens >= $ROTATE_THRESHOLD)"
-    echo "ROTATE" 2>/dev/null || true
+    echo "ROTATE" >&1  # Explicitly to stdout
     return
   fi
   
@@ -117,7 +117,7 @@ check_gutter() {
   if [[ $tokens -ge $WARN_THRESHOLD ]] && [[ $WARN_SENT -eq 0 ]]; then
     log_activity "WARN: Approaching token limit ($tokens >= $WARN_THRESHOLD)"
     WARN_SENT=1
-    echo "WARN" 2>/dev/null || true
+    echo "WARN" >&1  # Explicitly to stdout
   fi
 }
 
@@ -137,7 +137,7 @@ track_shell_failure() {
     
     if [[ $count -ge 3 ]]; then
       log_error "⚠️ GUTTER: same command failed ${count}x"
-      echo "GUTTER" 2>/dev/null || true
+      echo "GUTTER" >&1  # Explicitly to stdout
     fi
   fi
 }
@@ -160,7 +160,7 @@ track_file_write() {
   # Check for thrashing (5+ writes in 10 minutes)
   if [[ $count -ge 5 ]]; then
     log_error "⚠️ THRASHING: $path written ${count}x in 10 min"
-    echo "GUTTER" 2>/dev/null || true
+    echo "GUTTER" >&1  # Explicitly to stdout
   fi
 }
 
@@ -193,13 +193,13 @@ process_line() {
         # Check for completion sigil
         if [[ "$text" == *"<ralph>COMPLETE</ralph>"* ]]; then
           log_activity "✅ Agent signaled COMPLETE"
-          echo "COMPLETE" 2>/dev/null || true
+          echo "COMPLETE" >&1  # Explicitly to stdout
         fi
         
         # Check for gutter sigil
         if [[ "$text" == *"<ralph>GUTTER</ralph>"* ]]; then
           log_activity "🚨 Agent signaled GUTTER (stuck)"
-          echo "GUTTER" 2>/dev/null || true
+          echo "GUTTER" >&1  # Explicitly to stdout
         fi
       fi
       ;;

@@ -385,37 +385,30 @@ If you get rotated, the next agent picks up from your last commit. Your commits 
 
 ## Task Execution (CRITICAL - READ CAREFULLY)
 
-**⚠️ CRITICAL WARNING: You MUST create files and write code. Reading files and exiting is NOT acceptable.**
+**YOU MUST ACTUALLY WRITE CODE AND CREATE FILES. DO NOT JUST READ FILES AND EXIT.**
 
-**MANDATORY WORKFLOW:**
+1. **Read the full RALPH_TASK.md** - understand the project context, task description, and implementation steps
+2. **Check project structure** - if the project is empty, initialize it first:
+   - Create package.json if missing
+   - Create necessary directories
+   - Install dependencies if needed
+3. **Follow Implementation Steps** - if RALPH_TASK.md has "Implementation Steps", follow them in order
+4. **Work on the next unchecked criterion** - look for \`[ ]\` in Success Criteria section
+5. **ACTUALLY WRITE CODE**:
+   - Create new files as needed
+   - Write actual implementation code
+   - Don't just read files and exit
+   - Make real changes to the codebase
+6. **Test your changes** - run the test command from RALPH_TASK.md
+7. **Mark completed criteria**: Edit RALPH_TASK.md and change \`[ ]\` to \`[x]\`
+   - Example: \`- [ ] Implement parser\` becomes \`- [x] Implement parser\`
+   - This is how progress is tracked - YOU MUST update the file
+8. **Commit your work**: \`git add -A && git commit -m 'ralph: [describe what you did]'\`
+9. Update \`.ralph/progress.md\` with what you accomplished
+10. When ALL criteria show \`[x]\`: output \`<ralph>COMPLETE</ralph>\`
+11. If stuck 3+ times on same issue: output \`<ralph>GUTTER</ralph>\`
 
-1. **Read RALPH_TASK.md completely** - understand project context, task description, and ALL implementation steps
-2. **Check what files exist** - use \`ls\` or \`dir\` to see current project state
-3. **Start with the FIRST unchecked criterion** - look for the first \`[ ]\` in Success Criteria
-4. **IMMEDIATELY create the required files**:
-   - If criterion says "create package.json" → CREATE package.json file NOW
-   - If criterion says "create directory" → CREATE the directory NOW
-   - If criterion says "create Mock data" → CREATE the data file NOW
-   - DO NOT just read and exit - YOU MUST CREATE FILES
-5. **Write actual code/content**:
-   - For package.json: write valid JSON with project info
-   - For data files: write actual data structures
-   - For code files: write working code
-   - DO NOT create empty files
-6. **Verify your work**:
-   - Check that files were created: \`ls -la\` or \`dir\`
-   - Verify file contents are correct
-7. **Mark the criterion complete**: Edit RALPH_TASK.md, change \`[ ]\` to \`[x]\`
-8. **Commit immediately**: \`git add -A && git commit -m 'ralph: [specific thing you did]'\`
-9. **Update progress**: Add entry to \`.ralph/progress.md\` describing what you created
-10. **Continue to next criterion** - repeat steps 3-9 for each criterion
-11. When ALL criteria are \`[x]\`: output \`<ralph>COMPLETE</ralph>\`
-
-**ABSOLUTE REQUIREMENTS:**
-- You MUST create at least ONE file in each session
-- You MUST write actual content, not empty files
-- You MUST commit your changes
-- If you exit without creating any files, you have FAILED the task
+**IMPORTANT**: If you finish without writing any code or creating any files, you have NOT completed the task. You must make actual changes to the codebase.
 
 ## Learning from Failures
 
@@ -554,17 +547,19 @@ run_iteration() {
     done < "$signal_file"
   else
     # Use file polling (Windows/WSL fallback)
+    # Read signals while agent is running
     while kill -0 $agent_pid 2>/dev/null; do
       if [[ -s "$signal_file" ]]; then
-        local line=$(head -n 1 "$signal_file" 2>/dev/null || echo "")
-        if [[ -n "$line" ]]; then
+        # Read all lines from signal file
+        while IFS= read -r line || [[ -n "$line" ]]; do
+          [[ -z "$line" ]] && continue
           case "$line" in
             "ROTATE")
               printf "\r\033[K" >&2
               echo "🔄 Context rotation triggered - stopping agent..." >&2
               kill $agent_pid 2>/dev/null || true
               signal="ROTATE"
-              break
+              break 2  # Break both loops
               ;;
             "WARN")
               printf "\r\033[K" >&2
@@ -581,16 +576,41 @@ run_iteration() {
               signal="COMPLETE"
               ;;
           esac
-          # Clear the signal after reading
-          > "$signal_file"
-        fi
+        done < "$signal_file" 2>/dev/null || true
+        # Clear the signal file after reading
+        > "$signal_file"
       fi
       sleep 0.1
     done
+    
+    # After agent finishes, wait a bit and check for final signals
+    # (signals might be written after agent process ends)
+    sleep 0.5
+    if [[ -s "$signal_file" ]] && [[ -z "$signal" ]]; then
+      while IFS= read -r line || [[ -n "$line" ]]; do
+        [[ -z "$line" ]] && continue
+        case "$line" in
+          "ROTATE") signal="ROTATE" ;;
+          "GUTTER") signal="GUTTER" ;;
+          "COMPLETE") signal="COMPLETE" ;;
+        esac
+        [[ -n "$signal" ]] && break
+      done < "$signal_file" 2>/dev/null || true
+    fi
   fi
   
   # Wait for agent to finish
   wait $agent_pid 2>/dev/null || true
+  
+  # Final check for signals after agent finishes (important for Windows/WSL)
+  if [[ -z "$signal" ]] && [[ -s "$signal_file" ]]; then
+    local line=$(head -n 1 "$signal_file" 2>/dev/null || echo "")
+    case "$line" in
+      "ROTATE") signal="ROTATE" ;;
+      "GUTTER") signal="GUTTER" ;;
+      "COMPLETE") signal="COMPLETE" ;;
+    esac
+  fi
   
   # Stop spinner and clear line
   kill $spinner_pid 2>/dev/null || true
@@ -600,7 +620,7 @@ run_iteration() {
   # Cleanup
   rm -f "$signal_file"
   
-  echo "signal: $signal"
+  echo "$signal"
 }
 
 # =============================================================================
