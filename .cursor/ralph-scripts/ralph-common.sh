@@ -383,19 +383,32 @@ Ralph's strength is state-in-git, not LLM memory. Commit early and often:
 
 If you get rotated, the next agent picks up from your last commit. Your commits ARE your memory.
 
-## Task Execution
+## Task Execution (CRITICAL - READ CAREFULLY)
 
-1. **Read the full RALPH_TASK.md** - understand the project context and task description
-2. **Check project structure** - if the project is empty, you may need to initialize it first (create package.json, directory structure, etc.)
-3. Work on the next unchecked criterion in RALPH_TASK.md (look for \`[ ]\`)
-4. **Actually write code** - don't just read files, you must create/modify files to complete the task
-5. Run tests after changes (check RALPH_TASK.md for test_command)
-6. **Mark completed criteria**: Edit RALPH_TASK.md and change \`[ ]\` to \`[x]\`
+**YOU MUST ACTUALLY WRITE CODE AND CREATE FILES. DO NOT JUST READ FILES AND EXIT.**
+
+1. **Read the full RALPH_TASK.md** - understand the project context, task description, and implementation steps
+2. **Check project structure** - if the project is empty, initialize it first:
+   - Create package.json if missing
+   - Create necessary directories
+   - Install dependencies if needed
+3. **Follow Implementation Steps** - if RALPH_TASK.md has "Implementation Steps", follow them in order
+4. **Work on the next unchecked criterion** - look for \`[ ]\` in Success Criteria section
+5. **ACTUALLY WRITE CODE**:
+   - Create new files as needed
+   - Write actual implementation code
+   - Don't just read files and exit
+   - Make real changes to the codebase
+6. **Test your changes** - run the test command from RALPH_TASK.md
+7. **Mark completed criteria**: Edit RALPH_TASK.md and change \`[ ]\` to \`[x]\`
    - Example: \`- [ ] Implement parser\` becomes \`- [x] Implement parser\`
    - This is how progress is tracked - YOU MUST update the file
-7. Update \`.ralph/progress.md\` with what you accomplished
-8. When ALL criteria show \`[x]\`: output \`<ralph>COMPLETE</ralph>\`
-9. If stuck 3+ times on same issue: output \`<ralph>GUTTER</ralph>\`
+8. **Commit your work**: \`git add -A && git commit -m 'ralph: [describe what you did]'\`
+9. Update \`.ralph/progress.md\` with what you accomplished
+10. When ALL criteria show \`[x]\`: output \`<ralph>COMPLETE</ralph>\`
+11. If stuck 3+ times on same issue: output \`<ralph>GUTTER</ralph>\`
+
+**IMPORTANT**: If you finish without writing any code or creating any files, you have NOT completed the task. You must make actual changes to the codebase.
 
 ## Learning from Failures
 
