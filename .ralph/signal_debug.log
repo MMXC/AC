@@ -38,3 +38,8 @@
 [21:48:33] Testing write to signal file...
 [21:48:33] Signal file exists and is writable
 [21:48:33] Parser started, SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[21:48:45] Parser finished
+[21:48:47] After agent wait, checking signal file: /mnt/c/project/AC/.ralph/.parser_signal
+[21:48:47] Signal file exists: yes
+[21:48:47] Signal file size: 0
+[21:48:47] Returning signal: 'empty'

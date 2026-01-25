@@ -201,9 +201,9 @@ process_line() {
   local type=$(echo "$line" | jq -r '.type // empty' 2>/dev/null) || return
   local subtype=$(echo "$line" | jq -r '.subtype // empty' 2>/dev/null) || true
   
-  # Debug: log result messages
+  # Debug: log result messages and other important types
   if [[ "$type" == "result" ]]; then
-    echo "[$(date '+%H:%M:%S')] Processing result message" >> "$DEBUG_LOG" 2>&1
+    echo "[$(date '+%H:%M:%S')] Processing result message, type=$type" >> "$DEBUG_LOG" 2>&1
   fi
   
   case "$type" in
@@ -361,8 +361,18 @@ main() {
   
   # Track last token log time
   local last_token_log=$(date +%s)
+  local line_count=0
   
-  while IFS= read -r line; do
+  # Read all lines until EOF (important: don't exit early)
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line_count=$((line_count + 1))
+    
+    # Debug: log first few lines and result messages
+    if [[ $line_count -le 3 ]] || echo "$line" | jq -e '.type == "result"' > /dev/null 2>&1; then
+      local line_type=$(echo "$line" | jq -r '.type // "unknown"' 2>/dev/null || echo "parse_error")
+      echo "[$(date '+%H:%M:%S')] Line $line_count, type=$line_type" >> "$DEBUG_LOG" 2>&1
+    fi
+    
     process_line "$line"
     
     # Log token status every 30 seconds
@@ -377,7 +387,31 @@ main() {
   log_token_status
   
   # Debug: log that parser finished
-  echo "[$(date '+%H:%M:%S')] Parser finished" >> "$DEBUG_LOG" 2>&1
+  echo "[$(date '+%H:%M:%S')] Parser finished, processed $line_count lines" >> "$DEBUG_LOG" 2>&1
+  
+  # If we never received a result message, write FINISHED signal now
+  # (This handles cases where stdin closes before result message arrives)
+  if [[ $line_count -gt 0 ]]; then
+    local has_signal=false
+    if [[ -f "$SIGNAL_FILE" ]] && [[ -s "$SIGNAL_FILE" ]]; then
+      while IFS= read -r sig_line || [[ -n "$sig_line" ]]; do
+        sig_line=$(echo "$sig_line" | tr -d '\r\n' | xargs)
+        case "$sig_line" in
+          ROTATE|WARN|GUTTER|COMPLETE|FINISHED)
+            has_signal=true
+            break
+            ;;
+        esac
+      done < "$SIGNAL_FILE" 2>/dev/null || true
+    fi
+    
+    if [[ "$has_signal" == "false" ]]; then
+      mkdir -p "$(dirname "$SIGNAL_FILE")"
+      echo "FINISHED" >> "$SIGNAL_FILE" 2>&1
+      echo "[$(date '+%H:%M:%S')] Signal written: FINISHED (at parser exit, no result message received)" >> "$DEBUG_LOG" 2>&1
+      log_activity "Parser finished without result message, wrote FINISHED signal"
+    fi
+  fi
 }
 
 main
