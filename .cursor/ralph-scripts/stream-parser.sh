@@ -201,6 +201,11 @@ process_line() {
   local type=$(echo "$line" | jq -r '.type // empty' 2>/dev/null) || return
   local subtype=$(echo "$line" | jq -r '.subtype // empty' 2>/dev/null) || true
   
+  # Debug: log result messages
+  if [[ "$type" == "result" ]]; then
+    echo "[$(date '+%H:%M:%S')] Processing result message" >> "$DEBUG_LOG" 2>&1
+  fi
+  
   case "$type" in
     "system")
       if [[ "$subtype" == "init" ]]; then
@@ -300,26 +305,41 @@ process_line() {
       local duration=$(echo "$line" | jq -r '.duration_ms // 0' 2>/dev/null) || duration=0
       local tokens=$(calc_tokens)
       log_activity "SESSION END: ${duration}ms, ~$tokens tokens used"
+      echo "[$(date '+%H:%M:%S')] Received result message, duration=${duration}ms, tokens=$tokens" >> "$DEBUG_LOG" 2>&1
       
       # If no signal was sent during the session, emit a default "FINISHED" signal
       # This helps distinguish between "no signal" and "agent finished normally"
       local has_signal=false
-      if [[ -f "$SIGNAL_FILE" ]] && [[ -s "$SIGNAL_FILE" ]]; then
-        # Check if file contains any valid signal
-        while IFS= read -r sig_line || [[ -n "$sig_line" ]]; do
-          sig_line=$(echo "$sig_line" | tr -d '\r\n' | xargs)
-          case "$sig_line" in
-            ROTATE|WARN|GUTTER|COMPLETE|FINISHED)
-              has_signal=true
-              break
-              ;;
-          esac
-        done < "$SIGNAL_FILE" 2>/dev/null || true
+      echo "[$(date '+%H:%M:%S')] Checking for existing signals in $SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
+      
+      if [[ -f "$SIGNAL_FILE" ]]; then
+        echo "[$(date '+%H:%M:%S')] Signal file exists, size: $(wc -c < "$SIGNAL_FILE" 2>/dev/null || echo 0)" >> "$DEBUG_LOG" 2>&1
+        if [[ -s "$SIGNAL_FILE" ]]; then
+          # Check if file contains any valid signal
+          echo "[$(date '+%H:%M:%S')] Signal file content: '$(cat "$SIGNAL_FILE" 2>/dev/null || echo "empty")'" >> "$DEBUG_LOG" 2>&1
+          while IFS= read -r sig_line || [[ -n "$sig_line" ]]; do
+            sig_line=$(echo "$sig_line" | tr -d '\r\n' | xargs)
+            case "$sig_line" in
+              ROTATE|WARN|GUTTER|COMPLETE|FINISHED)
+                has_signal=true
+                echo "[$(date '+%H:%M:%S')] Found existing signal: $sig_line" >> "$DEBUG_LOG" 2>&1
+                break
+                ;;
+            esac
+          done < "$SIGNAL_FILE" 2>/dev/null || true
+        else
+          echo "[$(date '+%H:%M:%S')] Signal file is empty" >> "$DEBUG_LOG" 2>&1
+        fi
+      else
+        echo "[$(date '+%H:%M:%S')] Signal file does not exist!" >> "$DEBUG_LOG" 2>&1
       fi
       
       if [[ "$has_signal" == "false" ]]; then
+        # Ensure signal file exists
+        mkdir -p "$(dirname "$SIGNAL_FILE")"
         echo "FINISHED" >> "$SIGNAL_FILE" 2>&1
         echo "[$(date '+%H:%M:%S')] Signal written: FINISHED (agent finished normally, no explicit signal)" >> "$DEBUG_LOG" 2>&1
+        echo "[$(date '+%H:%M:%S')] Signal file after write, size: $(wc -c < "$SIGNAL_FILE" 2>/dev/null || echo 0)" >> "$DEBUG_LOG" 2>&1
         log_activity "Agent finished normally (no explicit signal)"
       else
         echo "[$(date '+%H:%M:%S')] Agent finished, signal already present in file" >> "$DEBUG_LOG" 2>&1

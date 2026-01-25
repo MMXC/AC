@@ -639,8 +639,11 @@ run_iteration() {
   wait $agent_pid 2>/dev/null || true
   
   # Final check for signals after agent finishes (important for Windows/WSL)
-  # Wait a bit more for parser to flush output
-  sleep 0.5
+  # Wait a bit more for parser to flush output and write FINISHED signal
+  sleep 1.0
+  echo "[$(date '+%H:%M:%S')] After agent wait, checking signal file: $signal_file" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+  echo "[$(date '+%H:%M:%S')] Signal file exists: $([ -f "$signal_file" ] && echo "yes" || echo "no")" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+  echo "[$(date '+%H:%M:%S')] Signal file size: $(wc -c < "$signal_file" 2>/dev/null || echo 0)" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
   if [[ -z "$signal" ]] && [[ -f "$signal_file" ]] && [[ -s "$signal_file" ]]; then
     # Read the last line (most recent signal)
     local line=$(tail -n 1 "$signal_file" 2>/dev/null | tr -d '\r\n' | xargs || echo "")
