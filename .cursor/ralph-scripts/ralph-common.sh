@@ -449,11 +449,20 @@ run_iteration() {
   local script_dir="${4:-$(dirname "${BASH_SOURCE[0]}")}"
   
   local prompt=$(build_prompt "$workspace" "$iteration")
-  local fifo="$workspace/.ralph/.parser_fifo"
+  local signal_file="$workspace/.ralph/.parser_signal"
   
-  # Create named pipe for parser signals
-  rm -f "$fifo"
-  mkfifo "$fifo"
+  # Use temporary file instead of named pipe (Windows/WSL compatibility)
+  rm -f "$signal_file"
+  touch "$signal_file"
+  
+  # Try to create named pipe, fallback to regular file if not supported
+  local use_fifo=true
+  if ! mkfifo "$signal_file" 2>/dev/null; then
+    # Fallback: use regular file with tail -f
+    rm -f "$signal_file"
+    touch "$signal_file"
+    use_fifo=false
+  fi
   
   # Use stderr for display (stdout is captured for signal)
   echo "" >&2
@@ -485,42 +494,77 @@ run_iteration() {
   local spinner_pid=$!
   
   # Start parser in background, reading from cursor-agent
-  # Parser outputs to fifo, we read signals from fifo
+  # Parser outputs to signal file, we read signals from file
   (
-    eval "$cmd \"$prompt\"" 2>&1 | "$script_dir/stream-parser.sh" "$workspace" > "$fifo"
+    eval "$cmd \"$prompt\"" 2>&1 | "$script_dir/stream-parser.sh" "$workspace" > "$signal_file"
   ) &
   local agent_pid=$!
   
   # Read signals from parser
   local signal=""
-  while IFS= read -r line; do
-    case "$line" in
-      "ROTATE")
-        printf "\r\033[K" >&2  # Clear spinner line
-        echo "🔄 Context rotation triggered - stopping agent..." >&2
-        kill $agent_pid 2>/dev/null || true
-        signal="ROTATE"
-        break
-        ;;
-      "WARN")
-        printf "\r\033[K" >&2  # Clear spinner line
-        echo "⚠️  Context warning - agent should wrap up soon..." >&2
-        # Send interrupt to encourage wrap-up (agent continues but is notified)
-        ;;
-      "GUTTER")
-        printf "\r\033[K" >&2  # Clear spinner line
-        echo "🚨 Gutter detected - agent may be stuck..." >&2
-        signal="GUTTER"
-        # Don't kill yet, let agent try to recover
-        ;;
-      "COMPLETE")
-        printf "\r\033[K" >&2  # Clear spinner line
-        echo "✅ Agent signaled completion!" >&2
-        signal="COMPLETE"
-        # Let agent finish gracefully
-        ;;
-    esac
-  done < "$fifo"
+  if [[ "$use_fifo" == "true" ]]; then
+    # Use named pipe (Linux/macOS)
+    while IFS= read -r line; do
+      case "$line" in
+        "ROTATE")
+          printf "\r\033[K" >&2  # Clear spinner line
+          echo "🔄 Context rotation triggered - stopping agent..." >&2
+          kill $agent_pid 2>/dev/null || true
+          signal="ROTATE"
+          break
+          ;;
+        "WARN")
+          printf "\r\033[K" >&2  # Clear spinner line
+          echo "⚠️  Context warning - agent should wrap up soon..." >&2
+          ;;
+        "GUTTER")
+          printf "\r\033[K" >&2  # Clear spinner line
+          echo "🚨 Gutter detected - agent may be stuck..." >&2
+          signal="GUTTER"
+          ;;
+        "COMPLETE")
+          printf "\r\033[K" >&2  # Clear spinner line
+          echo "✅ Agent signaled completion!" >&2
+          signal="COMPLETE"
+          ;;
+      esac
+    done < "$signal_file"
+  else
+    # Use file polling (Windows/WSL fallback)
+    while kill -0 $agent_pid 2>/dev/null; do
+      if [[ -s "$signal_file" ]]; then
+        local line=$(head -n 1 "$signal_file" 2>/dev/null || echo "")
+        if [[ -n "$line" ]]; then
+          case "$line" in
+            "ROTATE")
+              printf "\r\033[K" >&2
+              echo "🔄 Context rotation triggered - stopping agent..." >&2
+              kill $agent_pid 2>/dev/null || true
+              signal="ROTATE"
+              break
+              ;;
+            "WARN")
+              printf "\r\033[K" >&2
+              echo "⚠️  Context warning - agent should wrap up soon..." >&2
+              ;;
+            "GUTTER")
+              printf "\r\033[K" >&2
+              echo "🚨 Gutter detected - agent may be stuck..." >&2
+              signal="GUTTER"
+              ;;
+            "COMPLETE")
+              printf "\r\033[K" >&2
+              echo "✅ Agent signaled completion!" >&2
+              signal="COMPLETE"
+              ;;
+          esac
+          # Clear the signal after reading
+          > "$signal_file"
+        fi
+      fi
+      sleep 0.1
+    done
+  fi
   
   # Wait for agent to finish
   wait $agent_pid 2>/dev/null || true
@@ -531,7 +575,7 @@ run_iteration() {
   printf "\r\033[K" >&2  # Clear spinner line
   
   # Cleanup
-  rm -f "$fifo"
+  rm -f "$signal_file"
   
   echo "$signal"
 }
