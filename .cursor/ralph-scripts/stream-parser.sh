@@ -19,12 +19,29 @@
 
 set -euo pipefail
 
+# Disable exit on error for debug logging (may fail in some environments)
+set +e
+
 WORKSPACE="${1:-.}"
 RALPH_DIR="$WORKSPACE/.ralph"
 SIGNAL_FILE="$RALPH_DIR/.parser_signal"
 
 # Ensure .ralph directory exists
 mkdir -p "$RALPH_DIR"
+
+# Debug: verify signal file path and test write
+DEBUG_LOG="$RALPH_DIR/signal_debug.log"
+echo "[$(date '+%H:%M:%S')] Parser initialized: WORKSPACE=$WORKSPACE" >> "$DEBUG_LOG" 2>&1
+echo "[$(date '+%H:%M:%S')] SIGNAL_FILE=$SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
+echo "[$(date '+%H:%M:%S')] Testing write to signal file..." >> "$DEBUG_LOG" 2>&1
+echo "TEST" >> "$SIGNAL_FILE" 2>&1
+if [[ -f "$SIGNAL_FILE" ]]; then
+  echo "[$(date '+%H:%M:%S')] Signal file exists and is writable" >> "$DEBUG_LOG" 2>&1
+else
+  echo "[$(date '+%H:%M:%S')] ERROR: Signal file does not exist or not writable!" >> "$DEBUG_LOG" 2>&1
+fi
+# Remove test line
+sed -i '/^TEST$/d' "$SIGNAL_FILE" 2>/dev/null || true
 
 # Thresholds
 WARN_THRESHOLD=70000
@@ -110,8 +127,8 @@ check_gutter() {
   # Check rotation threshold
   if [[ $tokens -ge $ROTATE_THRESHOLD ]]; then
     log_activity "ROTATE: Token threshold reached ($tokens >= $ROTATE_THRESHOLD)"
-    echo "ROTATE" >> "$SIGNAL_FILE" 2>/dev/null || true
-    echo "[$(date '+%H:%M:%S')] Signal written: ROTATE" >> "$RALPH_DIR/signal_debug.log" 2>/dev/null || true
+    echo "ROTATE" >> "$SIGNAL_FILE" 2>&1
+    echo "[$(date '+%H:%M:%S')] Signal written: ROTATE to $SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
     echo "ROTATE" >&1  # Also to stdout for compatibility
     return
   fi
@@ -120,8 +137,8 @@ check_gutter() {
   if [[ $tokens -ge $WARN_THRESHOLD ]] && [[ $WARN_SENT -eq 0 ]]; then
     log_activity "WARN: Approaching token limit ($tokens >= $WARN_THRESHOLD)"
     WARN_SENT=1
-    echo "WARN" >> "$SIGNAL_FILE" 2>/dev/null || true
-    echo "[$(date '+%H:%M:%S')] Signal written: WARN" >> "$RALPH_DIR/signal_debug.log" 2>/dev/null || true
+    echo "WARN" >> "$SIGNAL_FILE" 2>&1
+    echo "[$(date '+%H:%M:%S')] Signal written: WARN to $SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
     echo "WARN" >&1  # Also to stdout for compatibility
   fi
 }
@@ -142,8 +159,8 @@ track_shell_failure() {
     
     if [[ $count -ge 3 ]]; then
       log_error "⚠️ GUTTER: same command failed ${count}x"
-      echo "GUTTER" >> "$SIGNAL_FILE" 2>/dev/null || true
-      echo "[$(date '+%H:%M:%S')] Signal written: GUTTER (command failed)" >> "$RALPH_DIR/signal_debug.log" 2>/dev/null || true
+      echo "GUTTER" >> "$SIGNAL_FILE" 2>&1
+      echo "[$(date '+%H:%M:%S')] Signal written: GUTTER (command failed) to $SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
       echo "GUTTER" >&1  # Also to stdout for compatibility
     fi
   fi
@@ -167,8 +184,8 @@ track_file_write() {
   # Check for thrashing (5+ writes in 10 minutes)
   if [[ $count -ge 5 ]]; then
     log_error "⚠️ THRASHING: $path written ${count}x in 10 min"
-    echo "GUTTER" >> "$SIGNAL_FILE" 2>/dev/null || true
-    echo "[$(date '+%H:%M:%S')] Signal written: GUTTER (thrashing)" >> "$RALPH_DIR/signal_debug.log" 2>/dev/null || true
+    echo "GUTTER" >> "$SIGNAL_FILE" 2>&1
+    echo "[$(date '+%H:%M:%S')] Signal written: GUTTER (thrashing) to $SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
     echo "GUTTER" >&1  # Also to stdout for compatibility
   fi
 }
@@ -202,16 +219,16 @@ process_line() {
         # Check for completion sigil
         if [[ "$text" == *"<ralph>COMPLETE</ralph>"* ]]; then
           log_activity "✅ Agent signaled COMPLETE"
-          echo "COMPLETE" >> "$SIGNAL_FILE" 2>/dev/null || true
-          echo "[$(date '+%H:%M:%S')] Signal written: COMPLETE" >> "$RALPH_DIR/signal_debug.log" 2>/dev/null || true
+          echo "COMPLETE" >> "$SIGNAL_FILE" 2>&1
+          echo "[$(date '+%H:%M:%S')] Signal written: COMPLETE to $SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
           echo "COMPLETE" >&1  # Also to stdout for compatibility
         fi
         
         # Check for gutter sigil
         if [[ "$text" == *"<ralph>GUTTER</ralph>"* ]]; then
           log_activity "🚨 Agent signaled GUTTER (stuck)"
-          echo "GUTTER" >> "$SIGNAL_FILE" 2>/dev/null || true
-          echo "[$(date '+%H:%M:%S')] Signal written: GUTTER" >> "$RALPH_DIR/signal_debug.log" 2>/dev/null || true
+          echo "GUTTER" >> "$SIGNAL_FILE" 2>&1
+          echo "[$(date '+%H:%M:%S')] Signal written: GUTTER to $SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
           echo "GUTTER" >&1  # Also to stdout for compatibility
         fi
       fi
@@ -295,6 +312,9 @@ main() {
   echo "Ralph Session Started: $(date)" >> "$RALPH_DIR/activity.log"
   echo "═══════════════════════════════════════════════════════════════" >> "$RALPH_DIR/activity.log"
   
+  # Debug: log that parser started
+  echo "[$(date '+%H:%M:%S')] Parser started, SIGNAL_FILE=$SIGNAL_FILE" >> "$DEBUG_LOG" 2>&1
+  
   # Track last token log time
   local last_token_log=$(date +%s)
   
@@ -311,6 +331,9 @@ main() {
   
   # Final token status
   log_token_status
+  
+  # Debug: log that parser finished
+  echo "[$(date '+%H:%M:%S')] Parser finished" >> "$DEBUG_LOG" 2>&1
 }
 
 main

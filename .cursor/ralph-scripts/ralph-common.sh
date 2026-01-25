@@ -471,6 +471,9 @@ run_iteration() {
   rm -f "$signal_file"
   touch "$signal_file"
   
+  # Debug: log signal file initialization
+  echo "[$(date '+%H:%M:%S')] Initialized signal_file: $signal_file" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
+  
   # Try to create named pipe, fallback to regular file if not supported
   local use_fifo=true
   if ! mkfifo "$signal_file" 2>/dev/null; then
@@ -511,10 +514,12 @@ run_iteration() {
   
   # Start parser in background, reading from cursor-agent
   # Parser now writes signals directly to signal file (no pipe needed)
+  echo "[$(date '+%H:%M:%S')] Starting agent with parser, signal_file=$signal_file" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
   (
     eval "$cmd \"$prompt\"" 2>&1 | "$script_dir/stream-parser.sh" "$workspace" 2>> "$workspace/.ralph/parser_stderr.log"
   ) &
   local agent_pid=$!
+  echo "[$(date '+%H:%M:%S')] Agent started with PID: $agent_pid" >> "$workspace/.ralph/signal_debug.log" 2>/dev/null || true
   
   # Read signals from parser
   local signal=""
