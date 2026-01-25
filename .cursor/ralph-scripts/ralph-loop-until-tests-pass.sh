@@ -242,8 +242,13 @@ main() {
         echo "   You may want to mark remaining criteria as complete."
       fi
       
-      # Update backlog status to Done
-      update_backlog_status "$WORKSPACE" "Done" "$SCRIPT_DIR" || true
+      # Finalize completed task (update status, save doc, delete RALPH_TASK.md)
+      if [[ "$task_status" == "COMPLETE" ]]; then
+        finalize_completed_task "$WORKSPACE" "$SCRIPT_DIR" || true
+      else
+        # Tests pass but criteria not all checked - just update status
+        update_backlog_status "$WORKSPACE" "Done" "$SCRIPT_DIR" || true
+      fi
       
       exit 0
     else

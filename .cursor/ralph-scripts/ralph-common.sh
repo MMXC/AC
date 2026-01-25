@@ -538,17 +538,32 @@ update_backlog_status() {
   
   # Try backlog CLI first (check if it actually works)
   if command -v backlog &> /dev/null; then
-    if backlog task edit "$task_id" -s "$new_status" &>/dev/null 2>&1; then
+    # Try to update status with verbose output for debugging
+    local result
+    result=$(backlog task edit "$task_id" -s "$new_status" 2>&1)
+    local exit_code=$?
+    
+    if [[ $exit_code -eq 0 ]]; then
+      echo "✅ Updated backlog task $task_id status to '$new_status'" >&2
       return 0
+    else
+      echo "⚠️  backlog CLI failed to update status: $result" >&2
+      # If CLI failed, fall through to Python fallback
     fi
-    # If CLI failed, fall through to Python fallback
   fi
   
   # Fallback to Python script
   local backlog_script="$script_dir/backlog-integration.py"
   if [[ -f "$backlog_script" ]]; then
-    python3 "$backlog_script" update-status "$backlog_id" "$new_status" >/dev/null 2>&1
-    return $?
+    local result
+    result=$(python3 "$backlog_script" update-status "$backlog_id" "$new_status" 2>&1)
+    local exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+      echo "✅ Updated backlog task $backlog_id status to '$new_status' (via Python fallback)" >&2
+      return 0
+    else
+      echo "⚠️  Python fallback failed: $result" >&2
+    fi
   fi
   
   return 1
@@ -571,11 +586,114 @@ check_task_complete() {
   unchecked=$(grep -cE '^[[:space:]]*([-*]|[0-9]+\.)[[:space:]]+\[ \]' "$task_file" 2>/dev/null) || unchecked=0
   
   if [[ "$unchecked" -eq 0 ]]; then
-    # Task is complete - update backlog status
-    update_backlog_status "$workspace" "Done" "$script_dir" || true
+    # Task is complete - update backlog status and archive task
+    finalize_completed_task "$workspace" "$script_dir" || true
     echo "COMPLETE"
   else
     echo "INCOMPLETE:$unchecked"
+  fi
+}
+
+# Finalize completed task: update status, save RALPH_TASK.md as doc, delete file
+finalize_completed_task() {
+  local workspace="$1"
+  local script_dir="${2:-$(dirname "${BASH_SOURCE[0]}")}"
+  local task_file="$workspace/RALPH_TASK.md"
+  
+  if [[ ! -f "$task_file" ]]; then
+    return 1
+  fi
+  
+  # Extract backlog_id and task_id
+  local backlog_id
+  backlog_id=$(grep -E '^backlog_id:' "$task_file" 2>/dev/null | sed -E 's/^backlog_id:[[:space:]]*["'\'']?([^"'\'']+)["'\'']?.*$/\1/' | head -1)
+  
+  if [[ -z "$backlog_id" ]]; then
+    backlog_id=$(grep -E 'backlog_id[[:space:]]*[:=][[:space:]]*["'\'']?([^"'\'']+)["'\'']?' "$task_file" 2>/dev/null | sed -E 's/.*backlog_id[[:space:]]*[:=][[:space:]]*["'\'']?([^"'\'']+)["'\'']?.*/\1/' | head -1)
+  fi
+  
+  if [[ -z "$backlog_id" ]]; then
+    echo "⚠️  No backlog_id found in RALPH_TASK.md, skipping finalization" >&2
+    return 1
+  fi
+  
+  local task_id
+  task_id=$(echo "$backlog_id" | sed -E 's/^backlog-([0-9]+)$/\1/')
+  if [[ -z "$task_id" ]]; then
+    task_id="$backlog_id"
+  fi
+  
+  echo "📋 Finalizing completed task $task_id..." >&2
+  
+  # Step 1: Update backlog status to "Done"
+  echo "  1. Updating backlog status to 'Done'..." >&2
+  update_backlog_status "$workspace" "Done" "$script_dir" || echo "   ⚠️  Failed to update status" >&2
+  
+  # Step 2: Save RALPH_TASK.md content to backlog task notes/doc
+  echo "  2. Saving RALPH_TASK.md content to backlog task..." >&2
+  if command -v backlog &> /dev/null; then
+    # Read RALPH_TASK.md content
+    local task_content
+    task_content=$(cat "$task_file")
+    
+    # Create notes content with timestamp and task content
+    # Use a temporary file to avoid shell quoting issues with special characters
+    local notes_file
+    notes_file=$(mktemp)
+    {
+      echo "$(date '+%Y-%m-%d %H:%M:%S') - 任务完成，RALPH_TASK.md 已归档"
+      echo ""
+      echo "---"
+      echo ""
+      echo "## RALPH_TASK.md 归档内容"
+      echo ""
+      echo "\`\`\`"
+      echo "$task_content"
+      echo "\`\`\`"
+    } > "$notes_file"
+    
+    # Try to append to notes using backlog CLI
+    # Read from file to avoid shell quoting issues
+    if backlog task edit "$task_id" --append-notes "$(cat "$notes_file")" &>/dev/null 2>&1; then
+      echo "  ✅ Saved RALPH_TASK.md content to backlog task notes" >&2
+      rm -f "$notes_file"
+    else
+      # Try with --notes instead (overwrite)
+      if backlog task edit "$task_id" --notes "$(cat "$notes_file")" &>/dev/null 2>&1; then
+        echo "  ✅ Saved RALPH_TASK.md content to backlog task notes" >&2
+        rm -f "$notes_file"
+      else
+        echo "  ⚠️  Failed to save RALPH_TASK.md to backlog notes (CLI may not support --notes/--append-notes)" >&2
+        rm -f "$notes_file"
+        # Try alternative: save to a file in backlog directory
+        local backlog_doc_file="$workspace/backlog/docs/task-$task_id-ralph-task.md"
+        mkdir -p "$(dirname "$backlog_doc_file")" 2>/dev/null || true
+        if cp "$task_file" "$backlog_doc_file" 2>/dev/null; then
+          echo "  ✅ Saved RALPH_TASK.md to $backlog_doc_file as fallback" >&2
+        fi
+      fi
+    fi
+  else
+    echo "  ⚠️  backlog CLI not available, skipping doc save" >&2
+    # Fallback: save to backlog directory
+    local backlog_doc_file="$workspace/backlog/docs/task-$task_id-ralph-task.md"
+    mkdir -p "$(dirname "$backlog_doc_file")" 2>/dev/null || true
+    if cp "$task_file" "$backlog_doc_file" 2>/dev/null; then
+      echo "  ✅ Saved RALPH_TASK.md to $backlog_doc_file as fallback" >&2
+    fi
+  fi
+  
+  # Step 3: Delete RALPH_TASK.md
+  echo "  3. Deleting RALPH_TASK.md..." >&2
+  if rm -f "$task_file"; then
+    echo "  ✅ Deleted RALPH_TASK.md" >&2
+    echo "" >&2
+    echo "✅ Task finalized successfully. RALPH_TASK.md has been archived to backlog and deleted." >&2
+    echo "   You can now load the next task from backlog." >&2
+    return 0
+  else
+    echo "  ⚠️  Failed to delete RALPH_TASK.md" >&2
+    return 1
   fi
 }
 
@@ -1043,9 +1161,12 @@ run_ralph_loop() {
       echo ""
       echo "Completed in $iteration iteration(s)."
       echo "Check git log for detailed history."
+      echo ""
       
-      # Update backlog status to Done (already done in check_task_complete, but log it)
-      echo "✅ Backlog task status updated to 'Done'"
+      # Finalize task (update status, save doc, delete RALPH_TASK.md)
+      # Note: finalize_completed_task is already called in check_task_complete,
+      # but we call it again here to ensure it happens even if called directly
+      finalize_completed_task "$workspace" "$script_dir" || true
       
       # Open PR if requested
       if [[ "$OPEN_PR" == "true" ]] && [[ -n "$USE_BRANCH" ]]; then
