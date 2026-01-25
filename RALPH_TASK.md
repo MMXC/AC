@@ -36,10 +36,20 @@ test_command: "npm test -- --testNamePattern='Mock数据'"
 
 ## Implementation Steps
 
-**第一步：初始化项目结构**
-1. 检查项目是否已有 package.json，如果没有则创建
-2. 创建必要的目录结构（mock/, src/, 等）
-3. 安装必要的依赖（如果使用 MSW，安装 msw；如果使用 Express，安装 express）
+**第一步：初始化项目结构（必须完成）**
+1. **立即创建 package.json** - 如果项目中没有 package.json，创建一个包含基本信息的 package.json
+   - 项目名称：watch-together
+   - 版本：0.1.0
+   - 描述：网页版一起看功能
+   - 添加必要的 scripts（start, test 等）
+2. **创建目录结构**：
+   - 创建 `mock/` 目录用于存放 Mock 数据
+   - 创建 `mock-server/` 目录用于 Mock 服务器代码
+   - 创建 `src/` 目录（如果需要）
+3. **安装依赖**（可选，但建议）：
+   - 如果使用 MSW：`npm install --save-dev msw`
+   - 如果使用 Express：`npm install express`
+   - 或者先创建基础结构，依赖可以稍后安装
 
 **第二步：创建 Mock 数据**
 1. 定义房间数据结构（房间号、成员列表、创建时间等）
@@ -63,13 +73,16 @@ test_command: "npm test -- --testNamePattern='Mock数据'"
 
 ## Success Criteria
 
-1. [ ] 项目已初始化（有 package.json 和基础目录结构）
-2. [ ] 创建房间 API Mock 返回正确的数据结构（POST /api/rooms）
-3. [ ] 获取房间信息 API Mock 返回房间数据和成员列表（GET /api/rooms/:roomId）
-4. [ ] WebSocket 连接 Mock 可以模拟实时消息（成员加入、消息发送等）
-5. [ ] Mock 数据格式与真实 API 一致（数据结构匹配）
-6. [ ] 有简单的测试或示例代码验证 Mock 功能
-7. [ ] 有文档说明如何使用 Mock 数据
+**必须按顺序完成，不能跳过任何步骤：**
+
+1. [ ] **创建 package.json** - 项目根目录必须有 package.json 文件，包含项目基本信息
+2. [ ] **创建目录结构** - 创建 mock/ 和 mock-server/ 目录
+3. [ ] **创建 Mock 数据文件** - 在 mock/ 目录下创建示例房间数据（JSON 格式）
+4. [ ] **实现创建房间 API Mock** - POST /api/rooms 返回正确的数据结构
+5. [ ] **实现获取房间信息 API Mock** - GET /api/rooms/:roomId 返回房间数据和成员列表
+6. [ ] **实现 WebSocket Mock** - 可以模拟实时消息（成员加入、消息发送等）
+7. [ ] **创建测试文件** - 有简单的测试或示例代码验证 Mock 功能
+8. [ ] **创建使用文档** - README 或文档说明如何使用 Mock 数据
 
 ---
 

@@ -28,3 +28,8 @@
 - **Instruction**: NEVER run commands that require interactive input (git push, npm login, password prompts, etc.). These will block execution indefinitely. Only commit locally, never push.
 - **Added after**: Session blocking on git push authentication (2026-01-25)
 
+### Sign: Must Create Files
+- **Trigger**: At the start of EVERY session
+- **Instruction**: You MUST create at least one file in each session. Do NOT just read files and exit. Start with the first unchecked criterion and immediately create the required files. If the first criterion is "create package.json", then CREATE package.json file with actual content right away.
+- **Added after**: Multiple sessions (20+) finishing without creating any files (2026-01-25)
+
