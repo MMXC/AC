@@ -368,9 +368,15 @@ main() {
     line_count=$((line_count + 1))
     
     # Debug: log first few lines and result messages
-    if [[ $line_count -le 3 ]] || echo "$line" | jq -e '.type == "result"' > /dev/null 2>&1; then
+    if [[ $line_count -le 5 ]] || echo "$line" | jq -e '.type == "result"' > /dev/null 2>&1; then
       local line_type=$(echo "$line" | jq -r '.type // "unknown"' 2>/dev/null || echo "parse_error")
-      echo "[$(date '+%H:%M:%S')] Line $line_count, type=$line_type" >> "$DEBUG_LOG" 2>&1
+      local line_preview=$(echo "$line" | head -c 100)
+      echo "[$(date '+%H:%M:%S')] Line $line_count, type=$line_type, preview='$line_preview...'" >> "$DEBUG_LOG" 2>&1
+      
+      # If parse error, log the actual line content for debugging
+      if [[ "$line_type" == "parse_error" ]]; then
+        echo "[$(date '+%H:%M:%S')] Parse error on line $line_count, full line: $line" >> "$DEBUG_LOG" 2>&1
+      fi
     fi
     
     process_line "$line"

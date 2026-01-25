@@ -54,3 +54,10 @@
 [21:49:34] Line 1, type=parse_error
 [21:49:34] Line 2, type=parse_error
 [21:49:34] Line 3, type=parse_error
+[21:49:45] Parser finished, processed 49 lines
+[21:49:45] Signal written: FINISHED (at parser exit, no result message received)
+[21:49:46] Final check found: FINISHED
+[21:49:47] After agent wait, checking signal file: /mnt/c/project/AC/.ralph/.parser_signal
+[21:49:47] Signal file exists: yes
+[21:49:47] Signal file size: 9
+[21:49:47] Returning signal: 'FINISHED'
