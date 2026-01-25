@@ -61,3 +61,21 @@
 [21:49:47] Signal file exists: yes
 [21:49:47] Signal file size: 9
 [21:49:47] Returning signal: 'FINISHED'
+[21:51:12] Initialized signal_file: /mnt/c/project/AC/.ralph/.parser_signal
+[21:51:12] Starting agent with parser, signal_file=/mnt/c/project/AC/.ralph/.parser_signal
+[21:51:12] Agent started with PID: 45951
+[21:51:12] Parser initialized: WORKSPACE=/mnt/c/project/AC
+[21:51:12] SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[21:51:12] Testing write to signal file...
+[21:51:12] Signal file exists and is writable
+[21:51:12] Parser started, SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[21:51:12] Line 1, type=parse_error, preview='/mnt/c/project/AC/.cursor/ralph-scripts/ralph-common.sh: line 519: RALPH_TASK.md: command not found...'
+[21:51:12] Parse error on line 1, full line: /mnt/c/project/AC/.cursor/ralph-scripts/ralph-common.sh: line 519: RALPH_TASK.md: command not found
+[21:51:12] Line 2, type=parse_error, preview='.ralph/guardrails.md: line 3: learned: command not found...'
+[21:51:12] Parse error on line 2, full line: .ralph/guardrails.md: line 3: learned: command not found
+[21:51:12] Line 3, type=parse_error, preview='.ralph/guardrails.md: line 8: -: command not found...'
+[21:51:12] Parse error on line 3, full line: .ralph/guardrails.md: line 8: -: command not found
+[21:51:13] Line 4, type=parse_error, preview='.ralph/guardrails.md: line 9: -: command not found...'
+[21:51:13] Parse error on line 4, full line: .ralph/guardrails.md: line 9: -: command not found
+[21:51:13] Line 5, type=parse_error, preview='.ralph/guardrails.md: line 10: -: command not found...'
+[21:51:13] Parse error on line 5, full line: .ralph/guardrails.md: line 10: -: command not found
