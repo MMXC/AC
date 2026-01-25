@@ -1,0 +1,35 @@
+/mnt/c/project/AC/.cursor/ralph-scripts/ralph-common.sh: line 521: RALPH_TASK.md: command not found
+.ralph/guardrails.md: line 3: learned: command not found
+.ralph/guardrails.md: line 8: -: command not found
+.ralph/guardrails.md: line 9: -: command not found
+.ralph/guardrails.md: line 10: -: command not found
+.ralph/guardrails.md: line 13: -: command not found
+.ralph/guardrails.md: line 14: -: command not found
+.ralph/guardrails.md: line 15: -: command not found
+.ralph/guardrails.md: line 18: -: command not found
+.ralph/guardrails.md: line 19: -: command not found
+.ralph/guardrails.md: line 20: -: command not found
+.ralph/guardrails.md: line 22: ---: command not found
+.ralph/guardrails.md: line 27: -: command not found
+.ralph/guardrails.md: line 28: syntax error near unexpected token `('
+.ralph/guardrails.md: line 28: `- **Instruction**: NEVER run commands that require interactive input (git push, npm login, password prompts, etc.). These will block execution indefinitely. Only commit locally, never push.'
+.ralph/progress.md: line 3: by: command not found
+.ralph/progress.md: line 7: -: command not found
+.ralph/progress.md: line 8: -: command not found
+.ralph/progress.md: line 12: Progress: command not found
+.ralph/progress.md: line 13: syntax error near unexpected token `('
+.ralph/progress.md: line 13: `When context is rotated (fresh agent), the new agent reads this file.'
+.ralph/errors.log: line 3: detected: command not found
+npm error code E404
+npm error 404 Not Found - GET https://registry.npmjs.org/create-* - Not found
+npm error 404
+npm error 404  'create-*@*' is not in this registry.
+npm error 404 This package name is not valid, because 
+npm error 404  1. name can no longer contain special characters ("~'!()*")
+npm error 404
+npm error 404 Note that you can also install from a
+npm error 404 tarball, folder, http url, or git url.
+npm error A complete log of this run can be found in: C:\Users\76028\AppData\Local\npm-cache\_logs\2026-01-25T13_52_02_052Z-debug-0.log
+/mnt/c/project/AC/.cursor/ralph-scripts/ralph-common.sh: line 521: --no-git: command not found
+/mnt/c/project/AC/.cursor/ralph-scripts/ralph-common.sh: line 521: .: filename argument required
+.: usage: . filename [arguments]

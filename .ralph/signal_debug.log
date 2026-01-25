@@ -86,3 +86,11 @@
 [21:51:28] Signal file exists: yes
 [21:51:28] Signal file size: 9
 [21:51:28] Returning signal: 'FINISHED'
+[21:52:00] Initialized signal_file: /mnt/c/project/AC/.ralph/.parser_signal
+[21:52:00] Starting agent with parser, signal_file=/mnt/c/project/AC/.ralph/.parser_signal
+[21:52:00] Agent started with PID: 47121
+[21:52:00] Parser initialized: WORKSPACE=/mnt/c/project/AC
+[21:52:00] SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[21:52:00] Testing write to signal file...
+[21:52:00] Signal file exists and is writable
+[21:52:00] Parser started, SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
