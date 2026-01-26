@@ -34,8 +34,8 @@ docker-compose up -d && docker-compose ps"
 
 ## Success Criteria
 
-- [ ] Dockerfile 可以成功构建镜像
-- [ ] docker-compose.yml 包含所有服务（API、PostgreSQL、Redis）
-- [ ] 容器可以正常启动和运行
-- [ ] 环境变量正确配置
-- [ ] 健康检查通过
+- [x] Dockerfile 可以成功构建镜像
+- [x] docker-compose.yml 包含所有服务（API、PostgreSQL、Redis）
+- [x] 容器可以正常启动和运行
+- [x] 环境变量正确配置
+- [x] 健康检查通过

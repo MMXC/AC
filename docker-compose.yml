@@ -1,6 +1,35 @@
 version: '3.8'
 
 services:
+  # API 服务器
+  api:
+    build:
+      context: ./watch-together-server
+      dockerfile: Dockerfile
+    container_name: watch-together-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://watchtogether:watchtogether123@postgres:5432/watchtogether?schema=public
+      - REDIS_URL=redis://redis:6379
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - watch-together-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 前端应用
   watch-together:
     build:
       context: .
@@ -20,9 +49,8 @@ services:
       start_period: 5s
     networks:
       - watch-together-network
-    depends_on:
-      - postgres
 
+  # PostgreSQL 数据库
   postgres:
     build:
       context: ./watch-together-server
@@ -42,9 +70,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     networks:
       - watch-together-network
 
+  # Redis 缓存
   redis:
     image: redis:7-alpine
     container_name: watch-together-redis
@@ -58,6 +88,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 5s
     networks:
       - watch-together-network
     command: redis-server --appendonly yes
