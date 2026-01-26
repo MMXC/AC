@@ -2089,3 +2089,4 @@
 [21:24:42] Signal file exists: yes
 [21:24:42] Signal file size: 9
 [21:24:42] Returning signal: 'FINISHED'
+[21:43:44] Initialized signal_file: /c/project/AC/.ralph/.parser_signal
