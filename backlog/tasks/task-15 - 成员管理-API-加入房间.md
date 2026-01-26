@@ -1,9 +1,10 @@
 ---
 id: TASK-15
 title: 成员管理 API - 加入房间
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:37'
+updated_date: '2026-01-26 14:18'
 labels: []
 dependencies: []
 ---

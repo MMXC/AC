@@ -1,40 +1,42 @@
 ---
-backlog_id: backlog-14
-task: 房间管理 API - 更新和删除房间
-test_command: "npm test -- --testNamePattern='更新删除房间'
-npm test -- --testNamePattern='更新删除房间'"
+backlog_id: backlog-15
+task: 成员管理 API - 加入房间
+test_command: "npm test -- --testNamePattern='加入房间'
+npm test -- --testNamePattern='加入房间'"
 ---
 
-# Task: 房间管理 API - 更新和删除房间
+# Task: 成员管理 API - 加入房间
 
 ## Description
 
-实现 PUT /api/v1/rooms/:roomId 和 DELETE /api/v1/rooms/:roomId 接口
+实现 POST /api/v1/rooms/:roomId/join 接口，允许用户加入房间
 
-**Test Command**: `npm test -- --testNamePattern='更新删除房间'`
+**Test Command**: `npm test -- --testNamePattern='加入房间'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: ``{name: "新房间名"}``
-   预期输出: `房间名称更新成功`
+1. 输入: ``{nickname: "新成员"}``
+   预期输出: ``{success: true, data: {userId: "user-xxx", roomId: "...", ...}}``
 
 **测试场景**:
-1. 更新房间名称应该成功
-2. 删除房间应该设置 deleted_at
-3. 删除后的房间查询应该返回 404
+1. 加入存在的房间应该成功
+2. 加入不存在的房间应该返回 404
+3. 成员应该添加到数据库
 
 **断言示例**:
-1. `await request(app).put(`/api/v1/rooms/${roomId}`).send({name: 'New Name'})`
-2. `const room = await prisma.room.findUnique({where: {id: roomId}})`
-3. `expect(room.name).toBe('New Name')`
+1. `const response = await request(app).post(`/api/v1/rooms/${roomId}/join`).send({nickname: 'New User'})`
+2. `expect(response.status).toBe(200)`
+3. `expect(response.body.data.userId).toMatch(/^user-[a-z0-9]+$/)`
+4. `const member = await prisma.roomMember.findFirst({where: {roomId, userId: response.body.data.userId}})`
+5. `expect(member).toBeDefined()`
 
-**Test Command**: `npm test -- --testNamePattern='更新删除房间'`
+**Test Command**: `npm test -- --testNamePattern='加入房间'`
 
 ## Success Criteria
 
-- [x] PUT 请求可以更新房间名称
-- [x] DELETE 请求可以软删除房间（设置 deleted_at）
-- [x] 删除后的房间无法通过 GET 获取
-- [x] 返回正确的 HTTP 状态码
-- [x] 数据库记录正确更新
+- [ ] POST 请求可以成功加入房间
+- [ ] 返回新创建的用户 ID 和房间信息
+- [ ] 成员记录正确保存到数据库
+- [ ] 如果房间不存在返回 404
+- [ ] 如果房间已满返回 400（如果设置了限制）

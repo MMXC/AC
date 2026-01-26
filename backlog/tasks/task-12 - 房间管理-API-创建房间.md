@@ -1,12 +1,13 @@
 ---
 id: TASK-12
 title: 房间管理 API - 创建房间
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:36'
-updated_date: '2026-01-26 12:47'
+updated_date: '2026-01-26 14:18'
 labels: []
 dependencies: []
+ordinal: 12000
 ---
 
 ## Description

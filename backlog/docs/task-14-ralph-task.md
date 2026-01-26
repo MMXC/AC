@@ -1,18 +1,14 @@
 ---
-id: TASK-14
-title: 房间管理 API - 更新和删除房间
-status: Done
-assignee: []
-created_date: '2026-01-26 06:37'
-updated_date: '2026-01-26 14:18'
-labels: []
-dependencies: []
-ordinal: 14000
+backlog_id: backlog-14
+task: 房间管理 API - 更新和删除房间
+test_command: "npm test -- --testNamePattern='更新删除房间'
+npm test -- --testNamePattern='更新删除房间'"
 ---
+
+# Task: 房间管理 API - 更新和删除房间
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 实现 PUT /api/v1/rooms/:roomId 和 DELETE /api/v1/rooms/:roomId 接口
 
 **Test Command**: `npm test -- --testNamePattern='更新删除房间'`
@@ -34,13 +30,11 @@ ordinal: 14000
 3. `expect(room.name).toBe('New Name')`
 
 **Test Command**: `npm test -- --testNamePattern='更新删除房间'`
-<!-- SECTION:DESCRIPTION:END -->
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 PUT 请求可以更新房间名称
-- [ ] #2 DELETE 请求可以软删除房间（设置 deleted_at）
-- [ ] #3 删除后的房间无法通过 GET 获取
-- [ ] #4 返回正确的 HTTP 状态码
-- [ ] #5 数据库记录正确更新
-<!-- AC:END -->
+## Success Criteria
+
+- [x] PUT 请求可以更新房间名称
+- [x] DELETE 请求可以软删除房间（设置 deleted_at）
+- [x] 删除后的房间无法通过 GET 获取
+- [x] 返回正确的 HTTP 状态码
+- [x] 数据库记录正确更新

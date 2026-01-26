@@ -1,12 +1,13 @@
 ---
 id: TASK-13
 title: 房间管理 API - 获取房间信息
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:36'
-updated_date: '2026-01-26 13:09'
+updated_date: '2026-01-26 14:18'
 labels: []
 dependencies: []
+ordinal: 13000
 ---
 
 ## Description
