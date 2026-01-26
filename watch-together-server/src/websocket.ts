@@ -21,6 +21,7 @@ interface WebSocketConnection {
   pingInterval?: NodeJS.Timeout; // ping 定时器
   timeoutTimer?: NodeJS.Timeout; // 超时定时器
   clientIp?: string; // 客户端 IP 地址
+  connectionId: string; // 唯一连接 ID（用于 Redis 连接数限制）
 }
 
 /**
@@ -35,6 +36,7 @@ const connections = new Map<string, Map<string, WebSocketConnection>>();
 
 /**
  * IP 地址到连接数的映射（用于连接数限制）
+ * 注意：已迁移到 Redis，此 Map 仅作为降级方案
  */
 const ipConnectionCount = new Map<string, number>();
 
@@ -193,37 +195,82 @@ function getClientIp(req: { headers?: { [key: string]: string | string[] | undef
 }
 
 /**
- * 检查 IP 连接数限制
+ * 检查 IP 连接数限制（使用 Redis）
  *
  * @param clientIp 客户端 IP 地址
- * @returns 是否允许连接
+ * @returns Promise<boolean> 是否允许连接
  */
-function checkConnectionLimit(clientIp: string): boolean {
-  const currentCount = ipConnectionCount.get(clientIp) || 0;
-  return currentCount < HEARTBEAT_CONFIG.maxConnectionsPerIp;
+async function checkConnectionLimit(clientIp: string): Promise<boolean> {
+  try {
+    const cache = getCacheService();
+    const key = `ws:ip:${clientIp}:connections`;
+    
+    // 获取当前连接数
+    const currentCount = await cache.scard(key);
+    
+    // 检查是否超过限制
+    return currentCount < HEARTBEAT_CONFIG.maxConnectionsPerIp;
+  } catch (error) {
+    // Redis 错误时，使用内存降级方案
+    console.error('Error checking connection limit in Redis:', error);
+    const currentCount = ipConnectionCount.get(clientIp) || 0;
+    return currentCount < HEARTBEAT_CONFIG.maxConnectionsPerIp;
+  }
 }
 
 /**
- * 增加 IP 连接数
+ * 增加 IP 连接数（使用 Redis）
  *
  * @param clientIp 客户端 IP 地址
+ * @param connectionId 连接 ID（用于唯一标识连接）
+ * @returns Promise<void>
  */
-function incrementIpConnectionCount(clientIp: string): void {
-  const currentCount = ipConnectionCount.get(clientIp) || 0;
-  ipConnectionCount.set(clientIp, currentCount + 1);
+async function incrementIpConnectionCount(clientIp: string, connectionId: string): Promise<void> {
+  try {
+    const cache = getCacheService();
+    const key = `ws:ip:${clientIp}:connections`;
+    
+    // 添加到 Redis Set（连接 ID 作为成员）
+    await cache.sadd(key, connectionId);
+    // 设置过期时间（1小时，防止连接断开时未清理导致的内存泄漏）
+    await cache.expire(key, 60 * 60);
+  } catch (error) {
+    // Redis 错误时，使用内存降级方案
+    console.error('Error incrementing connection count in Redis:', error);
+    const currentCount = ipConnectionCount.get(clientIp) || 0;
+    ipConnectionCount.set(clientIp, currentCount + 1);
+  }
 }
 
 /**
- * 减少 IP 连接数
+ * 减少 IP 连接数（使用 Redis）
  *
  * @param clientIp 客户端 IP 地址
+ * @param connectionId 连接 ID（用于唯一标识连接）
+ * @returns Promise<void>
  */
-function decrementIpConnectionCount(clientIp: string): void {
-  const currentCount = ipConnectionCount.get(clientIp) || 0;
-  if (currentCount <= 1) {
-    ipConnectionCount.delete(clientIp);
-  } else {
-    ipConnectionCount.set(clientIp, currentCount - 1);
+async function decrementIpConnectionCount(clientIp: string, connectionId: string): Promise<void> {
+  try {
+    const cache = getCacheService();
+    const key = `ws:ip:${clientIp}:connections`;
+    
+    // 从 Redis Set 移除连接
+    await cache.srem(key, connectionId);
+    
+    // 如果 Set 为空，删除键（可选，Redis 会自动过期）
+    const count = await cache.scard(key);
+    if (count === 0) {
+      await cache.delete(key);
+    }
+  } catch (error) {
+    // Redis 错误时，使用内存降级方案
+    console.error('Error decrementing connection count in Redis:', error);
+    const currentCount = ipConnectionCount.get(clientIp) || 0;
+    if (currentCount <= 1) {
+      ipConnectionCount.delete(clientIp);
+    } else {
+      ipConnectionCount.set(clientIp, currentCount - 1);
+    }
   }
 }
 
@@ -970,8 +1017,12 @@ async function handleConnection(ws: WebSocket, req: { url?: string; headers?: { 
     // 获取客户端 IP
     const clientIp = getClientIp(req);
 
+    // 生成唯一连接 ID（用于 Redis 连接数限制）
+    const connectionId = `${roomId}:${userId}:${Date.now()}:${Math.random().toString(36).substring(7)}`;
+
     // 检查连接数限制
-    if (!checkConnectionLimit(clientIp)) {
+    const canConnect = await checkConnectionLimit(clientIp);
+    if (!canConnect) {
       ws.close(1008, `Connection limit exceeded: maximum ${HEARTBEAT_CONFIG.maxConnectionsPerIp} connections per IP`);
       return;
     }
@@ -997,10 +1048,11 @@ async function handleConnection(ws: WebSocket, req: { url?: string; headers?: { 
       userId,
       lastPongTime: Date.now(),
       clientIp,
+      connectionId,
     };
 
     // 增加 IP 连接数
-    incrementIpConnectionCount(clientIp);
+    await incrementIpConnectionCount(clientIp, connectionId);
 
     // 检查是否已有其他成员在房间中（用于判断是否需要广播 MEMBER_JOINED）
     const hadOtherMembers = connections.has(roomId) && connections.get(roomId)!.size > 0;
@@ -1087,8 +1139,8 @@ async function handleConnection(ws: WebSocket, req: { url?: string; headers?: { 
       stopHeartbeat(connection);
 
       // 减少 IP 连接数
-      if (connection.clientIp) {
-        decrementIpConnectionCount(connection.clientIp);
+      if (connection.clientIp && connection.connectionId) {
+        await decrementIpConnectionCount(connection.clientIp, connection.connectionId);
       }
 
       // 更新成员最后活动时间

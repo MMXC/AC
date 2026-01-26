@@ -5,6 +5,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const db_1 = require("../db");
+const validate_1 = require("../middleware/validate");
+const errorHandler_1 = require("../middleware/errorHandler");
+const schemas_1 = require("../validation/schemas");
 const router = (0, express_1.Router)();
 /**
  * 生成唯一的房间 ID
@@ -51,30 +54,37 @@ function generateMessageId() {
     }
     return `msg-${randomString}`;
 }
-router.post('/', async (req, res) => {
+/**
+ * POST /api/v1/rooms
+ * 创建房间
+ *
+ * 请求体：
+ * {
+ *   name?: string,           // 房间名称（可选，默认为"未命名房间"）
+ *   hostNickname: string    // 房主昵称（必填）
+ * }
+ *
+ * 响应：
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,           // 房间 ID
+ *     name: string,         // 房间名称
+ *     hostId: string,       // 房主 ID
+ *     hostNickname: string, // 房主昵称
+ *     createdAt: string,     // 创建时间（ISO 字符串）
+ *     inviteLink: string    // 邀请链接
+ *   }
+ * }
+ */
+router.post('/', (0, validate_1.validateBody)(schemas_1.createRoomSchema), async (req, res, next) => {
     try {
         const { name, hostNickname } = req.body;
-        // 验证必填字段
-        if (!hostNickname || typeof hostNickname !== 'string' || hostNickname.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'hostNickname is required and must be a non-empty string',
-            });
-        }
-        // 验证房间名称（如果提供）
-        if (name !== undefined && name !== null && (typeof name !== 'string' || name.length > 255)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'name must be a string with maximum 255 characters',
-            });
-        }
         const prisma = (0, db_1.getPrismaClient)();
         // 生成房间 ID 和房主 ID
         const roomId = generateRoomId();
         const hostId = generateUserId();
-        const roomName = (name && typeof name === 'string' ? name.trim() : '') || '未命名房间';
+        const roomName = name || '未命名房间';
         const inviteLink = `/room/${roomId}`;
         // 创建房间和房主成员记录（使用事务确保数据一致性）
         const result = await prisma.$transaction(async (tx) => {
@@ -92,32 +102,27 @@ router.post('/', async (req, res) => {
                 data: {
                     roomId: roomId,
                     userId: hostId,
-                    nickname: hostNickname.trim(),
+                    nickname: hostNickname,
                     isHost: true,
                 },
             });
             return room;
         });
         // 返回成功响应
-        return res.status(201).json({
+        res.status(201).json({
             success: true,
             data: {
                 id: result.id,
                 name: result.name,
                 hostId: result.hostId,
-                hostNickname: hostNickname.trim(),
+                hostNickname: hostNickname,
                 createdAt: result.createdAt.toISOString(),
                 inviteLink: result.inviteLink,
             },
         });
     }
     catch (error) {
-        console.error('Error creating room:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to create room',
-        });
+        next(error);
     }
 });
 /**
@@ -156,22 +161,15 @@ router.post('/', async (req, res) => {
  *   message: "Room not found"
  * }
  */
-router.get('/:roomId', async (req, res) => {
+router.get('/:roomId', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), async (req, res, next) => {
     try {
-        const { roomId } = req.params;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
         const prisma = (0, db_1.getPrismaClient)();
         // 查询房间信息（包含成员列表，排除已删除的房间）
         const room = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null, // 排除已删除的房间
             },
             include: {
@@ -187,11 +185,7 @@ router.get('/:roomId', async (req, res) => {
         });
         // 如果房间不存在或已删除，返回 404
         if (!room) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 格式化成员列表
         const members = room.members.map(member => ({
@@ -202,7 +196,7 @@ router.get('/:roomId', async (req, res) => {
             lastActiveAt: member.lastActiveAt.toISOString(),
         }));
         // 返回成功响应
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             data: {
                 id: room.id,
@@ -218,71 +212,76 @@ router.get('/:roomId', async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Error getting room:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to get room',
-        });
+        next(error);
     }
 });
-router.put('/:roomId', async (req, res) => {
+/**
+ * PUT /api/v1/rooms/:roomId
+ * 更新房间信息
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   name?: string  // 房间名称（可选）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,
+ *     name: string,
+ *     hostId: string,
+ *     currentUrl: string | null,
+ *     inviteLink: string | null,
+ *     createdAt: string,
+ *     updatedAt: string
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+router.put('/:roomId', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), (0, validate_1.validateBody)(schemas_1.updateRoomSchema), async (req, res, next) => {
     try {
-        const { roomId } = req.params;
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
         const { name } = req.body;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
-        // 验证房间名称（如果提供）
-        if (name !== undefined && name !== null && (typeof name !== 'string' || name.length > 255)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'name must be a string with maximum 255 characters',
-            });
-        }
         const prisma = (0, db_1.getPrismaClient)();
         // 检查房间是否存在且未删除
         const existingRoom = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null,
             },
         });
         if (!existingRoom) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 准备更新数据
         const updateData = {};
-        if (name !== undefined && name !== null) {
-            updateData.name = typeof name === 'string' ? name.trim() || '未命名房间' : '未命名房间';
+        if (name !== undefined) {
+            updateData.name = name || '未命名房间';
         }
         // 如果没有提供任何更新字段，返回错误
         if (Object.keys(updateData).length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'At least one field must be provided for update',
-            });
+            throw (0, errorHandler_1.createHttpError)(400, errorHandler_1.ErrorCode.BAD_REQUEST, 'At least one field must be provided for update');
         }
         // 更新房间信息
         const updatedRoom = await prisma.room.update({
             where: {
-                id: roomId.trim(),
+                id: roomId,
             },
             data: updateData,
         });
         // 返回成功响应
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             data: {
                 id: updatedRoom.id,
@@ -296,12 +295,7 @@ router.put('/:roomId', async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Error updating room:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to update room',
-        });
+        next(error);
     }
 });
 /**
@@ -324,112 +318,108 @@ router.put('/:roomId', async (req, res) => {
  *   message: "Room not found"
  * }
  */
-router.delete('/:roomId', async (req, res) => {
+router.delete('/:roomId', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), async (req, res, next) => {
     try {
-        const { roomId } = req.params;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
         const prisma = (0, db_1.getPrismaClient)();
         // 检查房间是否存在且未删除
         const existingRoom = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null,
             },
         });
         if (!existingRoom) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 软删除房间（设置 deletedAt）
         await prisma.room.update({
             where: {
-                id: roomId.trim(),
+                id: roomId,
             },
             data: {
                 deletedAt: new Date(),
             },
         });
         // 返回成功响应
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             message: 'Room deleted successfully',
         });
     }
     catch (error) {
-        console.error('Error deleting room:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to delete room',
-        });
+        next(error);
     }
 });
-router.post('/:roomId/join', async (req, res) => {
+/**
+ * POST /api/v1/rooms/:roomId/join
+ * 加入房间
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   nickname: string  // 用户昵称（必填）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     userId: string,        // 新创建的用户 ID
+ *     roomId: string,        // 房间 ID
+ *     nickname: string,      // 用户昵称
+ *     room: {                // 房间信息
+ *       id: string,
+ *       name: string,
+ *       hostId: string,
+ *       currentUrl: string | null,
+ *       inviteLink: string | null,
+ *       createdAt: string,
+ *       updatedAt: string
+ *     },
+ *     joinedAt: string        // 加入时间（ISO 字符串）
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+router.post('/:roomId/join', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), (0, validate_1.validateBody)(schemas_1.joinRoomSchema), async (req, res, next) => {
     try {
-        const { roomId } = req.params;
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
         const { nickname } = req.body;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
-        // 验证必填字段
-        if (!nickname || typeof nickname !== 'string' || nickname.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'nickname is required and must be a non-empty string',
-            });
-        }
-        // 验证昵称长度
-        if (nickname.trim().length > 100) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'nickname must be a string with maximum 100 characters',
-            });
-        }
         const prisma = (0, db_1.getPrismaClient)();
         // 检查房间是否存在且未删除
         const room = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null,
             },
         });
         if (!room) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 生成新的用户 ID
         const userId = generateUserId();
         // 创建成员记录
         const member = await prisma.roomMember.create({
             data: {
-                roomId: roomId.trim(),
+                roomId: roomId,
                 userId: userId,
-                nickname: nickname.trim(),
+                nickname: nickname,
                 isHost: false,
             },
         });
         // 返回成功响应
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             data: {
                 userId: member.userId,
@@ -449,63 +439,60 @@ router.post('/:roomId/join', async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Error joining room:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to join room',
-        });
+        next(error);
     }
 });
-router.post('/:roomId/leave', async (req, res) => {
+/**
+ * POST /api/v1/rooms/:roomId/leave
+ * 离开房间
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   userId: string  // 用户 ID（必填）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   message: "Member left room successfully"
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room or member not found"
+ * }
+ */
+router.post('/:roomId/leave', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), (0, validate_1.validateBody)(schemas_1.leaveRoomSchema), async (req, res, next) => {
     try {
-        const { roomId } = req.params;
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
         const { userId } = req.body;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
-        // 验证必填字段
-        if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'userId is required and must be a non-empty string',
-            });
-        }
         const prisma = (0, db_1.getPrismaClient)();
         // 检查房间是否存在且未删除
         const room = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null,
             },
         });
         if (!room) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 检查成员是否存在且未离开
         const member = await prisma.roomMember.findFirst({
             where: {
-                roomId: roomId.trim(),
-                userId: userId.trim(),
+                roomId: roomId,
+                userId: userId,
                 leftAt: null, // 只查找未离开的成员
             },
         });
         if (!member) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Member not found or already left',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Member not found or already left');
         }
         // 更新成员的 leftAt 字段
         await prisma.roomMember.update({
@@ -517,18 +504,13 @@ router.post('/:roomId/leave', async (req, res) => {
             },
         });
         // 返回成功响应
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             message: 'Member left room successfully',
         });
     }
     catch (error) {
-        console.error('Error leaving room:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to leave room',
-        });
+        next(error);
     }
 });
 /**
@@ -560,36 +542,25 @@ router.post('/:roomId/leave', async (req, res) => {
  *   message: "Room not found"
  * }
  */
-router.get('/:roomId/members', async (req, res) => {
+router.get('/:roomId/members', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), async (req, res, next) => {
     try {
-        const { roomId } = req.params;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
         const prisma = (0, db_1.getPrismaClient)();
         // 检查房间是否存在且未删除
         const room = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null,
             },
         });
         if (!room) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 查询未离开的成员列表，按加入时间排序
         const members = await prisma.roomMember.findMany({
             where: {
-                roomId: roomId.trim(),
+                roomId: roomId,
                 leftAt: null, // 只返回未离开的成员
             },
             orderBy: {
@@ -605,7 +576,7 @@ router.get('/:roomId/members', async (req, res) => {
             lastActiveAt: member.lastActiveAt.toISOString(),
         }));
         // 返回成功响应
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             data: {
                 members: formattedMembers,
@@ -614,79 +585,68 @@ router.get('/:roomId/members', async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Error getting members:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to get members',
-        });
+        next(error);
     }
 });
-router.post('/:roomId/messages', async (req, res) => {
+/**
+ * POST /api/v1/rooms/:roomId/messages
+ * 发送消息
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   userId: string,   // 用户 ID（必填）
+ *   content: string   // 消息内容（必填，最大 1000 字符）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,        // 消息 ID
+ *     roomId: string,    // 房间 ID
+ *     userId: string,    // 用户 ID
+ *     nickname: string,  // 用户昵称
+ *     content: string,  // 消息内容
+ *     createdAt: string  // 创建时间（ISO 字符串）
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+router.post('/:roomId/messages', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), (0, validate_1.validateBody)(schemas_1.sendMessageSchema), async (req, res, next) => {
     try {
-        const { roomId } = req.params;
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
         const { userId, content } = req.body;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
-        // 验证必填字段
-        if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'userId is required and must be a non-empty string',
-            });
-        }
-        // 验证消息内容
-        if (!content || typeof content !== 'string' || content.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'content is required and must be a non-empty string',
-            });
-        }
-        // 验证消息内容长度（最大 1000 字符）
-        if (content.length > 1000) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'content must be a string with maximum 1000 characters',
-            });
-        }
         const prisma = (0, db_1.getPrismaClient)();
         // 检查房间是否存在且未删除
         const room = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null,
             },
         });
         if (!room) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 检查用户是否存在且未离开
         const member = await prisma.roomMember.findFirst({
             where: {
-                roomId: roomId.trim(),
-                userId: userId.trim(),
+                roomId: roomId,
+                userId: userId,
                 leftAt: null, // 只查找未离开的成员
             },
         });
         if (!member) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'User not found in room or has left',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'User not found in room or has left');
         }
         // 生成消息 ID
         const messageId = generateMessageId();
@@ -694,14 +654,14 @@ router.post('/:roomId/messages', async (req, res) => {
         const message = await prisma.message.create({
             data: {
                 id: messageId,
-                roomId: roomId.trim(),
-                userId: userId.trim(),
+                roomId: roomId,
+                userId: userId,
                 nickname: member.nickname,
-                content: content.trim(),
+                content: content,
             },
         });
         // 返回成功响应
-        return res.status(201).json({
+        res.status(201).json({
             success: true,
             data: {
                 id: message.id,
@@ -714,12 +674,7 @@ router.post('/:roomId/messages', async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Error sending message:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to send message',
-        });
+        next(error);
     }
 });
 /**
@@ -763,69 +718,33 @@ router.post('/:roomId/messages', async (req, res) => {
  *   message: "Room not found"
  * }
  */
-router.get('/:roomId/messages', async (req, res) => {
+router.get('/:roomId/messages', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), (0, validate_1.validateQuery)(schemas_1.getMessagesQuerySchema), async (req, res, next) => {
     try {
-        const { roomId } = req.params;
-        const { limit: limitParam, offset: offsetParam } = req.query;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
-        // 解析 limit 参数（默认 50，最大 100）
-        let limit = 50;
-        if (limitParam !== undefined) {
-            const parsedLimit = parseInt(limitParam, 10);
-            if (isNaN(parsedLimit) || parsedLimit < 1) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Bad Request',
-                    message: 'limit must be a positive integer',
-                });
-            }
-            limit = Math.min(parsedLimit, 100); // 最大值为 100
-        }
-        // 解析 offset 参数（默认 0）
-        let offset = 0;
-        if (offsetParam !== undefined) {
-            const parsedOffset = parseInt(offsetParam, 10);
-            if (isNaN(parsedOffset) || parsedOffset < 0) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Bad Request',
-                    message: 'offset must be a non-negative integer',
-                });
-            }
-            offset = parsedOffset;
-        }
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
+        const validatedQuery = req.validatedQuery;
+        const { limit, offset } = validatedQuery;
         const prisma = (0, db_1.getPrismaClient)();
         // 检查房间是否存在且未删除
         const room = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null,
             },
         });
         if (!room) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 获取总消息数
         const total = await prisma.message.count({
             where: {
-                roomId: roomId.trim(),
+                roomId: roomId,
             },
         });
         // 获取消息列表（按时间倒序，最新的在前）
         const messages = await prisma.message.findMany({
             where: {
-                roomId: roomId.trim(),
+                roomId: roomId,
             },
             orderBy: {
                 createdAt: 'desc', // 按创建时间倒序排列
@@ -845,7 +764,7 @@ router.get('/:roomId/messages', async (req, res) => {
         // 计算是否有更多消息
         const hasMore = offset + limit < total;
         // 返回成功响应
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             data: {
                 messages: formattedMessages,
@@ -859,118 +778,93 @@ router.get('/:roomId/messages', async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Error getting messages:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to get messages',
-        });
+        next(error);
     }
 });
 /**
- * 验证 URL 格式
- * @param url - 要验证的 URL
- * @returns 是否为有效的 HTTP/HTTPS URL
+ * PUT /api/v1/rooms/:roomId/url
+ * 更新房间共享 URL
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   url: string,    // 新的 URL（必填，必须是有效的 HTTP/HTTPS URL）
+ *   userId: string  // 用户 ID（必填，用于验证用户权限）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,
+ *     name: string,
+ *     hostId: string,
+ *     currentUrl: string,
+ *     inviteLink: string | null,
+ *     createdAt: string,
+ *     updatedAt: string
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
  */
-function isValidUrl(url) {
+router.put('/:roomId/url', (0, validate_1.validateParams)(schemas_1.roomIdParamSchema), (0, validate_1.validateBody)(schemas_1.updateRoomUrlSchema), async (req, res, next) => {
     try {
-        const urlObj = new URL(url);
-        // 只允许 http 和 https 协议
-        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-    }
-    catch {
-        return false;
-    }
-}
-router.put('/:roomId/url', async (req, res) => {
-    try {
-        const { roomId } = req.params;
+        const validatedParams = req.validatedParams;
+        const roomId = validatedParams.roomId;
         const { url, userId } = req.body;
-        // 验证 roomId 格式
-        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'roomId is required and must be a non-empty string',
-            });
-        }
-        // 验证必填字段
-        if (!url || typeof url !== 'string' || url.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'url is required and must be a non-empty string',
-            });
-        }
-        if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'userId is required and must be a non-empty string',
-            });
-        }
-        // 验证 URL 格式（必须是有效的 HTTP/HTTPS URL）
-        const trimmedUrl = url.trim();
-        if (!isValidUrl(trimmedUrl)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Bad Request',
-                message: 'url must be a valid HTTP or HTTPS URL',
-            });
-        }
         const prisma = (0, db_1.getPrismaClient)();
         // 检查房间是否存在且未删除
         const room = await prisma.room.findFirst({
             where: {
-                id: roomId.trim(),
+                id: roomId,
                 deletedAt: null,
             },
         });
         if (!room) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'Room not found',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'Room not found');
         }
         // 检查用户是否存在且未离开（可选：验证用户权限）
         const member = await prisma.roomMember.findFirst({
             where: {
-                roomId: roomId.trim(),
-                userId: userId.trim(),
+                roomId: roomId,
+                userId: userId,
                 leftAt: null, // 只查找未离开的成员
             },
         });
         if (!member) {
-            return res.status(404).json({
-                success: false,
-                error: 'Not Found',
-                message: 'User not found in room or has left',
-            });
+            throw (0, errorHandler_1.createHttpError)(404, errorHandler_1.ErrorCode.NOT_FOUND, 'User not found in room or has left');
         }
         // 更新房间 URL
         const updatedRoom = await prisma.room.update({
             where: {
-                id: roomId.trim(),
+                id: roomId,
             },
             data: {
-                currentUrl: trimmedUrl,
+                currentUrl: url,
             },
         });
         // 可选：记录 URL 变更事件到 RoomEvent 表
         await prisma.roomEvent.create({
             data: {
-                roomId: roomId.trim(),
+                roomId: roomId,
                 eventType: 'URL_CHANGED',
-                userId: userId.trim(),
+                userId: userId,
                 eventData: {
                     oldUrl: room.currentUrl,
-                    newUrl: trimmedUrl,
+                    newUrl: url,
                 },
             },
         });
         // 返回成功响应
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             data: {
                 id: updatedRoom.id,
@@ -984,12 +878,7 @@ router.put('/:roomId/url', async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Error updating room URL:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to update room URL',
-        });
+        next(error);
     }
 });
 exports.default = router;

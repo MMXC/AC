@@ -10,6 +10,8 @@ exports.createApp = createApp;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const rooms_1 = __importDefault(require("./routes/rooms"));
+const errorHandler_1 = require("./middleware/errorHandler");
+const rateLimit_1 = require("./middleware/rateLimit");
 /**
  * 创建并配置 Express 应用
  */
@@ -24,7 +26,9 @@ function createApp() {
     app.use(express_1.default.json());
     // URL 编码解析中间件
     app.use(express_1.default.urlencoded({ extended: true }));
-    // 健康检查端点
+    // 限流中间件（应用到所有 API 路由）
+    app.use('/api', rateLimit_1.rateLimit);
+    // 健康检查端点（不应用限流）
     app.get('/health', (_req, res) => {
         res.status(200).json({
             status: 'ok',
@@ -36,28 +40,15 @@ function createApp() {
     // 404 处理（必须在错误处理中间件之前）
     app.use((req, res) => {
         res.status(404).json({
-            error: 'Not Found',
-            message: `Route ${req.method} ${req.path} not found`,
+            success: false,
+            error: {
+                code: 'NOT_FOUND',
+                message: `Route ${req.method} ${req.path} not found`,
+            },
         });
     });
-    // 错误处理中间件（必须在所有路由之后，包括 404 处理）
-    // Express 5.x 会自动捕获同步错误，但我们需要确保中间件正确配置
-    app.use((err, _req, res, _next) => {
-        // 如果是 JSON 解析错误
-        if (err instanceof SyntaxError && 'body' in err) {
-            res.status(400).json({
-                error: 'Invalid JSON',
-                message: 'Request body contains invalid JSON',
-            });
-            return;
-        }
-        // 其他错误
-        console.error('Error:', err);
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred',
-        });
-    });
+    // 统一错误处理中间件（必须在所有路由之后，包括 404 处理）
+    app.use(errorHandler_1.errorHandler);
     return app;
 }
 //# sourceMappingURL=app.js.map

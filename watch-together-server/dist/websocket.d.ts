@@ -16,6 +16,7 @@ interface WebSocketConnection {
     pingInterval?: NodeJS.Timeout;
     timeoutTimer?: NodeJS.Timeout;
     clientIp?: string;
+    connectionId: string;
 }
 /**
  * 创建并启动 WebSocket 服务器

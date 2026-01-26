@@ -6,6 +6,7 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import roomsRouter from './routes/rooms';
 import { errorHandler } from './middleware/errorHandler';
+import { rateLimit } from './middleware/rateLimit';
 
 /**
  * 创建并配置 Express 应用
@@ -27,7 +28,10 @@ export function createApp(): Express {
   // URL 编码解析中间件
   app.use(express.urlencoded({ extended: true }));
 
-  // 健康检查端点
+  // 限流中间件（应用到所有 API 路由）
+  app.use('/api', rateLimit);
+
+  // 健康检查端点（不应用限流）
   app.get('/health', (_req: Request, res: Response) => {
     res.status(200).json({
       status: 'ok',
