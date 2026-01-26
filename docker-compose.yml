@@ -4,7 +4,7 @@ services:
   watch-together:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./watch-together/Dockerfile
     container_name: watch-together
     ports:
       - "3001:3001"
@@ -20,6 +20,31 @@ services:
       start_period: 5s
     networks:
       - watch-together-network
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: watch-together-postgres
+    environment:
+      POSTGRES_USER: watchtogether
+      POSTGRES_PASSWORD: watchtogether123
+      POSTGRES_DB: watchtogether
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U watchtogether"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - watch-together-network
+
+volumes:
+  postgres_data:
 
 networks:
   watch-together-network:

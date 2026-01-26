@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Room {
+  id         String   @id @db.VarChar(32)
+  name       String   @default("未命名房间") @db.VarChar(255)
+  hostId     String   @db.VarChar(32)
+  currentUrl String?  @db.Text
+  inviteLink String?  @db.VarChar(500)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  settings   Json?
+
+  // Relations
+  members    RoomMember[]
+  messages   Message[]
+  events     RoomEvent[]
+
+  @@index([hostId])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("rooms")
+}
+
+model RoomMember {
+  id           BigInt   @id @default(autoincrement())
+  roomId       String   @db.VarChar(32)
+  userId       String   @db.VarChar(32)
+  nickname     String   @db.VarChar(100)
+  isHost       Boolean  @default(false)
+  joinedAt     DateTime @default(now())
+  leftAt       DateTime?
+  lastActiveAt DateTime @default(now())
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+  @@index([lastActiveAt])
+  @@map("room_members")
+}
+
+model Message {
+  id        String   @id @db.VarChar(32)
+  roomId    String   @db.VarChar(32)
+  userId    String   @db.VarChar(32)
+  nickname  String   @db.VarChar(100)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("messages")
+}
+
+model RoomEvent {
+  id        BigInt   @id @default(autoincrement())
+  roomId    String   @db.VarChar(32)
+  eventType String   @db.VarChar(50) // URL_CHANGED, MEMBER_JOINED, etc.
+  userId    String?  @db.VarChar(32)
+  eventData Json?
+  createdAt DateTime @default(now())
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@index([eventType])
+  @@map("room_events")
+}

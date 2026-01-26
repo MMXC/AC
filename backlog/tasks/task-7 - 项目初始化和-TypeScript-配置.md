@@ -1,12 +1,13 @@
 ---
 id: TASK-7
 title: 项目初始化和 TypeScript 配置
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:36'
-updated_date: '2026-01-26 06:39'
+updated_date: '2026-01-26 07:30'
 labels: []
 dependencies: []
+ordinal: 7000
 ---
 
 ## Description
