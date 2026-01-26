@@ -1,9 +1,10 @@
 ---
 id: TASK-10
 title: 数据库连接和 Prisma Client 集成
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:36'
+updated_date: '2026-01-26 12:28'
 labels: []
 dependencies: []
 ---

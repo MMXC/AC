@@ -1,18 +1,14 @@
 ---
-id: TASK-9
-title: Express 服务器基础框架
-status: Done
-assignee: []
-created_date: '2026-01-26 06:36'
-updated_date: '2026-01-26 12:28'
-labels: []
-dependencies: []
-ordinal: 9000
+backlog_id: backlog-9
+task: Express 服务器基础框架
+test_command: "npm test -- express-server.test.ts
+npm test -- express-server.test.ts"
 ---
+
+# Task: Express 服务器基础框架
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 创建 Express 应用，配置中间件（CORS、JSON 解析、错误处理），设置路由结构
 
 **Test Command**: `npm test -- express-server.test.ts`
@@ -34,13 +30,11 @@ ordinal: 9000
 3. `expect(response.body.status).toBe('ok')`
 
 **Test Command**: `npm test -- express-server.test.ts`
-<!-- SECTION:DESCRIPTION:END -->
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 Express 应用可以启动（监听指定端口）
-- [ ] #2 CORS 中间件配置正确
-- [ ] #3 JSON 解析中间件工作正常
-- [ ] #4 错误处理中间件可以捕获并格式化错误
-- [ ] #5 健康检查端点 `/health` 返回 200
-<!-- AC:END -->
+## Success Criteria
+
+- [x] Express 应用可以启动（监听指定端口）
+- [x] CORS 中间件配置正确
+- [x] JSON 解析中间件工作正常
+- [x] 错误处理中间件可以捕获并格式化错误
+- [x] 健康检查端点 `/health` 返回 200
