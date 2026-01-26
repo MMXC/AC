@@ -1327,3 +1327,18 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-26 19:15:31
 **Session 1 started** (model: auto)
+
+### 2026-01-26 [current time]
+**Session 1 completed** - 实现限流和防刷功能
+- 修复了测试文件中的编译错误（未使用的 cache 变量）
+- 修改了 WebSocket 连接数限制，使用 Redis 而不是内存 Map（支持多实例）
+- 实现了 IP 限流：100 请求/分钟（使用 Redis 滑动窗口算法）
+- 实现了用户限流：1000 请求/小时（使用 Redis 滑动窗口算法）
+- 实现了超过限制返回 429 错误（包含详细的错误信息和响应头）
+- 实现了 WebSocket 连接数限制：每 IP 最多 10 个连接（使用 Redis Set 存储连接 ID）
+- 完善了测试用例，确保所有功能都有测试覆盖
+- 所有成功标准已完成并标记
+- 提交了更改到 git
+
+### 2026-01-26 19:26:49
+**Session 1 started** (model: auto)
