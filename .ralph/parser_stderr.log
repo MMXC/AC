@@ -53,3 +53,7 @@ Cannot use this model: opus-4.5-thinking. Available models: auto, composer-1, gr
 Cannot use this model: opus-4.5-thinking. Available models: auto, composer-1, grok
 C: [canceled] http/2 stream closed with error code CANCEL (0x8)
 [16:30:55] cursor-agent exited with code: 1
+Cannot use this model: auto. Available models: 
+[17:17:45] cursor-agent exited with code: 1
+C: Connection stalled
+[17:18:23] cursor-agent exited with code: 1

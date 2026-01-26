@@ -195,10 +195,11 @@ router.get('/:roomId', async (req: Request<{ roomId: string }>, res: Response) =
 
     const prisma = getPrismaClient();
 
-    // 查询房间信息（包含成员列表）
-    const room = await prisma.room.findUnique({
+    // 查询房间信息（包含成员列表，排除已删除的房间）
+    const room = await prisma.room.findFirst({
       where: {
         id: roomId.trim(),
+        deletedAt: null, // 排除已删除的房间
       },
       include: {
         members: {
@@ -212,7 +213,7 @@ router.get('/:roomId', async (req: Request<{ roomId: string }>, res: Response) =
       },
     });
 
-    // 如果房间不存在，返回 404
+    // 如果房间不存在或已删除，返回 404
     if (!room) {
       return res.status(404).json({
         success: false,
@@ -251,6 +252,206 @@ router.get('/:roomId', async (req: Request<{ roomId: string }>, res: Response) =
       success: false,
       error: 'Internal Server Error',
       message: 'Failed to get room',
+    });
+  }
+});
+
+/**
+ * PUT /api/v1/rooms/:roomId
+ * 更新房间信息
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   name?: string  // 房间名称（可选）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,
+ *     name: string,
+ *     hostId: string,
+ *     currentUrl: string | null,
+ *     inviteLink: string | null,
+ *     createdAt: string,
+ *     updatedAt: string
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+interface UpdateRoomRequest {
+  name?: string;
+}
+
+router.put('/:roomId', async (req: Request<{ roomId: string }, unknown, UpdateRoomRequest>, res: Response) => {
+  try {
+    const { roomId } = req.params;
+    const { name } = req.body;
+
+    // 验证 roomId 格式
+    if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'roomId is required and must be a non-empty string',
+      });
+    }
+
+    // 验证房间名称（如果提供）
+    if (name !== undefined && name !== null && (typeof name !== 'string' || name.length > 255)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'name must be a string with maximum 255 characters',
+      });
+    }
+
+    const prisma = getPrismaClient();
+
+    // 检查房间是否存在且未删除
+    const existingRoom = await prisma.room.findFirst({
+      where: {
+        id: roomId.trim(),
+        deletedAt: null,
+      },
+    });
+
+    if (!existingRoom) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Room not found',
+      });
+    }
+
+    // 准备更新数据
+    const updateData: { name?: string } = {};
+    if (name !== undefined && name !== null) {
+      updateData.name = typeof name === 'string' ? name.trim() || '未命名房间' : '未命名房间';
+    }
+
+    // 如果没有提供任何更新字段，返回错误
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'At least one field must be provided for update',
+      });
+    }
+
+    // 更新房间信息
+    const updatedRoom = await prisma.room.update({
+      where: {
+        id: roomId.trim(),
+      },
+      data: updateData,
+    });
+
+    // 返回成功响应
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: updatedRoom.id,
+        name: updatedRoom.name,
+        hostId: updatedRoom.hostId,
+        currentUrl: updatedRoom.currentUrl,
+        inviteLink: updatedRoom.inviteLink,
+        createdAt: updatedRoom.createdAt.toISOString(),
+        updatedAt: updatedRoom.updatedAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Error updating room:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to update room',
+    });
+  }
+});
+
+/**
+ * DELETE /api/v1/rooms/:roomId
+ * 软删除房间（设置 deletedAt）
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   message: "Room deleted successfully"
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+router.delete('/:roomId', async (req: Request<{ roomId: string }>, res: Response) => {
+  try {
+    const { roomId } = req.params;
+
+    // 验证 roomId 格式
+    if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'roomId is required and must be a non-empty string',
+      });
+    }
+
+    const prisma = getPrismaClient();
+
+    // 检查房间是否存在且未删除
+    const existingRoom = await prisma.room.findFirst({
+      where: {
+        id: roomId.trim(),
+        deletedAt: null,
+      },
+    });
+
+    if (!existingRoom) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Room not found',
+      });
+    }
+
+    // 软删除房间（设置 deletedAt）
+    await prisma.room.update({
+      where: {
+        id: roomId.trim(),
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    // 返回成功响应
+    return res.status(200).json({
+      success: true,
+      message: 'Room deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting room:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to delete room',
     });
   }
 });
