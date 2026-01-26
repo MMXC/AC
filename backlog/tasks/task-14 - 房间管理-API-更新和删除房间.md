@@ -1,9 +1,10 @@
 ---
 id: TASK-14
 title: 房间管理 API - 更新和删除房间
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:37'
+updated_date: '2026-01-26 13:25'
 labels: []
 dependencies: []
 ---
