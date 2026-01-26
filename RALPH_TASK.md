@@ -1,21 +1,21 @@
 ---
-backlog_id: backlog-5
-task: 共享区域操作同步
-test_command: "npm test -- --testNamePattern='操作同步'"
+backlog_id: backlog-6
+task: 房间路由和导航
+test_command: "npm test -- --testNamePattern='路由导航'"
 ---
 
-# Task: 共享区域操作同步
+# Task: 房间路由和导航
 
 ## Description
 
-实现共享浏览区域的操作同步，成员的操作（滚动、点击等）同步给其他成员
+实现前端路由，支持首页和房间页面的导航，处理房间链接参数
 
-**Test Command**: `npm test -- --testNamePattern='操作同步'`
+**Test Command**: `npm test -- --testNamePattern='路由导航'`
 
 ## Success Criteria
 
-- [x] 可以捕获 iframe 内的操作事件
-- [x] 操作事件可以发送到服务器
-- [x] 操作可以同步给其他成员
-- [x] 滚动位置可以同步
-- [x] URL 变化可以同步
+- [ ] 首页路由 / 可以正常访问
+- [ ] 房间路由 /room/:roomId 可以正常访问
+- [ ] 通过房间链接可以正确跳转到房间页面
+- [ ] URL 参数可以正确解析
+- [ ] 无效房间号显示错误提示

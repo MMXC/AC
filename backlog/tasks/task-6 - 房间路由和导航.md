@@ -1,9 +1,10 @@
 ---
-id: task-6
+id: TASK-6
 title: 房间路由和导航
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-25 16:57'
+updated_date: '2026-01-26 05:46'
 labels: []
 dependencies: []
 ---
