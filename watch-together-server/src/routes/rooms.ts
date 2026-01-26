@@ -144,4 +144,115 @@ router.post('/', async (req: Request<Record<string, never>, unknown, CreateRoomR
   }
 });
 
+/**
+ * GET /api/v1/rooms/:roomId
+ * 获取房间详细信息
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,              // 房间 ID
+ *     name: string,            // 房间名称
+ *     hostId: string,          // 房主 ID
+ *     currentUrl: string | null, // 当前 URL
+ *     inviteLink: string | null, // 邀请链接
+ *     createdAt: string,        // 创建时间（ISO 字符串）
+ *     updatedAt: string,        // 更新时间（ISO 字符串）
+ *     members: Array<{          // 成员列表
+ *       userId: string,
+ *       nickname: string,
+ *       isHost: boolean,
+ *       joinedAt: string,
+ *       lastActiveAt: string
+ *     }>,
+ *     memberCount: number       // 成员数量
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+router.get('/:roomId', async (req: Request<{ roomId: string }>, res: Response) => {
+  try {
+    const { roomId } = req.params;
+
+    // 验证 roomId 格式
+    if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'roomId is required and must be a non-empty string',
+      });
+    }
+
+    const prisma = getPrismaClient();
+
+    // 查询房间信息（包含成员列表）
+    const room = await prisma.room.findUnique({
+      where: {
+        id: roomId.trim(),
+      },
+      include: {
+        members: {
+          where: {
+            leftAt: null, // 只包含未离开的成员
+          },
+          orderBy: {
+            joinedAt: 'asc',
+          },
+        },
+      },
+    });
+
+    // 如果房间不存在，返回 404
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Room not found',
+      });
+    }
+
+    // 格式化成员列表
+    const members = room.members.map(member => ({
+      userId: member.userId,
+      nickname: member.nickname,
+      isHost: member.isHost,
+      joinedAt: member.joinedAt.toISOString(),
+      lastActiveAt: member.lastActiveAt.toISOString(),
+    }));
+
+    // 返回成功响应
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: room.id,
+        name: room.name,
+        hostId: room.hostId,
+        currentUrl: room.currentUrl,
+        inviteLink: room.inviteLink,
+        createdAt: room.createdAt.toISOString(),
+        updatedAt: room.updatedAt.toISOString(),
+        members: members,
+        memberCount: members.length,
+      },
+    });
+  } catch (error) {
+    console.error('Error getting room:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to get room',
+    });
+  }
+});
+
 export default router;
