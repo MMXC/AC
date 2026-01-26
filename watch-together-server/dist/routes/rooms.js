@@ -36,6 +36,21 @@ function generateUserId() {
     }
     return `user-${randomString}`;
 }
+/**
+ * 生成唯一的消息 ID
+ * 格式：msg-{随机字符串}
+ *
+ * @returns 消息 ID
+ */
+function generateMessageId() {
+    // 生成 8 位随机字符串（小写字母和数字）
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let randomString = '';
+    for (let i = 0; i < 8; i++) {
+        randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `msg-${randomString}`;
+}
 router.post('/', async (req, res) => {
     try {
         const { name, hostNickname } = req.body;
@@ -604,6 +619,106 @@ router.get('/:roomId/members', async (req, res) => {
             success: false,
             error: 'Internal Server Error',
             message: 'Failed to get members',
+        });
+    }
+});
+router.post('/:roomId/messages', async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const { userId, content } = req.body;
+        // 验证 roomId 格式
+        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'roomId is required and must be a non-empty string',
+            });
+        }
+        // 验证必填字段
+        if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'userId is required and must be a non-empty string',
+            });
+        }
+        // 验证消息内容
+        if (!content || typeof content !== 'string' || content.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'content is required and must be a non-empty string',
+            });
+        }
+        // 验证消息内容长度（最大 1000 字符）
+        if (content.length > 1000) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'content must be a string with maximum 1000 characters',
+            });
+        }
+        const prisma = (0, db_1.getPrismaClient)();
+        // 检查房间是否存在且未删除
+        const room = await prisma.room.findFirst({
+            where: {
+                id: roomId.trim(),
+                deletedAt: null,
+            },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: 'Not Found',
+                message: 'Room not found',
+            });
+        }
+        // 检查用户是否存在且未离开
+        const member = await prisma.roomMember.findFirst({
+            where: {
+                roomId: roomId.trim(),
+                userId: userId.trim(),
+                leftAt: null, // 只查找未离开的成员
+            },
+        });
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                error: 'Not Found',
+                message: 'User not found in room or has left',
+            });
+        }
+        // 生成消息 ID
+        const messageId = generateMessageId();
+        // 创建消息记录
+        const message = await prisma.message.create({
+            data: {
+                id: messageId,
+                roomId: roomId.trim(),
+                userId: userId.trim(),
+                nickname: member.nickname,
+                content: content.trim(),
+            },
+        });
+        // 返回成功响应
+        return res.status(201).json({
+            success: true,
+            data: {
+                id: message.id,
+                roomId: message.roomId,
+                userId: message.userId,
+                nickname: message.nickname,
+                content: message.content,
+                createdAt: message.createdAt.toISOString(),
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error sending message:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal Server Error',
+            message: 'Failed to send message',
         });
     }
 });

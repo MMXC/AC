@@ -57,3 +57,5 @@ Cannot use this model: auto. Available models:
 [17:17:45] cursor-agent exited with code: 1
 C: Connection stalled
 [17:18:23] cursor-agent exited with code: 1
+C: Connection stalled
+[17:32:34] cursor-agent exited with code: 1
