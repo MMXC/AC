@@ -1,42 +1,42 @@
 ---
-backlog_id: backlog-25
-task: WebSocket 心跳和连接管理
-test_command: "npm test -- --testNamePattern='心跳连接管理'
-npm test -- --testNamePattern='心跳连接管理'"
+backlog_id: backlog-27
+task: 限流和防刷
+test_command: "npm test -- --testNamePattern='限流防刷'
+npm test -- --testNamePattern='限流防刷'"
 ---
 
-# Task: WebSocket 心跳和连接管理
+# Task: 限流和防刷
 
 ## Description
 
-实现心跳机制（ping/pong），连接超时处理，自动清理断开的连接
+实现 API 限流中间件（IP 限流、用户限流），WebSocket 连接数限制
 
-**Test Command**: `npm test -- --testNamePattern='心跳连接管理'`
+**Test Command**: `npm test -- --testNamePattern='限流防刷'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `WebSocket 连接，5 分钟无活动`
-   预期输出: `连接自动断开，资源清理`
+1. 输入: `短时间内发送 101 个请求`
+   预期输出: `第 101 个请求返回 429`
 
 **测试场景**:
-1. ping/pong 应该正常工作
-2. 超时连接应该自动断开
-3. Redis 连接记录应该清理
+1. 超过 IP 限流应该返回 429
+2. 超过用户限流应该返回 429
+3. 限流计数器应该正确重置
 
 **断言示例**:
-1. `// 模拟 5 分钟无活动`
-2. `jest.advanceTimersByTime(5 * 60 * 1000)`
-3. `expect(ws.readyState).toBe(WebSocket.CLOSED)`
-4. `const connections = await redis.smembers(`ws:room:${roomId}:connections`)`
-5. `expect(connections).not.toContain(userId)`
+1. `for (let i = 0; i < 101; i++) {`
+2. `await request(app).get('/api/v1/rooms/room-123')`
+3. `}`
+4. `const response = await request(app).get('/api/v1/rooms/room-123')`
+5. `expect(response.status).toBe(429)`
 
-**Test Command**: `npm test -- --testNamePattern='心跳连接管理'`
+**Test Command**: `npm test -- --testNamePattern='限流防刷'`
 
 ## Success Criteria
 
-- [x] 服务器定期发送 ping，客户端响应 pong
-- [x] 无响应 5 分钟后自动断开连接
-- [x] 断开连接时清理 Redis 中的连接记录
-- [x] 断开连接时更新成员 last_active_at
-- [x] 连接数限制（每 IP 最多 10 个连接）
+- [ ] IP 限流：100 请求/分钟
+- [ ] 用户限流：1000 请求/小时
+- [ ] 超过限制返回 429 错误
+- [ ] WebSocket 连接数限制：每 IP 最多 10 个
+- [ ] 限流使用 Redis 实现（支持多实例）

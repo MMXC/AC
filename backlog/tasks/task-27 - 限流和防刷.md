@@ -1,9 +1,10 @@
 ---
 id: TASK-27
 title: 限流和防刷
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:38'
+updated_date: '2026-01-26 18:07'
 labels: []
 dependencies: []
 ---
