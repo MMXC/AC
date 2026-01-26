@@ -1,9 +1,10 @@
 ---
 id: TASK-30
 title: 性能测试和优化
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:38'
+updated_date: '2026-01-26 18:51'
 labels: []
 dependencies: []
 ---

@@ -1,40 +1,41 @@
 ---
-backlog_id: backlog-29
-task: 缓存策略优化
-test_command: "npm test -- --testNamePattern='缓存优化'
-npm test -- --testNamePattern='缓存优化'"
+backlog_id: backlog-30
+task: 性能测试和优化
+test_command: "npm run test:performance
+npm run test:performance"
 ---
 
-# Task: 缓存策略优化
+# Task: 性能测试和优化
 
 ## Description
 
-实现房间状态缓存（Redis），减少数据库查询，提高性能
+编写性能测试，优化数据库查询和 WebSocket 消息处理
 
-**Test Command**: `npm test -- --testNamePattern='缓存优化'`
+**Test Command**: `npm run test:performance`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `多次查询同一房间`
-   预期输出: `第一次查询数据库，后续查询缓存`
+1. 输入: `1000 并发请求`
+   预期输出: `P95 响应时间 < 200ms`
 
 **测试场景**:
-1. 首次查询应该查询数据库并缓存
-2. 后续查询应该使用缓存
-3. 更新房间应该失效缓存
+1. 并发请求应该快速响应
+2. WebSocket 消息应该低延迟
+3. 高并发不应该导致错误
 
 **断言示例**:
-1. `const room1 = await getRoom(roomId) // 查询数据库`
-2. `const room2 = await getRoom(roomId) // 使用缓存`
-3. `expect(dbQueryCount).toBe(1) // 只查询一次数据库`
+1. `const results = await Promise.all(Array(1000).fill(0).map(() => request(app).get(`/api/v1/rooms/${roomId}`)))`
+2. `const responseTimes = results.map(r => r.headers['x-response-time'])`
+3. `const p95 = calculatePercentile(responseTimes, 95)`
+4. `expect(p95).toBeLessThan(200)`
 
-**Test Command**: `npm test -- --testNamePattern='缓存优化'`
+**Test Command**: `npm run test:performance`
 
 ## Success Criteria
 
-- [x] 房间信息缓存到 Redis（TTL 1 小时）
-- [x] 缓存命中时减少数据库查询
-- [x] 房间更新时自动失效缓存
-- [x] 缓存未命中时从数据库加载并缓存
-- [x] 性能提升：P95 响应时间 < 200ms
+- [ ] REST API P95 响应时间 < 200ms
+- [ ] WebSocket 消息延迟 P95 < 50ms
+- [ ] 支持 10,000+ 并发 WebSocket 连接（单实例）
+- [ ] 支持 1,000+ QPS（REST API）
+- [ ] 数据库查询优化（索引、连接池）
