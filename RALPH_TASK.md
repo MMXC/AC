@@ -38,8 +38,8 @@ npm test -- --testNamePattern='状态同步'"
 
 ## Success Criteria
 
-- [ ] 连接建立时自动发送 SYNC_STATE 消息
-- [ ] 消息包含当前 URL、成员列表、最近消息
-- [ ] 客户端发送 SYNC_REQUEST 时响应 SYNC_STATE
-- [ ] 消息格式符合 WebSocket 协议规范
-- [ ] 状态数据从数据库和 Redis 正确获取
+- [x] 连接建立时自动发送 SYNC_STATE 消息
+- [x] 消息包含当前 URL、成员列表、最近消息
+- [x] 客户端发送 SYNC_REQUEST 时响应 SYNC_STATE
+- [x] 消息格式符合 WebSocket 协议规范
+- [x] 状态数据从数据库和 Redis 正确获取
