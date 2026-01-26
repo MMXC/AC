@@ -1,44 +1,41 @@
 ---
-backlog_id: backlog-12
-task: 房间管理 API - 创建房间
-test_command: "npm test -- --testNamePattern='创建房间'
-npm test -- --testNamePattern='创建房间'"
+backlog_id: backlog-13
+task: 房间管理 API - 获取房间信息
+test_command: "npm test -- --testNamePattern='获取房间信息'
+npm test -- --testNamePattern='获取房间信息'"
 ---
 
-# Task: 房间管理 API - 创建房间
+# Task: 房间管理 API - 获取房间信息
 
 ## Description
 
-实现 POST /api/v1/rooms 接口，创建房间并返回房间信息
+实现 GET /api/v1/rooms/:roomId 接口，返回房间详细信息
 
-**Test Command**: `npm test -- --testNamePattern='创建房间'`
+**Test Command**: `npm test -- --testNamePattern='获取房间信息'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: ``{name: "我的房间", hostNickname: "房主"}``
-   预期输出: ``{success: true, data: {id: "room-xxx", name: "我的房间", ...}}``
+1. 输入: `有效的 roomId`
+   预期输出: `完整的房间信息对象`
 
 **测试场景**:
-1. 创建房间应该返回 201 状态码
-2. 房间 ID 应该是唯一的
-3. 房主应该自动添加到成员列表
-4. 数据库应该保存房间记录
+1. 获取存在的房间应该返回 200
+2. 获取不存在的房间应该返回 404
+3. 响应应该包含成员列表和消息数量
 
 **断言示例**:
-1. `const response = await request(app).post('/api/v1/rooms').send({name: 'Test Room'})`
-2. `expect(response.status).toBe(201)`
-3. `expect(response.body.success).toBe(true)`
-4. `expect(response.body.data.id).toMatch(/^room-[a-z0-9]+$/)`
-5. `const room = await prisma.room.findUnique({where: {id: response.body.data.id}})`
-6. `expect(room).toBeDefined()`
+1. `const response = await request(app).get(`/api/v1/rooms/${roomId}`)`
+2. `expect(response.status).toBe(200)`
+3. `expect(response.body.data.members).toBeArray()`
+4. `expect(response.body.data.memberCount).toBeGreaterThanOrEqual(0)`
 
-**Test Command**: `npm test -- --testNamePattern='创建房间'`
+**Test Command**: `npm test -- --testNamePattern='获取房间信息'`
 
 ## Success Criteria
 
-- [x] POST 请求可以成功创建房间
-- [x] 返回的房间 ID 格式正确（如 room-abc12345）
-- [x] 自动创建房主成员记录
-- [x] 返回的响应格式符合 API 规范
-- [x] 房间信息正确保存到数据库
+- [ ] GET 请求可以成功获取存在的房间
+- [ ] 返回 404 当房间不存在时
+- [ ] 返回的房间信息包含所有必需字段
+- [ ] 成员列表正确包含在响应中
+- [ ] 响应格式符合 API 规范
