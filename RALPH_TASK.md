@@ -37,8 +37,8 @@ npm test -- --testNamePattern='成员加入离开'"
 
 ## Success Criteria
 
-- [ ] 新成员加入时广播 MEMBER_JOINED 消息
-- [ ] 成员离开时广播 MEMBER_LEFT 消息
-- [ ] 消息只发送给同一房间的其他成员
-- [ ] 成员列表正确更新
-- [ ] 断开连接时自动触发 MEMBER_LEFT
+- [x] 新成员加入时广播 MEMBER_JOINED 消息
+- [x] 成员离开时广播 MEMBER_LEFT 消息
+- [x] 消息只发送给同一房间的其他成员
+- [x] 成员列表正确更新
+- [x] 断开连接时自动触发 MEMBER_LEFT
