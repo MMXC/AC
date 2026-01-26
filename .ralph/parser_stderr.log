@@ -59,3 +59,5 @@ C: Connection stalled
 [17:18:23] cursor-agent exited with code: 1
 C: Connection stalled
 [17:32:34] cursor-agent exited with code: 1
+C: [resource_exhausted] Error
+[18:45:33] cursor-agent exited with code: 1

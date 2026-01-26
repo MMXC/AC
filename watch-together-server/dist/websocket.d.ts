@@ -12,6 +12,10 @@ interface WebSocketConnection {
     ws: WebSocket;
     roomId: string;
     userId: string;
+    lastPongTime: number;
+    pingInterval?: NodeJS.Timeout;
+    timeoutTimer?: NodeJS.Timeout;
+    clientIp?: string;
 }
 /**
  * 创建并启动 WebSocket 服务器

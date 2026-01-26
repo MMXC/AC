@@ -23,6 +23,18 @@ let wss = null;
  */
 const connections = new Map();
 /**
+ * IP 地址到连接数的映射（用于连接数限制）
+ */
+const ipConnectionCount = new Map();
+/**
+ * 心跳配置
+ */
+const HEARTBEAT_CONFIG = {
+    pingInterval: 30000, // 每 30 秒发送一次 ping
+    timeoutDuration: 5 * 60 * 1000, // 5 分钟无响应则断开
+    maxConnectionsPerIp: 10, // 每个 IP 最多 10 个连接
+};
+/**
  * 验证房间 ID 格式
  *
  * @param roomId 房间 ID
@@ -127,6 +139,141 @@ async function removeConnectionFromRedis(roomId, userId) {
     catch (error) {
         console.error('Error removing connection from Redis:', error);
         // Redis 错误不应该阻止清理，只记录日志
+    }
+}
+/**
+ * 获取客户端 IP 地址
+ *
+ * @param req HTTP 请求
+ * @returns 客户端 IP 地址
+ */
+function getClientIp(req) {
+    // 尝试从 X-Forwarded-For 获取（代理场景）
+    const forwardedFor = req.headers?.['x-forwarded-for'];
+    if (forwardedFor) {
+        if (typeof forwardedFor === 'string') {
+            return forwardedFor.split(',')[0].trim();
+        }
+        if (Array.isArray(forwardedFor) && forwardedFor.length > 0) {
+            return forwardedFor[0].split(',')[0].trim();
+        }
+    }
+    // 尝试从 X-Real-IP 获取
+    const realIp = req.headers?.['x-real-ip'];
+    if (realIp) {
+        if (typeof realIp === 'string') {
+            return realIp;
+        }
+        if (Array.isArray(realIp) && realIp.length > 0) {
+            return realIp[0];
+        }
+    }
+    // 从 socket 获取
+    return req.socket?.remoteAddress || 'unknown';
+}
+/**
+ * 检查 IP 连接数限制
+ *
+ * @param clientIp 客户端 IP 地址
+ * @returns 是否允许连接
+ */
+function checkConnectionLimit(clientIp) {
+    const currentCount = ipConnectionCount.get(clientIp) || 0;
+    return currentCount < HEARTBEAT_CONFIG.maxConnectionsPerIp;
+}
+/**
+ * 增加 IP 连接数
+ *
+ * @param clientIp 客户端 IP 地址
+ */
+function incrementIpConnectionCount(clientIp) {
+    const currentCount = ipConnectionCount.get(clientIp) || 0;
+    ipConnectionCount.set(clientIp, currentCount + 1);
+}
+/**
+ * 减少 IP 连接数
+ *
+ * @param clientIp 客户端 IP 地址
+ */
+function decrementIpConnectionCount(clientIp) {
+    const currentCount = ipConnectionCount.get(clientIp) || 0;
+    if (currentCount <= 1) {
+        ipConnectionCount.delete(clientIp);
+    }
+    else {
+        ipConnectionCount.set(clientIp, currentCount - 1);
+    }
+}
+/**
+ * 更新成员最后活动时间
+ *
+ * @param roomId 房间 ID
+ * @param userId 用户 ID
+ * @returns Promise<void>
+ */
+async function updateMemberLastActiveAt(roomId, userId) {
+    try {
+        const prisma = (0, db_1.getPrismaClient)();
+        await prisma.roomMember.updateMany({
+            where: {
+                roomId: roomId,
+                userId: userId,
+                leftAt: null, // 只更新未离开的成员
+            },
+            data: {
+                lastActiveAt: new Date(),
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error updating member lastActiveAt:', error);
+        // 错误不应该阻止断开连接，只记录日志
+    }
+}
+/**
+ * 启动心跳机制
+ *
+ * @param connection WebSocket 连接信息
+ */
+function startHeartbeat(connection) {
+    const now = Date.now();
+    connection.lastPongTime = now;
+    // 定期发送 ping
+    connection.pingInterval = setInterval(() => {
+        if (connection.ws.readyState === ws_1.WebSocket.OPEN) {
+            try {
+                connection.ws.ping();
+            }
+            catch (error) {
+                console.error('Error sending ping:', error);
+            }
+        }
+    }, HEARTBEAT_CONFIG.pingInterval);
+    // 检查超时
+    connection.timeoutTimer = setInterval(() => {
+        const timeSinceLastPong = Date.now() - connection.lastPongTime;
+        if (timeSinceLastPong >= HEARTBEAT_CONFIG.timeoutDuration) {
+            console.log(`Connection timeout: roomId=${connection.roomId}, userId=${connection.userId}`);
+            // 超时，断开连接
+            if (connection.ws.readyState === ws_1.WebSocket.OPEN) {
+                connection.ws.close(1008, 'Connection timeout: no response for 5 minutes');
+            }
+        }
+    }, 10000); // 每 10 秒检查一次
+}
+/**
+ * 清理心跳机制
+ *
+ * @param connection WebSocket 连接信息
+ */
+function stopHeartbeat(connection) {
+    if (connection.pingInterval) {
+        clearInterval(connection.pingInterval);
+        connection.pingInterval = undefined;
+    }
+    if (connection.timeoutTimer) {
+        clearInterval(connection.timeoutTimer);
+        connection.timeoutTimer = undefined;
     }
 }
 /**
@@ -669,6 +816,13 @@ async function handleConnection(ws, req) {
             ws.close(1008, 'Invalid userId format');
             return;
         }
+        // 获取客户端 IP
+        const clientIp = getClientIp(req);
+        // 检查连接数限制
+        if (!checkConnectionLimit(clientIp)) {
+            ws.close(1008, `Connection limit exceeded: maximum ${HEARTBEAT_CONFIG.maxConnectionsPerIp} connections per IP`);
+            return;
+        }
         // 验证房间是否存在
         const roomExists = await validateRoom(roomId);
         if (!roomExists) {
@@ -686,7 +840,11 @@ async function handleConnection(ws, req) {
             ws,
             roomId,
             userId,
+            lastPongTime: Date.now(),
+            clientIp,
         };
+        // 增加 IP 连接数
+        incrementIpConnectionCount(clientIp);
         // 检查是否已有其他成员在房间中（用于判断是否需要广播 MEMBER_JOINED）
         const hadOtherMembers = connections.has(roomId) && connections.get(roomId).size > 0;
         // 存储连接
@@ -696,13 +854,25 @@ async function handleConnection(ws, req) {
         connections.get(roomId).set(userId, connection);
         // 存储到 Redis
         await storeConnectionInRedis(roomId, userId);
-        console.log(`WebSocket connected: roomId=${roomId}, userId=${userId}`);
+        // 启动心跳机制
+        startHeartbeat(connection);
+        console.log(`WebSocket connected: roomId=${roomId}, userId=${userId}, ip=${clientIp}`);
         // 如果有其他成员在房间中，广播 MEMBER_JOINED 消息
         if (hadOtherMembers) {
             await broadcastMemberJoined(roomId, userId);
         }
+        // 处理 pong 消息（心跳响应）
+        ws.on('pong', () => {
+            connection.lastPongTime = Date.now();
+            // 更新成员最后活动时间
+            updateMemberLastActiveAt(roomId, userId).catch(error => {
+                console.error('Error updating lastActiveAt on pong:', error);
+            });
+        });
         // 处理消息
         ws.on('message', async (data) => {
+            // 更新最后活动时间（收到任何消息都表示连接活跃）
+            connection.lastPongTime = Date.now();
             try {
                 const message = JSON.parse(data.toString());
                 console.log(`Received message from ${userId} in ${roomId}:`, message);
@@ -740,6 +910,14 @@ async function handleConnection(ws, req) {
         // 处理连接关闭
         ws.on('close', async () => {
             console.log(`WebSocket disconnected: roomId=${roomId}, userId=${userId}`);
+            // 停止心跳机制
+            stopHeartbeat(connection);
+            // 减少 IP 连接数
+            if (connection.clientIp) {
+                decrementIpConnectionCount(connection.clientIp);
+            }
+            // 更新成员最后活动时间
+            await updateMemberLastActiveAt(roomId, userId);
             // 检查是否还有其他成员在房间中（用于判断是否需要广播 MEMBER_LEFT）
             const roomConnections = connections.get(roomId);
             const hasOtherMembers = roomConnections && roomConnections.size > 1;
