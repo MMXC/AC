@@ -1,18 +1,14 @@
 ---
-id: TASK-17
-title: 消息管理 API - 发送消息
-status: Done
-assignee: []
-created_date: '2026-01-26 06:37'
-updated_date: '2026-01-26 15:17'
-labels: []
-dependencies: []
-ordinal: 16000
+backlog_id: backlog-17
+task: 消息管理 API - 发送消息
+test_command: "npm test -- --testNamePattern='发送消息'
+npm test -- --testNamePattern='发送消息'"
 ---
+
+# Task: 消息管理 API - 发送消息
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 实现 POST /api/v1/rooms/:roomId/messages 接口，保存消息到数据库
 
 **Test Command**: `npm test -- --testNamePattern='发送消息'`
@@ -36,13 +32,11 @@ ordinal: 16000
 5. `expect(message).toBeDefined()`
 
 **Test Command**: `npm test -- --testNamePattern='发送消息'`
-<!-- SECTION:DESCRIPTION:END -->
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 POST 请求可以成功发送消息
-- [ ] #2 消息正确保存到数据库
-- [ ] #3 返回的消息包含所有必需字段（id, userId, nickname, content, timestamp）
-- [ ] #4 消息内容长度验证（最大 1000 字符）
-- [ ] #5 如果房间不存在返回 404
-<!-- AC:END -->
+## Success Criteria
+
+- [x] POST 请求可以成功发送消息
+- [x] 消息正确保存到数据库
+- [x] 返回的消息包含所有必需字段（id, userId, nickname, content, timestamp）
+- [x] 消息内容长度验证（最大 1000 字符）
+- [x] 如果房间不存在返回 404
