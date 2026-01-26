@@ -1,12 +1,13 @@
 ---
 id: TASK-22
 title: WebSocket 消息处理 - 成员加入和离开
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:37'
-updated_date: '2026-01-26 16:29'
+updated_date: '2026-01-26 20:03'
 labels: []
 dependencies: []
+ordinal: 21000
 ---
 
 ## Description

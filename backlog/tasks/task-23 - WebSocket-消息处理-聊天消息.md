@@ -1,12 +1,13 @@
 ---
 id: TASK-23
 title: WebSocket 消息处理 - 聊天消息
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:37'
-updated_date: '2026-01-26 17:27'
+updated_date: '2026-01-26 20:03'
 labels: []
 dependencies: []
+ordinal: 23000
 ---
 
 ## Description

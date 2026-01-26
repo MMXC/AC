@@ -1,12 +1,13 @@
 ---
 id: TASK-25
 title: WebSocket 心跳和连接管理
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:37'
-updated_date: '2026-01-26 17:58'
+updated_date: '2026-01-26 20:03'
 labels: []
 dependencies: []
+ordinal: 25000
 ---
 
 ## Description

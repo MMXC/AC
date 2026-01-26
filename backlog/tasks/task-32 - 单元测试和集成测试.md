@@ -1,9 +1,10 @@
 ---
 id: TASK-32
 title: 单元测试和集成测试
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:38'
+updated_date: '2026-01-26 20:03'
 labels: []
 dependencies: []
 ---

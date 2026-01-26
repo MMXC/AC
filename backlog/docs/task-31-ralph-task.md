@@ -1,18 +1,14 @@
 ---
-id: TASK-31
-title: Docker 容器化
-status: Done
-assignee: []
-created_date: '2026-01-26 06:38'
-updated_date: '2026-01-26 20:03'
-labels: []
-dependencies: []
-ordinal: 28000
+backlog_id: backlog-31
+task: Docker 容器化
+test_command: "docker-compose up -d && docker-compose ps
+docker-compose up -d && docker-compose ps"
 ---
+
+# Task: Docker 容器化
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 创建 Dockerfile 和 docker-compose.yml，支持本地开发和生产部署
 
 **Test Command**: `docker-compose up -d && docker-compose ps`
@@ -35,13 +31,11 @@ ordinal: 28000
 4. `# 应该返回 200`
 
 **Test Command**: `docker-compose up -d && docker-compose ps`
-<!-- SECTION:DESCRIPTION:END -->
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 Dockerfile 可以成功构建镜像
-- [ ] #2 docker-compose.yml 包含所有服务（API、PostgreSQL、Redis）
-- [ ] #3 容器可以正常启动和运行
-- [ ] #4 环境变量正确配置
-- [ ] #5 健康检查通过
-<!-- AC:END -->
+## Success Criteria
+
+- [x] Dockerfile 可以成功构建镜像
+- [x] docker-compose.yml 包含所有服务（API、PostgreSQL、Redis）
+- [x] 容器可以正常启动和运行
+- [x] 环境变量正确配置
+- [x] 健康检查通过

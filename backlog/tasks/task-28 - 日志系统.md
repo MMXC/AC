@@ -1,12 +1,13 @@
 ---
 id: TASK-28
 title: 日志系统
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:38'
-updated_date: '2026-01-26 18:17'
+updated_date: '2026-01-26 20:03'
 labels: []
 dependencies: []
+ordinal: 27000
 ---
 
 ## Description

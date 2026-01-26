@@ -1,12 +1,13 @@
 ---
 id: TASK-29
 title: 缓存策略优化
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:38'
-updated_date: '2026-01-26 18:39'
+updated_date: '2026-01-26 20:03'
 labels: []
 dependencies: []
+ordinal: 26000
 ---
 
 ## Description
