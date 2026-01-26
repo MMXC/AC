@@ -281,6 +281,117 @@ async function sendSyncState(ws: WebSocket, roomId: string): Promise<void> {
 }
 
 /**
+ * 广播 MEMBER_JOINED 消息给房间内其他成员
+ *
+ * @param roomId 房间 ID
+ * @param userId 新加入的用户 ID
+ */
+async function broadcastMemberJoined(roomId: string, userId: string): Promise<void> {
+  try {
+    // 从数据库获取用户信息
+    const prisma = getPrismaClient();
+    const member = await prisma.roomMember.findFirst({
+      where: {
+        roomId: roomId,
+        userId: userId,
+        leftAt: null,
+      },
+      select: {
+        userId: true,
+        nickname: true,
+        isHost: true,
+        joinedAt: true,
+      },
+    });
+
+    if (!member) {
+      console.warn(`Member ${userId} not found in room ${roomId}`);
+      return;
+    }
+
+    // 构建 MEMBER_JOINED 消息
+    const message = {
+      type: 'MEMBER_JOINED',
+      data: {
+        userId: member.userId,
+        nickname: member.nickname,
+        isHost: member.isHost,
+        joinedAt: member.joinedAt.toISOString(),
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    // 广播给房间内其他成员（不包括发送者）
+    const roomConnections = connections.get(roomId);
+    if (roomConnections) {
+      const messageStr = JSON.stringify(message);
+      roomConnections.forEach((connection, connectionUserId) => {
+        // 只发送给其他成员
+        if (connectionUserId !== userId && connection.ws.readyState === WebSocket.OPEN) {
+          connection.ws.send(messageStr);
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error broadcasting MEMBER_JOINED:', error);
+  }
+}
+
+/**
+ * 广播 MEMBER_LEFT 消息给房间内其他成员
+ *
+ * @param roomId 房间 ID
+ * @param userId 离开的用户 ID
+ */
+async function broadcastMemberLeft(roomId: string, userId: string): Promise<void> {
+  try {
+    // 从数据库获取用户信息（可能已经离开，所以不检查 leftAt）
+    const prisma = getPrismaClient();
+    const member = await prisma.roomMember.findFirst({
+      where: {
+        roomId: roomId,
+        userId: userId,
+      },
+      select: {
+        userId: true,
+        nickname: true,
+        isHost: true,
+      },
+    });
+
+    if (!member) {
+      console.warn(`Member ${userId} not found in room ${roomId}`);
+      return;
+    }
+
+    // 构建 MEMBER_LEFT 消息
+    const message = {
+      type: 'MEMBER_LEFT',
+      data: {
+        userId: member.userId,
+        nickname: member.nickname,
+        isHost: member.isHost,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    // 广播给房间内其他成员（不包括发送者）
+    const roomConnections = connections.get(roomId);
+    if (roomConnections) {
+      const messageStr = JSON.stringify(message);
+      roomConnections.forEach((connection, connectionUserId) => {
+        // 只发送给其他成员
+        if (connectionUserId !== userId && connection.ws.readyState === WebSocket.OPEN) {
+          connection.ws.send(messageStr);
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error broadcasting MEMBER_LEFT:', error);
+  }
+}
+
+/**
  * 处理 WebSocket 连接
  *
  * @param ws WebSocket 连接
@@ -331,6 +442,9 @@ async function handleConnection(ws: WebSocket, req: { url?: string }): Promise<v
       userId,
     };
 
+    // 检查是否已有其他成员在房间中（用于判断是否需要广播 MEMBER_JOINED）
+    const hadOtherMembers = connections.has(roomId) && connections.get(roomId)!.size > 0;
+
     // 存储连接
     if (!connections.has(roomId)) {
       connections.set(roomId, new Map());
@@ -341,6 +455,11 @@ async function handleConnection(ws: WebSocket, req: { url?: string }): Promise<v
     await storeConnectionInRedis(roomId, userId);
 
     console.log(`WebSocket connected: roomId=${roomId}, userId=${userId}`);
+
+    // 如果有其他成员在房间中，广播 MEMBER_JOINED 消息
+    if (hadOtherMembers) {
+      await broadcastMemberJoined(roomId, userId);
+    }
 
     // 处理消息
     ws.on('message', async (data: Buffer) => {
@@ -371,8 +490,11 @@ async function handleConnection(ws: WebSocket, req: { url?: string }): Promise<v
     ws.on('close', async () => {
       console.log(`WebSocket disconnected: roomId=${roomId}, userId=${userId}`);
 
-      // 从内存中移除连接
+      // 检查是否还有其他成员在房间中（用于判断是否需要广播 MEMBER_LEFT）
       const roomConnections = connections.get(roomId);
+      const hasOtherMembers = roomConnections && roomConnections.size > 1;
+
+      // 从内存中移除连接
       if (roomConnections) {
         roomConnections.delete(userId);
         if (roomConnections.size === 0) {
@@ -382,6 +504,11 @@ async function handleConnection(ws: WebSocket, req: { url?: string }): Promise<v
 
       // 从 Redis 移除连接
       await removeConnectionFromRedis(roomId, userId);
+
+      // 如果还有其他成员在房间中，广播 MEMBER_LEFT 消息
+      if (hasOtherMembers) {
+        await broadcastMemberLeft(roomId, userId);
+      }
     });
 
     // 处理错误
