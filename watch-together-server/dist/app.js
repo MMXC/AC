@@ -9,9 +9,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createApp = createApp;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const pino_http_1 = __importDefault(require("pino-http"));
 const rooms_1 = __importDefault(require("./routes/rooms"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const rateLimit_1 = require("./middleware/rateLimit");
+const logger_1 = require("./logger");
 /**
  * 创建并配置 Express 应用
  */
@@ -26,6 +28,43 @@ function createApp() {
     app.use(express_1.default.json());
     // URL 编码解析中间件
     app.use(express_1.default.urlencoded({ extended: true }));
+    // HTTP 请求日志中间件（必须在限流之前，以便记录所有请求）
+    app.use((0, pino_http_1.default)({
+        logger: logger_1.logger,
+        customLogLevel: (_req, res, _err) => {
+            if (res.statusCode >= 500) {
+                return 'error';
+            }
+            else if (res.statusCode >= 400) {
+                return 'warn';
+            }
+            return 'info';
+        },
+        customSuccessMessage: (req, res) => {
+            return `${req.method} ${req.url} - ${res.statusCode}`;
+        },
+        customErrorMessage: (req, res, err) => {
+            return `${req.method} ${req.url} - ${res.statusCode} - ${err.message}`;
+        },
+        // 自定义请求日志字段
+        customProps: (req) => {
+            return {
+                method: req.method,
+                url: req.url,
+                path: req.path,
+                query: req.query,
+                ip: req.ip || req.socket.remoteAddress,
+                userAgent: req.get('user-agent'),
+            };
+        },
+        // 自定义响应日志字段
+        customAttributeKeys: {
+            req: 'request',
+            res: 'response',
+            err: 'error',
+            responseTime: 'duration',
+        },
+    }));
     // 限流中间件（应用到所有 API 路由）
     app.use('/api', rateLimit_1.rateLimit);
     // 健康检查端点（不应用限流）

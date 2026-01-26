@@ -14,10 +14,15 @@ const ws_1 = require("ws");
 const url_1 = require("url");
 const db_1 = require("./db");
 const redis_1 = require("./redis");
+const logger_1 = require("./logger");
 /**
  * WebSocket 服务器实例
  */
 let wss = null;
+/**
+ * WebSocket 专用 logger（添加上下文信息）
+ */
+const wsLogger = (0, logger_1.createChildLogger)({ component: 'websocket' });
 /**
  * 活动连接映射（roomId -> userId -> WebSocket）
  */
@@ -76,7 +81,7 @@ async function validateRoom(roomId) {
         return true;
     }
     catch (error) {
-        console.error('Error validating room:', error);
+        wsLogger.error({ err: error }, 'Error validating room');
         return false;
     }
 }
@@ -100,7 +105,7 @@ async function validateUserInRoom(roomId, userId) {
         return member !== null;
     }
     catch (error) {
-        console.error('Error validating user in room:', error);
+        wsLogger.error({ err: error }, 'Error validating user in room');
         return false;
     }
 }
@@ -120,7 +125,7 @@ async function storeConnectionInRedis(roomId, userId) {
         await cache.expire(key, 24 * 60 * 60);
     }
     catch (error) {
-        console.error('Error storing connection in Redis:', error);
+        wsLogger.error({ err: error, roomId, userId }, 'Error storing connection in Redis');
         // Redis 错误不应该阻止连接，只记录日志
     }
 }
@@ -138,7 +143,7 @@ async function removeConnectionFromRedis(roomId, userId) {
         await cache.srem(key, userId);
     }
     catch (error) {
-        console.error('Error removing connection from Redis:', error);
+        wsLogger.error({ err: error, roomId, userId }, 'Error removing connection from Redis');
         // Redis 错误不应该阻止清理，只记录日志
     }
 }
@@ -189,7 +194,7 @@ async function checkConnectionLimit(clientIp) {
     }
     catch (error) {
         // Redis 错误时，使用内存降级方案
-        console.error('Error checking connection limit in Redis:', error);
+        wsLogger.error({ err: error, clientIp }, 'Error checking connection limit in Redis');
         const currentCount = ipConnectionCount.get(clientIp) || 0;
         return currentCount < HEARTBEAT_CONFIG.maxConnectionsPerIp;
     }
@@ -212,7 +217,7 @@ async function incrementIpConnectionCount(clientIp, connectionId) {
     }
     catch (error) {
         // Redis 错误时，使用内存降级方案
-        console.error('Error incrementing connection count in Redis:', error);
+        wsLogger.error({ err: error, clientIp, connectionId }, 'Error incrementing connection count in Redis');
         const currentCount = ipConnectionCount.get(clientIp) || 0;
         ipConnectionCount.set(clientIp, currentCount + 1);
     }
@@ -238,7 +243,7 @@ async function decrementIpConnectionCount(clientIp, connectionId) {
     }
     catch (error) {
         // Redis 错误时，使用内存降级方案
-        console.error('Error decrementing connection count in Redis:', error);
+        wsLogger.error({ err: error, clientIp, connectionId }, 'Error decrementing connection count in Redis');
         const currentCount = ipConnectionCount.get(clientIp) || 0;
         if (currentCount <= 1) {
             ipConnectionCount.delete(clientIp);
@@ -270,7 +275,7 @@ async function updateMemberLastActiveAt(roomId, userId) {
         });
     }
     catch (error) {
-        console.error('Error updating member lastActiveAt:', error);
+        wsLogger.error({ err: error, roomId, userId }, 'Error updating member lastActiveAt');
         // 错误不应该阻止断开连接，只记录日志
     }
 }
@@ -289,7 +294,7 @@ function startHeartbeat(connection) {
                 connection.ws.ping();
             }
             catch (error) {
-                console.error('Error sending ping:', error);
+                wsLogger.error({ err: error, roomId: connection.roomId, userId: connection.userId }, 'Error sending ping');
             }
         }
     }, HEARTBEAT_CONFIG.pingInterval);
@@ -297,7 +302,7 @@ function startHeartbeat(connection) {
     connection.timeoutTimer = setInterval(() => {
         const timeSinceLastPong = Date.now() - connection.lastPongTime;
         if (timeSinceLastPong >= HEARTBEAT_CONFIG.timeoutDuration) {
-            console.log(`Connection timeout: roomId=${connection.roomId}, userId=${connection.userId}`);
+            wsLogger.warn({ roomId: connection.roomId, userId: connection.userId, timeSinceLastPong }, 'Connection timeout');
             // 超时，断开连接
             if (connection.ws.readyState === ws_1.WebSocket.OPEN) {
                 connection.ws.close(1008, 'Connection timeout: no response for 5 minutes');
@@ -394,7 +399,7 @@ async function getRoomState(roomId) {
         return state;
     }
     catch (error) {
-        console.error('Error getting room state:', error);
+        wsLogger.error({ err: error, roomId }, 'Error getting room state');
         // 返回空状态而不是抛出错误
         return {
             currentUrl: null,
@@ -420,7 +425,7 @@ async function sendSyncState(ws, roomId) {
         ws.send(JSON.stringify(message));
     }
     catch (error) {
-        console.error('Error sending SYNC_STATE:', error);
+        wsLogger.error({ err: error, roomId }, 'Error sending SYNC_STATE');
         // 发送错误消息
         ws.send(JSON.stringify({
             type: 'ERROR',
@@ -453,7 +458,7 @@ async function broadcastMemberJoined(roomId, userId) {
             },
         });
         if (!member) {
-            console.warn(`Member ${userId} not found in room ${roomId}`);
+            wsLogger.warn({ roomId, userId }, 'Member not found in room (MEMBER_JOINED)');
             return;
         }
         // 构建 MEMBER_JOINED 消息
@@ -480,7 +485,7 @@ async function broadcastMemberJoined(roomId, userId) {
         }
     }
     catch (error) {
-        console.error('Error broadcasting MEMBER_JOINED:', error);
+        wsLogger.error({ err: error, roomId, userId }, 'Error broadcasting MEMBER_JOINED');
     }
 }
 /**
@@ -678,7 +683,7 @@ async function handleUrlChange(ws, message, roomId, userId) {
         broadcastToRoom(roomId, broadcastMessage);
     }
     catch (error) {
-        console.error('Error handling URL_CHANGE:', error);
+        wsLogger.error({ err: error, roomId, userId }, 'Error handling URL_CHANGE');
         ws.send(JSON.stringify({
             type: 'ERROR',
             error: 'Failed to process URL change',
@@ -775,7 +780,7 @@ async function handleChatMessage(ws, message, roomId, userId) {
         broadcastToRoom(roomId, broadcastMessage);
     }
     catch (error) {
-        console.error('Error handling CHAT_MESSAGE:', error);
+        wsLogger.error({ err: error, roomId, userId }, 'Error handling CHAT_MESSAGE');
         ws.send(JSON.stringify({
             type: 'ERROR',
             error: 'Failed to process chat message',
@@ -805,7 +810,7 @@ async function broadcastMemberLeft(roomId, userId) {
             },
         });
         if (!member) {
-            console.warn(`Member ${userId} not found in room ${roomId}`);
+            wsLogger.warn({ roomId, userId }, 'Member not found in room (MEMBER_LEFT)');
             return;
         }
         // 构建 MEMBER_LEFT 消息
@@ -831,7 +836,7 @@ async function broadcastMemberLeft(roomId, userId) {
         }
     }
     catch (error) {
-        console.error('Error broadcasting MEMBER_LEFT:', error);
+        wsLogger.error({ err: error, roomId, userId }, 'Error broadcasting MEMBER_LEFT');
     }
 }
 /**
@@ -904,7 +909,7 @@ async function handleConnection(ws, req) {
         await storeConnectionInRedis(roomId, userId);
         // 启动心跳机制
         startHeartbeat(connection);
-        console.log(`WebSocket connected: roomId=${roomId}, userId=${userId}, ip=${clientIp}`);
+        wsLogger.info({ roomId, userId, ip: clientIp }, 'WebSocket connected');
         // 如果有其他成员在房间中，广播 MEMBER_JOINED 消息
         if (hadOtherMembers) {
             await broadcastMemberJoined(roomId, userId);
@@ -914,7 +919,7 @@ async function handleConnection(ws, req) {
             connection.lastPongTime = Date.now();
             // 更新成员最后活动时间
             updateMemberLastActiveAt(roomId, userId).catch(error => {
-                console.error('Error updating lastActiveAt on pong:', error);
+                wsLogger.error({ err: error, roomId, userId }, 'Error updating lastActiveAt on pong');
             });
         });
         // 处理消息
@@ -923,7 +928,7 @@ async function handleConnection(ws, req) {
             connection.lastPongTime = Date.now();
             try {
                 const message = JSON.parse(data.toString());
-                console.log(`Received message from ${userId} in ${roomId}:`, message);
+                wsLogger.debug({ roomId, userId, messageType: message.type }, 'Received WebSocket message');
                 // 处理 SYNC_REQUEST 消息
                 if (message.type === 'SYNC_REQUEST') {
                     await sendSyncState(ws, roomId);
@@ -947,7 +952,7 @@ async function handleConnection(ws, req) {
                 }));
             }
             catch (error) {
-                console.error('Error parsing message:', error);
+                wsLogger.error({ err: error, roomId, userId }, 'Error parsing WebSocket message');
                 ws.send(JSON.stringify({
                     type: 'ERROR',
                     error: 'Invalid message format',
@@ -957,7 +962,7 @@ async function handleConnection(ws, req) {
         });
         // 处理连接关闭
         ws.on('close', async () => {
-            console.log(`WebSocket disconnected: roomId=${roomId}, userId=${userId}`);
+            wsLogger.info({ roomId, userId }, 'WebSocket disconnected');
             // 停止心跳机制
             stopHeartbeat(connection);
             // 减少 IP 连接数
@@ -985,7 +990,7 @@ async function handleConnection(ws, req) {
         });
         // 处理错误
         ws.on('error', error => {
-            console.error(`WebSocket error for ${userId} in ${roomId}:`, error);
+            wsLogger.error({ err: error, roomId, userId }, 'WebSocket error');
         });
         // 发送连接成功消息
         ws.send(JSON.stringify({
@@ -1000,7 +1005,7 @@ async function handleConnection(ws, req) {
         await sendSyncState(ws, roomId);
     }
     catch (error) {
-        console.error('Error handling WebSocket connection:', error);
+        wsLogger.error({ err: error }, 'Error handling WebSocket connection');
         ws.close(1011, 'Internal server error');
     }
 }
@@ -1020,14 +1025,14 @@ function createWebSocketServer(server) {
     });
     wss.on('connection', (ws, req) => {
         handleConnection(ws, req).catch(error => {
-            console.error('Error in handleConnection:', error);
+            wsLogger.error({ err: error }, 'Error in handleConnection');
             ws.close(1011, 'Internal server error');
         });
     });
     wss.on('error', error => {
-        console.error('WebSocket server error:', error);
+        wsLogger.error({ err: error }, 'WebSocket server error');
     });
-    console.log('WebSocket server started on /ws');
+    wsLogger.info({ path: '/ws' }, 'WebSocket server started');
     return wss;
 }
 /**
@@ -1040,11 +1045,11 @@ async function closeWebSocketServer() {
         return new Promise((resolve, reject) => {
             wss.close(error => {
                 if (error) {
-                    console.error('Error closing WebSocket server:', error);
+                    wsLogger.error({ err: error }, 'Error closing WebSocket server');
                     reject(error);
                 }
                 else {
-                    console.log('WebSocket server closed');
+                    wsLogger.info('WebSocket server closed');
                     wss = null;
                     connections.clear();
                     resolve();

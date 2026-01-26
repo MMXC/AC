@@ -8,6 +8,7 @@ exports.errorHandler = errorHandler;
 exports.createHttpError = createHttpError;
 const zod_1 = require("zod");
 const client_1 = require("@prisma/client");
+const logger_1 = require("../logger");
 /**
  * 错误代码枚举
  */
@@ -88,13 +89,26 @@ function handlePrismaError(error) {
  * 统一错误处理中间件
  */
 function errorHandler(error, req, res, _next) {
-    // 记录错误日志
-    console.error('Error occurred:', {
+    // 创建错误日志上下文
+    const errorContext = {
         method: req.method,
         path: req.path,
+        url: req.url,
+        ip: req.ip || req.socket.remoteAddress,
+        userAgent: req.get('user-agent'),
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-    });
+    };
+    // 使用 Pino 记录错误日志（包含堆栈信息）
+    if (error instanceof Error) {
+        logger_1.logger.error({
+            ...errorContext,
+            err: error, // Pino 会自动提取堆栈信息
+        }, `Error occurred: ${error.message}`);
+    }
+    else {
+        logger_1.logger.error(errorContext, `Error occurred: ${String(error)}`);
+    }
     // 处理 Zod 验证错误
     if (error instanceof zod_1.ZodError) {
         const response = {

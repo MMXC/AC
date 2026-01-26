@@ -5,6 +5,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { Prisma } from '@prisma/client';
+import { logger } from '../logger';
 
 /**
  * 错误代码枚举
@@ -110,13 +111,29 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  // 记录错误日志
-  console.error('Error occurred:', {
+  // 创建错误日志上下文
+  const errorContext = {
     method: req.method,
     path: req.path,
+    url: req.url,
+    ip: req.ip || req.socket.remoteAddress,
+    userAgent: req.get('user-agent'),
     error: error instanceof Error ? error.message : String(error),
     stack: error instanceof Error ? error.stack : undefined,
-  });
+  };
+
+  // 使用 Pino 记录错误日志（包含堆栈信息）
+  if (error instanceof Error) {
+    logger.error(
+      {
+        ...errorContext,
+        err: error, // Pino 会自动提取堆栈信息
+      },
+      `Error occurred: ${error.message}`
+    );
+  } else {
+    logger.error(errorContext, `Error occurred: ${String(error)}`);
+  }
 
   // 处理 Zod 验证错误
   if (error instanceof ZodError) {
