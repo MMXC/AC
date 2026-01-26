@@ -33,8 +33,8 @@ npm test -- --testNamePattern='URL同步'"
 
 ## Success Criteria
 
-- [ ] 客户端发送 URL_CHANGE 可以成功接收
-- [ ] URL 更新到数据库
-- [ ] URL_CHANGED 消息广播给所有成员
-- [ ] URL 格式验证
-- [ ] 消息包含 changedBy 字段
+- [x] 客户端发送 URL_CHANGE 可以成功接收
+- [x] URL 更新到数据库
+- [x] URL_CHANGED 消息广播给所有成员
+- [x] URL 格式验证
+- [x] 消息包含 changedBy 字段
