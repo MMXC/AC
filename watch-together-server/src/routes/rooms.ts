@@ -1123,4 +1123,180 @@ router.get('/:roomId/messages', async (req: Request<{ roomId: string }, unknown,
   }
 });
 
+/**
+ * PUT /api/v1/rooms/:roomId/url
+ * 更新房间共享 URL
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   url: string,    // 新的 URL（必填，必须是有效的 HTTP/HTTPS URL）
+ *   userId: string  // 用户 ID（必填，用于验证用户权限）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,
+ *     name: string,
+ *     hostId: string,
+ *     currentUrl: string,
+ *     inviteLink: string | null,
+ *     createdAt: string,
+ *     updatedAt: string
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+interface UpdateRoomUrlRequest {
+  url: string;
+  userId: string;
+}
+
+/**
+ * 验证 URL 格式
+ * @param url - 要验证的 URL
+ * @returns 是否为有效的 HTTP/HTTPS URL
+ */
+function isValidUrl(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    // 只允许 http 和 https 协议
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+router.put('/:roomId/url', async (req: Request<{ roomId: string }, unknown, UpdateRoomUrlRequest>, res: Response) => {
+  try {
+    const { roomId } = req.params;
+    const { url, userId } = req.body;
+
+    // 验证 roomId 格式
+    if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'roomId is required and must be a non-empty string',
+      });
+    }
+
+    // 验证必填字段
+    if (!url || typeof url !== 'string' || url.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'url is required and must be a non-empty string',
+      });
+    }
+
+    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'userId is required and must be a non-empty string',
+      });
+    }
+
+    // 验证 URL 格式（必须是有效的 HTTP/HTTPS URL）
+    const trimmedUrl = url.trim();
+    if (!isValidUrl(trimmedUrl)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'url must be a valid HTTP or HTTPS URL',
+      });
+    }
+
+    const prisma = getPrismaClient();
+
+    // 检查房间是否存在且未删除
+    const room = await prisma.room.findFirst({
+      where: {
+        id: roomId.trim(),
+        deletedAt: null,
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Room not found',
+      });
+    }
+
+    // 检查用户是否存在且未离开（可选：验证用户权限）
+    const member = await prisma.roomMember.findFirst({
+      where: {
+        roomId: roomId.trim(),
+        userId: userId.trim(),
+        leftAt: null, // 只查找未离开的成员
+      },
+    });
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'User not found in room or has left',
+      });
+    }
+
+    // 更新房间 URL
+    const updatedRoom = await prisma.room.update({
+      where: {
+        id: roomId.trim(),
+      },
+      data: {
+        currentUrl: trimmedUrl,
+      },
+    });
+
+    // 可选：记录 URL 变更事件到 RoomEvent 表
+    await prisma.roomEvent.create({
+      data: {
+        roomId: roomId.trim(),
+        eventType: 'URL_CHANGED',
+        userId: userId.trim(),
+        eventData: {
+          oldUrl: room.currentUrl,
+          newUrl: trimmedUrl,
+        },
+      },
+    });
+
+    // 返回成功响应
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: updatedRoom.id,
+        name: updatedRoom.name,
+        hostId: updatedRoom.hostId,
+        currentUrl: updatedRoom.currentUrl,
+        inviteLink: updatedRoom.inviteLink,
+        createdAt: updatedRoom.createdAt.toISOString(),
+        updatedAt: updatedRoom.updatedAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Error updating room URL:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to update room URL',
+    });
+  }
+});
+
 export default router;
