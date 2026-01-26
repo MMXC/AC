@@ -591,4 +591,214 @@ router.post('/:roomId/join', async (req: Request<{ roomId: string }, unknown, Jo
   }
 });
 
+/**
+ * POST /api/v1/rooms/:roomId/leave
+ * 离开房间
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   userId: string  // 用户 ID（必填）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   message: "Member left room successfully"
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room or member not found"
+ * }
+ */
+interface LeaveRoomRequest {
+  userId: string;
+}
+
+router.post('/:roomId/leave', async (req: Request<{ roomId: string }, unknown, LeaveRoomRequest>, res: Response) => {
+  try {
+    const { roomId } = req.params;
+    const { userId } = req.body;
+
+    // 验证 roomId 格式
+    if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'roomId is required and must be a non-empty string',
+      });
+    }
+
+    // 验证必填字段
+    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'userId is required and must be a non-empty string',
+      });
+    }
+
+    const prisma = getPrismaClient();
+
+    // 检查房间是否存在且未删除
+    const room = await prisma.room.findFirst({
+      where: {
+        id: roomId.trim(),
+        deletedAt: null,
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Room not found',
+      });
+    }
+
+    // 检查成员是否存在且未离开
+    const member = await prisma.roomMember.findFirst({
+      where: {
+        roomId: roomId.trim(),
+        userId: userId.trim(),
+        leftAt: null, // 只查找未离开的成员
+      },
+    });
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Member not found or already left',
+      });
+    }
+
+    // 更新成员的 leftAt 字段
+    await prisma.roomMember.update({
+      where: {
+        id: member.id,
+      },
+      data: {
+        leftAt: new Date(),
+      },
+    });
+
+    // 返回成功响应
+    return res.status(200).json({
+      success: true,
+      message: 'Member left room successfully',
+    });
+  } catch (error) {
+    console.error('Error leaving room:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to leave room',
+    });
+  }
+});
+
+/**
+ * GET /api/v1/rooms/:roomId/members
+ * 获取房间成员列表
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     members: Array<{
+ *       userId: string,
+ *       nickname: string,
+ *       isHost: boolean,
+ *       joinedAt: string,
+ *       lastActiveAt: string
+ *     }>,
+ *     memberCount: number
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+router.get('/:roomId/members', async (req: Request<{ roomId: string }>, res: Response) => {
+  try {
+    const { roomId } = req.params;
+
+    // 验证 roomId 格式
+    if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'roomId is required and must be a non-empty string',
+      });
+    }
+
+    const prisma = getPrismaClient();
+
+    // 检查房间是否存在且未删除
+    const room = await prisma.room.findFirst({
+      where: {
+        id: roomId.trim(),
+        deletedAt: null,
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Room not found',
+      });
+    }
+
+    // 查询未离开的成员列表，按加入时间排序
+    const members = await prisma.roomMember.findMany({
+      where: {
+        roomId: roomId.trim(),
+        leftAt: null, // 只返回未离开的成员
+      },
+      orderBy: {
+        joinedAt: 'asc', // 按加入时间升序排序
+      },
+    });
+
+    // 格式化成员列表
+    const formattedMembers = members.map(member => ({
+      userId: member.userId,
+      nickname: member.nickname,
+      isHost: member.isHost,
+      joinedAt: member.joinedAt.toISOString(),
+      lastActiveAt: member.lastActiveAt.toISOString(),
+    }));
+
+    // 返回成功响应
+    return res.status(200).json({
+      success: true,
+      data: {
+        members: formattedMembers,
+        memberCount: formattedMembers.length,
+      },
+    });
+  } catch (error) {
+    console.error('Error getting members:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to get members',
+    });
+  }
+});
+
 export default router;
