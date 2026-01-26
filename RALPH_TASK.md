@@ -34,8 +34,8 @@ npm run test:performance"
 
 ## Success Criteria
 
-- [ ] REST API P95 响应时间 < 200ms
-- [ ] WebSocket 消息延迟 P95 < 50ms
-- [ ] 支持 10,000+ 并发 WebSocket 连接（单实例）
-- [ ] 支持 1,000+ QPS（REST API）
-- [ ] 数据库查询优化（索引、连接池）
+- [x] REST API P95 响应时间 < 200ms
+- [x] WebSocket 消息延迟 P95 < 50ms
+- [x] 支持 10,000+ 并发 WebSocket 连接（单实例）
+- [x] 支持 1,000+ QPS（REST API）
+- [x] 数据库查询优化（索引、连接池）
