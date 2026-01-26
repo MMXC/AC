@@ -35,8 +35,8 @@ npm test -- --testNamePattern='心跳连接管理'"
 
 ## Success Criteria
 
-- [ ] 服务器定期发送 ping，客户端响应 pong
-- [ ] 无响应 5 分钟后自动断开连接
-- [ ] 断开连接时清理 Redis 中的连接记录
-- [ ] 断开连接时更新成员 last_active_at
-- [ ] 连接数限制（每 IP 最多 10 个连接）
+- [x] 服务器定期发送 ping，客户端响应 pong
+- [x] 无响应 5 分钟后自动断开连接
+- [x] 断开连接时清理 Redis 中的连接记录
+- [x] 断开连接时更新成员 last_active_at
+- [x] 连接数限制（每 IP 最多 10 个连接）
