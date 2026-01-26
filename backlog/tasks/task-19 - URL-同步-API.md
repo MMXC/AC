@@ -1,9 +1,10 @@
 ---
 id: TASK-19
 title: URL 同步 API
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:37'
+updated_date: '2026-01-26 15:31'
 labels: []
 dependencies: []
 ---

@@ -1,18 +1,14 @@
 ---
-id: TASK-18
-title: 消息管理 API - 获取消息历史
-status: Done
-assignee: []
-created_date: '2026-01-26 06:37'
-updated_date: '2026-01-26 15:31'
-labels: []
-dependencies: []
-ordinal: 18000
+backlog_id: backlog-18
+task: 消息管理 API - 获取消息历史
+test_command: "npm test -- --testNamePattern='消息历史'
+npm test -- --testNamePattern='消息历史'"
 ---
+
+# Task: 消息管理 API - 获取消息历史
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 实现 GET /api/v1/rooms/:roomId/messages 接口，支持分页查询
 
 **Test Command**: `npm test -- --testNamePattern='消息历史'`
@@ -35,13 +31,11 @@ ordinal: 18000
 4. `expect(response.body.data.pagination.hasMore).toBeBoolean()`
 
 **Test Command**: `npm test -- --testNamePattern='消息历史'`
-<!-- SECTION:DESCRIPTION:END -->
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 GET 请求可以获取消息列表
-- [ ] #2 支持 limit 和 offset 参数
-- [ ] #3 返回分页信息（total, limit, offset, hasMore）
-- [ ] #4 消息按时间倒序排列（最新的在前）
-- [ ] #5 limit 最大值为 100
-<!-- AC:END -->
+## Success Criteria
+
+- [x] GET 请求可以获取消息列表
+- [x] 支持 limit 和 offset 参数
+- [x] 返回分页信息（total, limit, offset, hasMore）
+- [x] 消息按时间倒序排列（最新的在前）
+- [x] limit 最大值为 100

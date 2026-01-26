@@ -79,11 +79,8 @@ function createApp() {
     // 404 处理（必须在错误处理中间件之前）
     app.use((req, res) => {
         res.status(404).json({
-            success: false,
-            error: {
-                code: 'NOT_FOUND',
-                message: `Route ${req.method} ${req.path} not found`,
-            },
+            error: 'Not Found',
+            message: `Route ${req.method} ${req.path} not found`,
         });
     });
     // 统一错误处理中间件（必须在所有路由之后，包括 404 处理）
