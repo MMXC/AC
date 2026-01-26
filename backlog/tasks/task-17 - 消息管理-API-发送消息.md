@@ -1,9 +1,10 @@
 ---
 id: TASK-17
 title: 消息管理 API - 发送消息
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:37'
+updated_date: '2026-01-26 15:00'
 labels: []
 dependencies: []
 ---

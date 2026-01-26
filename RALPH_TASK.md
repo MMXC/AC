@@ -1,40 +1,42 @@
 ---
-backlog_id: backlog-16
-task: 成员管理 API - 离开房间和获取成员列表
-test_command: "npm test -- --testNamePattern='成员管理'
-npm test -- --testNamePattern='成员管理'"
+backlog_id: backlog-17
+task: 消息管理 API - 发送消息
+test_command: "npm test -- --testNamePattern='发送消息'
+npm test -- --testNamePattern='发送消息'"
 ---
 
-# Task: 成员管理 API - 离开房间和获取成员列表
+# Task: 消息管理 API - 发送消息
 
 ## Description
 
-实现 POST /api/v1/rooms/:roomId/leave 和 GET /api/v1/rooms/:roomId/members 接口
+实现 POST /api/v1/rooms/:roomId/messages 接口，保存消息到数据库
 
-**Test Command**: `npm test -- --testNamePattern='成员管理'`
+**Test Command**: `npm test -- --testNamePattern='发送消息'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: ``{userId: "user-xxx"}``
-   预期输出: `成员成功离开，left_at 字段设置`
+1. 输入: ``{userId: "user-xxx", content: "Hello!"}``
+   预期输出: ``{success: true, data: {id: "msg-xxx", content: "Hello!", ...}}``
 
 **测试场景**:
-1. 离开房间应该更新 left_at 字段
-2. 获取成员列表应该只返回未离开的成员
-3. 成员列表应该包含所有必需字段
+1. 发送消息应该返回 201
+2. 消息应该保存到数据库
+3. 超过 1000 字符的消息应该返回 400
 
 **断言示例**:
-1. `await request(app).post(`/api/v1/rooms/${roomId}/leave`).send({userId})`
-2. `const member = await prisma.roomMember.findFirst({where: {roomId, userId}})`
-3. `expect(member.leftAt).not.toBeNull()`
+1. `const response = await request(app).post(`/api/v1/rooms/${roomId}/messages`).send({userId, content: 'Hello'})`
+2. `expect(response.status).toBe(201)`
+3. `expect(response.body.data.content).toBe('Hello')`
+4. `const message = await prisma.message.findUnique({where: {id: response.body.data.id}})`
+5. `expect(message).toBeDefined()`
 
-**Test Command**: `npm test -- --testNamePattern='成员管理'`
+**Test Command**: `npm test -- --testNamePattern='发送消息'`
 
 ## Success Criteria
 
-- [x] POST leave 可以成功移除成员
-- [x] GET members 返回房间所有成员列表
-- [x] 成员离开后数据库记录正确更新（设置 left_at）
-- [x] 成员列表按加入时间排序
-- [x] 返回格式符合 API 规范
+- [ ] POST 请求可以成功发送消息
+- [ ] 消息正确保存到数据库
+- [ ] 返回的消息包含所有必需字段（id, userId, nickname, content, timestamp）
+- [ ] 消息内容长度验证（最大 1000 字符）
+- [ ] 如果房间不存在返回 404
