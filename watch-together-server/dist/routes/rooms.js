@@ -359,5 +359,88 @@ router.delete('/:roomId', async (req, res) => {
         });
     }
 });
+router.post('/:roomId/join', async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const { nickname } = req.body;
+        // 验证 roomId 格式
+        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'roomId is required and must be a non-empty string',
+            });
+        }
+        // 验证必填字段
+        if (!nickname || typeof nickname !== 'string' || nickname.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'nickname is required and must be a non-empty string',
+            });
+        }
+        // 验证昵称长度
+        if (nickname.trim().length > 100) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'nickname must be a string with maximum 100 characters',
+            });
+        }
+        const prisma = (0, db_1.getPrismaClient)();
+        // 检查房间是否存在且未删除
+        const room = await prisma.room.findFirst({
+            where: {
+                id: roomId.trim(),
+                deletedAt: null,
+            },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: 'Not Found',
+                message: 'Room not found',
+            });
+        }
+        // 生成新的用户 ID
+        const userId = generateUserId();
+        // 创建成员记录
+        const member = await prisma.roomMember.create({
+            data: {
+                roomId: roomId.trim(),
+                userId: userId,
+                nickname: nickname.trim(),
+                isHost: false,
+            },
+        });
+        // 返回成功响应
+        return res.status(200).json({
+            success: true,
+            data: {
+                userId: member.userId,
+                roomId: member.roomId,
+                nickname: member.nickname,
+                room: {
+                    id: room.id,
+                    name: room.name,
+                    hostId: room.hostId,
+                    currentUrl: room.currentUrl,
+                    inviteLink: room.inviteLink,
+                    createdAt: room.createdAt.toISOString(),
+                    updatedAt: room.updatedAt.toISOString(),
+                },
+                joinedAt: member.joinedAt.toISOString(),
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error joining room:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal Server Error',
+            message: 'Failed to join room',
+        });
+    }
+});
 exports.default = router;
 //# sourceMappingURL=rooms.js.map

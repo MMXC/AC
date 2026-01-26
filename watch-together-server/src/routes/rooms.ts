@@ -456,4 +456,139 @@ router.delete('/:roomId', async (req: Request<{ roomId: string }>, res: Response
   }
 });
 
+/**
+ * POST /api/v1/rooms/:roomId/join
+ * 加入房间
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   nickname: string  // 用户昵称（必填）
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     userId: string,        // 新创建的用户 ID
+ *     roomId: string,        // 房间 ID
+ *     nickname: string,      // 用户昵称
+ *     room: {                // 房间信息
+ *       id: string,
+ *       name: string,
+ *       hostId: string,
+ *       currentUrl: string | null,
+ *       inviteLink: string | null,
+ *       createdAt: string,
+ *       updatedAt: string
+ *     },
+ *     joinedAt: string        // 加入时间（ISO 字符串）
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+interface JoinRoomRequest {
+  nickname: string;
+}
+
+router.post('/:roomId/join', async (req: Request<{ roomId: string }, unknown, JoinRoomRequest>, res: Response) => {
+  try {
+    const { roomId } = req.params;
+    const { nickname } = req.body;
+
+    // 验证 roomId 格式
+    if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'roomId is required and must be a non-empty string',
+      });
+    }
+
+    // 验证必填字段
+    if (!nickname || typeof nickname !== 'string' || nickname.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'nickname is required and must be a non-empty string',
+      });
+    }
+
+    // 验证昵称长度
+    if (nickname.trim().length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'nickname must be a string with maximum 100 characters',
+      });
+    }
+
+    const prisma = getPrismaClient();
+
+    // 检查房间是否存在且未删除
+    const room = await prisma.room.findFirst({
+      where: {
+        id: roomId.trim(),
+        deletedAt: null,
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Room not found',
+      });
+    }
+
+    // 生成新的用户 ID
+    const userId = generateUserId();
+
+    // 创建成员记录
+    const member = await prisma.roomMember.create({
+      data: {
+        roomId: roomId.trim(),
+        userId: userId,
+        nickname: nickname.trim(),
+        isHost: false,
+      },
+    });
+
+    // 返回成功响应
+    return res.status(200).json({
+      success: true,
+      data: {
+        userId: member.userId,
+        roomId: member.roomId,
+        nickname: member.nickname,
+        room: {
+          id: room.id,
+          name: room.name,
+          hostId: room.hostId,
+          currentUrl: room.currentUrl,
+          inviteLink: room.inviteLink,
+          createdAt: room.createdAt.toISOString(),
+          updatedAt: room.updatedAt.toISOString(),
+        },
+        joinedAt: member.joinedAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Error joining room:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to join room',
+    });
+  }
+});
+
 export default router;
