@@ -35,21 +35,25 @@ Usage:
   ./requirement-workflow.sh --interactive
 
 Options:
-  --file <file>      Read requirement from file
-  --interactive      Interactive mode (prompt for requirement)
-  --no-confirm       Skip confirmation prompts
-  --auto-execute     Automatically execute with Ralph after creation
-  -h, --help         Show this help
+  --file <file>           Read requirement from file
+  --decomposed <file>      Read already decomposed tasks from file (skip decomposition)
+  --interactive            Interactive mode (prompt for requirement)
+  --no-confirm             Skip confirmation prompts
+  --auto-execute           Automatically execute with Ralph after creation
+  -h, --help               Show this help
 
 Examples:
   ./requirement-workflow.sh "构建一个 TypeScript CLI todo 应用，支持 add/list/done 命令"
   ./requirement-workflow.sh --file my-requirement.txt
+  ./requirement-workflow.sh --decomposed BACKEND_TASKS_DECOMPOSED.md
 EOF
 }
 
 # Parse arguments
 REQUIREMENT=""
 FROM_FILE=false
+FROM_DECOMPOSED=false
+DECOMPOSED_FILE=""
 INTERACTIVE=false
 NO_CONFIRM=false
 AUTO_EXECUTE=false
@@ -59,6 +63,11 @@ while [[ $# -gt 0 ]]; do
         --file)
             FROM_FILE=true
             REQUIREMENT_FILE="$2"
+            shift 2
+            ;;
+        --decomposed)
+            FROM_DECOMPOSED=true
+            DECOMPOSED_FILE="$2"
             shift 2
             ;;
         --interactive)
@@ -89,8 +98,58 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Get requirement
-if [[ "$INTERACTIVE" == "true" ]]; then
+# Get requirement or parse decomposed tasks
+if [[ "$FROM_DECOMPOSED" == "true" ]]; then
+    # Parse already decomposed tasks
+    if [[ ! -f "$DECOMPOSED_FILE" ]]; then
+        echo "❌ File not found: $DECOMPOSED_FILE" >&2
+        exit 1
+    fi
+    
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════════"
+    echo "📋 Requirement Workflow: 从已分解任务创建 Backlog"
+    echo "═══════════════════════════════════════════════════════════════════"
+    echo ""
+    echo -e "${BLUE}已分解任务文档：${NC}"
+    echo "$DECOMPOSED_FILE"
+    echo ""
+    
+    # Parse decomposed tasks using parser script
+    PARSER_SCRIPT="$SCRIPT_DIR/parse-decomposed-tasks.py"
+    if [[ ! -f "$PARSER_SCRIPT" ]]; then
+        echo "❌ Parser script not found: $PARSER_SCRIPT" >&2
+        echo "   请确保 parse-decomposed-tasks.py 存在" >&2
+        exit 1
+    fi
+    
+    echo -e "${YELLOW}步骤 1/4: 解析已分解任务...${NC}"
+    export PYTHONIOENCODING=utf-8
+    TASKS_JSON=$(python3 "$PARSER_SCRIPT" "$DECOMPOSED_FILE" --json 2>/dev/null)
+    
+    if [[ -z "$TASKS_JSON" ]] || [[ "$TASKS_JSON" == "[]" ]]; then
+        echo "❌ 解析失败或未找到任务" >&2
+        exit 1
+    fi
+    
+    TASK_COUNT=$(echo "$TASKS_JSON" | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null)
+    echo -e "${GREEN}✅ 解析完成，找到 $TASK_COUNT 个任务${NC}"
+    echo ""
+    
+    # Step 2: Show tasks summary
+    echo -e "${YELLOW}步骤 2/4: 展示任务列表...${NC}"
+    echo "$TASKS_JSON" | python3 -c "
+import sys, json
+tasks = json.load(sys.stdin)
+for i, task in enumerate(tasks, 1):
+    print(f'{i}. {task[\"id\"]}: {task[\"title\"]}')
+    print(f'   测试命令: {task.get(\"test_command\", \"N/A\")}')
+    print(f'   成功标准: {len(task.get(\"success_criteria\", []))} 条')
+    print()
+" 2>/dev/null
+    echo ""
+    
+elif [[ "$INTERACTIVE" == "true" ]]; then
     echo -e "${BLUE}请输入需求描述：${NC}"
     read -r REQUIREMENT
 elif [[ "$FROM_FILE" == "true" ]]; then
@@ -105,42 +164,45 @@ elif [[ -z "$REQUIREMENT" ]]; then
     exit 1
 fi
 
-echo ""
-echo "═══════════════════════════════════════════════════════════════════"
-echo "📋 Requirement Workflow: 需求分解与任务创建"
-echo "═══════════════════════════════════════════════════════════════════"
-echo ""
-echo -e "${BLUE}需求描述：${NC}"
-echo "$REQUIREMENT"
-echo ""
-
-# Step 1: Decompose requirement
-echo -e "${YELLOW}步骤 1/4: 正交分解需求...${NC}"
-DECOMPOSER_SCRIPT="$SCRIPT_DIR/../skills/requirement-decomposer/scripts/decompose_requirement.py"
-
-if [[ ! -f "$DECOMPOSER_SCRIPT" ]]; then
-    echo "❌ Decomposer script not found: $DECOMPOSER_SCRIPT" >&2
-    exit 1
+# If not using decomposed tasks, decompose requirement
+if [[ "$FROM_DECOMPOSED" != "true" ]]; then
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════════"
+    echo "📋 Requirement Workflow: 需求分解与任务创建"
+    echo "═══════════════════════════════════════════════════════════════════"
+    echo ""
+    echo -e "${BLUE}需求描述：${NC}"
+    echo "$REQUIREMENT"
+    echo ""
+    
+    # Step 1: Decompose requirement
+    echo -e "${YELLOW}步骤 1/4: 正交分解需求...${NC}"
+    DECOMPOSER_SCRIPT="$SCRIPT_DIR/../skills/requirement-decomposer/scripts/decompose_requirement.py"
+    
+    if [[ ! -f "$DECOMPOSER_SCRIPT" ]]; then
+        echo "❌ Decomposer script not found: $DECOMPOSER_SCRIPT" >&2
+        exit 1
+    fi
+    
+    # Run decomposer (ensure UTF-8 encoding)
+    export PYTHONIOENCODING=utf-8
+    TASKS_JSON=$(echo "$REQUIREMENT" | python3 "$DECOMPOSER_SCRIPT" --json 2>/dev/null)
+    
+    if [[ -z "$TASKS_JSON" ]] || [[ "$TASKS_JSON" == "[]" ]]; then
+        echo "❌ Failed to decompose requirement" >&2
+        exit 1
+    fi
+    
+    # Parse tasks
+    TASK_COUNT=$(echo "$TASKS_JSON" | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null)
+    echo -e "${GREEN}✅ 分解完成，生成 $TASK_COUNT 个子任务${NC}"
+    echo ""
+    
+    # Step 2: Show decomposition result
+    echo -e "${YELLOW}步骤 2/4: 展示分解结果...${NC}"
+    echo "$REQUIREMENT" | python3 "$DECOMPOSER_SCRIPT" 2>/dev/null | cat
+    echo ""
 fi
-
-# Run decomposer (ensure UTF-8 encoding)
-export PYTHONIOENCODING=utf-8
-TASKS_JSON=$(echo "$REQUIREMENT" | python3 "$DECOMPOSER_SCRIPT" --json 2>/dev/null)
-
-if [[ -z "$TASKS_JSON" ]] || [[ "$TASKS_JSON" == "[]" ]]; then
-    echo "❌ Failed to decompose requirement" >&2
-    exit 1
-fi
-
-# Parse tasks
-TASK_COUNT=$(echo "$TASKS_JSON" | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null)
-echo -e "${GREEN}✅ 分解完成，生成 $TASK_COUNT 个子任务${NC}"
-echo ""
-
-# Step 2: Show decomposition result
-echo -e "${YELLOW}步骤 2/4: 展示分解结果...${NC}"
-echo "$REQUIREMENT" | python3 "$DECOMPOSER_SCRIPT" 2>/dev/null | cat
-echo ""
 
 # Step 3: User confirmation
 if [[ "$NO_CONFIRM" != "true" ]]; then

@@ -1,12 +1,13 @@
 ---
 id: TASK-6
 title: 房间路由和导航
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-25 16:57'
-updated_date: '2026-01-26 05:46'
+updated_date: '2026-01-26 06:37'
 labels: []
 dependencies: []
+ordinal: 6000
 ---
 
 ## Description

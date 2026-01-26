@@ -1,14 +1,17 @@
 ---
-backlog_id: backlog-7
-task: 项目初始化和 TypeScript 配置
-test_command: "npm run build && npm run type-check
-npm run build && npm run type-check"
+id: TASK-7
+title: 项目初始化和 TypeScript 配置
+status: In Progress
+assignee: []
+created_date: '2026-01-26 06:36'
+updated_date: '2026-01-26 06:39'
+labels: []
+dependencies: []
 ---
-
-# Task: 项目初始化和 TypeScript 配置
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 初始化 Node.js + TypeScript 项目，配置开发环境和构建工具
 
 **Test Command**: `npm run build && npm run type-check`
@@ -30,11 +33,13 @@ npm run build && npm run type-check"
 3. `expect(process.exitCode).toBe(0)`
 
 **Test Command**: `npm run build && npm run type-check`
+<!-- SECTION:DESCRIPTION:END -->
 
-## Success Criteria
-
-- [ ] 项目目录结构创建完成（src/, tests/, prisma/ 等）
-- [ ] package.json 配置正确，包含所有必需依赖
-- [ ] TypeScript 配置文件（tsconfig.json）正确设置
-- [ ] 代码可以成功编译（无类型错误）
-- [ ] ESLint 和 Prettier 配置完成
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 项目目录结构创建完成（src/, tests/, prisma/ 等）
+- [ ] #2 package.json 配置正确，包含所有必需依赖
+- [ ] #3 TypeScript 配置文件（tsconfig.json）正确设置
+- [ ] #4 代码可以成功编译（无类型错误）
+- [ ] #5 ESLint 和 Prettier 配置完成
+<!-- AC:END -->

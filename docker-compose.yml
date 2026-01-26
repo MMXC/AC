@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  watch-together:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: watch-together
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - watch-together-network
+
+networks:
+  watch-together-network:
+    driver: bridge

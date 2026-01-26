@@ -1,12 +1,13 @@
 ---
 id: TASK-4
 title: 实时聊天功能
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-25 16:56'
-updated_date: '2026-01-26 04:50'
+updated_date: '2026-01-26 06:37'
 labels: []
 dependencies: []
+ordinal: 4000
 ---
 
 ## Description
