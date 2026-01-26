@@ -48,7 +48,7 @@ function generateRoomLink(roomId) {
     if (typeof window !== 'undefined' && window.location) {
         baseUrl = window.location.origin;
     }
-    return `${baseUrl}/join/${roomId}`;
+    return `${baseUrl}/room/${roomId}`;
 }
 
 /**

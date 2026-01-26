@@ -2,6 +2,12 @@
  * 房间页面功能
  */
 
+// API 基础 URL（可以根据环境配置）
+let API_BASE = 'http://localhost:3001';
+if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
+    API_BASE = process.env.API_BASE;
+}
+
 // 成员列表数据
 let membersList = [];
 
@@ -92,10 +98,15 @@ function getUrlParameter(name) {
  */
 function getRoomIdFromPath() {
     const path = window.location.pathname;
-    // 路径格式: /join/{roomId} 或 /join.html?roomId=xxx
-    const match = path.match(/\/join\/([^\/]+)/);
-    if (match) {
-        return match[1];
+    // 路径格式: /room/{roomId} 或 /join/{roomId} (兼容旧格式)
+    const roomMatch = path.match(/\/room\/([^\/]+)/);
+    if (roomMatch) {
+        return roomMatch[1];
+    }
+    // 兼容旧格式 /join/{roomId}
+    const joinMatch = path.match(/\/join\/([^\/]+)/);
+    if (joinMatch) {
+        return joinMatch[1];
     }
     // 如果路径不匹配，尝试从查询参数获取
     return getUrlParameter('roomId');
@@ -186,11 +197,69 @@ function updateRoomInfo(roomId) {
 }
 
 /**
+ * 验证房间是否存在
+ */
+async function validateRoom(roomId) {
+    if (!roomId) {
+        return { valid: false, error: '房间号不能为空' };
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/rooms/${roomId}`);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            return { valid: false, error: data.error?.message || '房间不存在或已关闭' };
+        }
+
+        return { valid: true, room: data.data };
+    } catch (error) {
+        console.error('验证房间错误:', error);
+        return { valid: false, error: '无法连接到服务器，请稍后重试' };
+    }
+}
+
+/**
+ * 显示错误信息
+ */
+function showError(message) {
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const errorMessage = document.getElementById('errorMessage');
+    const iframe = document.getElementById('browserFrame');
+    
+    if (loading) loading.style.display = 'none';
+    if (iframe) iframe.style.display = 'none';
+    if (error) {
+        error.style.display = 'block';
+        if (errorMessage) {
+            errorMessage.textContent = message;
+        }
+    }
+}
+
+/**
  * 页面初始化
  */
-function init() {
+async function init() {
     // 获取房间ID
     const roomId = getRoomIdFromPath();
+    
+    // 如果没有房间ID，显示错误
+    if (!roomId) {
+        showError('无效的房间链接。请检查链接是否正确。');
+        return;
+    }
+
+    // 验证房间是否存在
+    const validation = await validateRoom(roomId);
+    if (!validation.valid) {
+        showError(validation.error || '房间不存在或已关闭');
+        updateRoomInfo(null);
+        return;
+    }
+
+    // 房间有效，更新房间信息
     updateRoomInfo(roomId);
 
     // 初始化成员列表显示
@@ -215,9 +284,13 @@ function init() {
         const error = document.getElementById('error');
         const errorMessage = document.getElementById('errorMessage');
         
-        loading.style.display = 'none';
-        error.style.display = 'block';
-        errorMessage.textContent = '请在 URL 中添加 ?url=网页地址 参数来加载网页。例如: ?url=https://www.example.com';
+        if (loading) loading.style.display = 'none';
+        if (error) {
+            error.style.display = 'block';
+            if (errorMessage) {
+                errorMessage.textContent = '请在 URL 中添加 ?url=网页地址 参数来加载网页。例如: ?url=https://www.example.com';
+            }
+        }
     }
 }
 
@@ -239,5 +312,8 @@ if (typeof module !== 'undefined' && module.exports) {
         updateMembersDisplay,
         getMemberInitial,
         getMembersList: () => membersList,
+        validateRoom,
+        showError,
+        API_BASE,
     };
 }

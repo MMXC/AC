@@ -13,6 +13,21 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 
+// 静态文件服务 - 提供 HTML、JS、CSS 等文件
+const staticPath = path.join(__dirname, '..');
+app.use(express.static(staticPath));
+
+// 路由处理
+// 首页路由 /
+app.get('/', (req, res) => {
+  res.sendFile(path.join(staticPath, 'index.html'));
+});
+
+// 房间路由 /room/:roomId
+app.get('/room/:roomId', (req, res) => {
+  res.sendFile(path.join(staticPath, 'join.html'));
+});
+
 // 加载 mock 数据
 const mockDataPath = path.join(__dirname, '../mock/rooms.json');
 let mockData = { rooms: [] };
@@ -46,7 +61,7 @@ app.post('/api/rooms', (req, res) => {
     hostId: hostId,
     currentUrl: '',
     createdAt: new Date().toISOString(),
-    inviteLink: `http://localhost:3000/join/${roomId}`,
+    inviteLink: `http://localhost:3000/room/${roomId}`,
     members: [
       {
         id: hostId,
