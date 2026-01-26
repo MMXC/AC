@@ -1,42 +1,42 @@
 ---
-backlog_id: backlog-27
-task: 限流和防刷
-test_command: "npm test -- --testNamePattern='限流防刷'
-npm test -- --testNamePattern='限流防刷'"
+backlog_id: backlog-28
+task: 日志系统
+test_command: "npm test -- --testNamePattern='日志系统'
+npm test -- --testNamePattern='日志系统'"
 ---
 
-# Task: 限流和防刷
+# Task: 日志系统
 
 ## Description
 
-实现 API 限流中间件（IP 限流、用户限流），WebSocket 连接数限制
+使用 Pino 实现结构化日志，记录所有关键操作和错误
 
-**Test Command**: `npm test -- --testNamePattern='限流防刷'`
+**Test Command**: `npm test -- --testNamePattern='日志系统'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `短时间内发送 101 个请求`
-   预期输出: `第 101 个请求返回 429`
+1. 输入: `API 请求和错误`
+   预期输出: `日志文件包含结构化 JSON 日志`
 
 **测试场景**:
-1. 超过 IP 限流应该返回 429
-2. 超过用户限流应该返回 429
-3. 限流计数器应该正确重置
+1. API 请求应该记录日志
+2. 错误应该记录 ERROR 级别日志
+3. 日志应该包含时间戳和上下文
 
 **断言示例**:
-1. `for (let i = 0; i < 101; i++) {`
-2. `await request(app).get('/api/v1/rooms/room-123')`
-3. `}`
-4. `const response = await request(app).get('/api/v1/rooms/room-123')`
-5. `expect(response.status).toBe(429)`
+1. `const logContent = fs.readFileSync('logs/app.log', 'utf-8')`
+2. `const logLines = logContent.split('\n').filter(Boolean)`
+3. `const lastLog = JSON.parse(logLines[logLines.length - 1])`
+4. `expect(lastLog.level).toBeDefined()`
+5. `expect(lastLog.time).toBeDefined()`
 
-**Test Command**: `npm test -- --testNamePattern='限流防刷'`
+**Test Command**: `npm test -- --testNamePattern='日志系统'`
 
 ## Success Criteria
 
-- [x] IP 限流：100 请求/分钟
-- [x] 用户限流：1000 请求/小时
-- [x] 超过限制返回 429 错误
-- [x] WebSocket 连接数限制：每 IP 最多 10 个
-- [x] 限流使用 Redis 实现（支持多实例）
+- [ ] 所有日志使用 JSON 格式
+- [ ] 日志级别正确（DEBUG, INFO, WARN, ERROR）
+- [ ] API 请求和响应记录日志
+- [ ] WebSocket 连接和消息记录日志
+- [ ] 错误日志包含堆栈信息
