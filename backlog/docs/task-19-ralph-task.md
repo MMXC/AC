@@ -1,18 +1,14 @@
 ---
-id: TASK-19
-title: URL 同步 API
-status: Done
-assignee: []
-created_date: '2026-01-26 06:37'
-updated_date: '2026-01-26 16:05'
-labels: []
-dependencies: []
-ordinal: 19000
+backlog_id: backlog-19
+task: URL 同步 API
+test_command: "npm test -- --testNamePattern='URL同步'
+npm test -- --testNamePattern='URL同步'"
 ---
+
+# Task: URL 同步 API
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 实现 PUT /api/v1/rooms/:roomId/url 接口，更新房间共享 URL
 
 **Test Command**: `npm test -- --testNamePattern='URL同步'`
@@ -35,13 +31,11 @@ ordinal: 19000
 4. `expect(room.currentUrl).toBe('https://example.com')`
 
 **Test Command**: `npm test -- --testNamePattern='URL同步'`
-<!-- SECTION:DESCRIPTION:END -->
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 PUT 请求可以更新房间 URL
-- [ ] #2 URL 格式验证（必须是有效的 HTTP/HTTPS URL）
-- [ ] #3 数据库记录正确更新
-- [ ] #4 返回更新后的 URL 信息
-- [ ] #5 如果房间不存在返回 404
-<!-- AC:END -->
+## Success Criteria
+
+- [x] PUT 请求可以更新房间 URL
+- [x] URL 格式验证（必须是有效的 HTTP/HTTPS URL）
+- [x] 数据库记录正确更新
+- [x] 返回更新后的 URL 信息
+- [x] 如果房间不存在返回 404
