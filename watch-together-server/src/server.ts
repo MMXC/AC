@@ -4,13 +4,15 @@
 
 import { createApp } from './app';
 import { connectDatabase, disconnectDatabase } from './db';
+import { connectRedis, disconnectRedis } from './redis';
+import { createWebSocketServer, closeWebSocketServer } from './websocket';
 
 const PORT = process.env.PORT || 3000;
 
 /**
  * 启动服务器
  *
- * 连接数据库并启动 HTTP 服务器
+ * 连接数据库和 Redis，启动 HTTP 服务器和 WebSocket 服务器
  */
 export async function startServer(): Promise<void> {
   try {
@@ -21,15 +23,34 @@ export async function startServer(): Promise<void> {
     process.exit(1);
   }
 
+  try {
+    // 连接 Redis
+    await connectRedis();
+  } catch (error) {
+    console.error('Failed to start server: Redis connection failed', error);
+    // Redis 连接失败不应该阻止服务器启动，只记录警告
+    console.warn('Server will continue without Redis (some features may be limited)');
+  }
+
   const app = createApp();
 
   const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 
+  // 创建 WebSocket 服务器
+  createWebSocketServer(server);
+
   // 优雅关闭处理函数
   const gracefulShutdown = async (signal: string) => {
-    console.log(`${signal} signal received: closing HTTP server`);
+    console.log(`${signal} signal received: closing servers`);
+
+    // 关闭 WebSocket 服务器
+    try {
+      await closeWebSocketServer();
+    } catch (error) {
+      console.error('Error closing WebSocket server:', error);
+    }
 
     server.close(async () => {
       console.log('HTTP server closed');
@@ -37,6 +58,8 @@ export async function startServer(): Promise<void> {
       try {
         // 断开数据库连接
         await disconnectDatabase();
+        // 断开 Redis 连接
+        await disconnectRedis();
         console.log('Graceful shutdown completed');
         process.exit(0);
       } catch (error) {

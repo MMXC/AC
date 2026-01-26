@@ -43,9 +43,11 @@
     "@prisma/client": "^6.19.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/ws": "^8.18.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "ioredis": "^5.9.2",
-    "prisma": "^6.19.2"
+    "prisma": "^6.19.2",
+    "ws": "^8.19.0"
   }
 }

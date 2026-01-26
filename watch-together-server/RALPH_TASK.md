@@ -1,40 +1,41 @@
 ---
-backlog_id: task-19
-task: URL 同步 API
-test_command: "npm test -- --testNamePattern='URL同步'"
+backlog_id: task-20
+task: WebSocket 服务器基础框架
+test_command: "npm test -- --testNamePattern='WebSocket服务器'"
 ---
 
-# Task: URL 同步 API
+# Task: WebSocket 服务器基础框架
 
 ## Description
 
-实现 PUT /api/v1/rooms/:roomId/url 接口，更新房间共享 URL
+使用 ws 库创建 WebSocket 服务器，实现连接管理和基础消息处理
 
-**Test Command**: `npm test -- --testNamePattern='URL同步'`
+**Test Command**: `npm test -- --testNamePattern='WebSocket服务器'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: ``{url: "https://www.bilibili.com/video/xxx", userId: "user-xxx"}``
-   预期输出: `URL 更新成功，返回更新信息`
+1. 输入: `WebSocket 连接 ws://localhost:3001/ws?roomId=room-123&userId=user-456`
+   预期输出: `连接成功，加入房间`
 
 **测试场景**:
-1. 更新有效 URL 应该成功
-2. 更新无效 URL 应该返回 400
-3. 数据库应该保存新 URL
+1. 使用有效 roomId 和 userId 应该连接成功
+2. 使用无效 roomId 应该拒绝连接
+3. 连接应该存储到 Redis
 
 **断言示例**:
-1. `const response = await request(app).put(`/api/v1/rooms/${roomId}/url`).send({url: 'https://example.com', userId})`
-2. `expect(response.status).toBe(200)`
-3. `const room = await prisma.room.findUnique({where: {id: roomId}})`
-4. `expect(room.currentUrl).toBe('https://example.com')`
+1. `const ws = new WebSocket('ws://localhost:3001/ws?roomId=valid-room&userId=valid-user')`
+2. `await new Promise((resolve) => ws.on('open', resolve))`
+3. `expect(ws.readyState).toBe(WebSocket.OPEN)`
+4. `const connections = await redis.smembers(`ws:room:valid-room:connections`)`
+5. `expect(connections).toContain('valid-user')`
 
-**Test Command**: `npm test -- --testNamePattern='URL同步'`
+**Test Command**: `npm test -- --testNamePattern='WebSocket服务器'`
 
 ## Success Criteria
 
-- [x] PUT 请求可以更新房间 URL
-- [x] URL 格式验证（必须是有效的 HTTP/HTTPS URL）
-- [x] 数据库记录正确更新
-- [x] 返回更新后的 URL 信息
-- [x] 如果房间不存在返回 404
+- [x] WebSocket 服务器可以启动
+- [x] 客户端可以成功连接（通过 roomId 和 userId 参数）
+- [x] 连接时验证 roomId 和 userId 的有效性
+- [x] 连接信息存储到 Redis（用于多实例支持）
+- [x] 连接断开时正确清理资源
