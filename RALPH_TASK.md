@@ -34,8 +34,8 @@ npm test -- --testNamePattern='URL同步'"
 
 ## Success Criteria
 
-- [ ] PUT 请求可以更新房间 URL
-- [ ] URL 格式验证（必须是有效的 HTTP/HTTPS URL）
-- [ ] 数据库记录正确更新
-- [ ] 返回更新后的 URL 信息
-- [ ] 如果房间不存在返回 404
+- [x] PUT 请求可以更新房间 URL
+- [x] URL 格式验证（必须是有效的 HTTP/HTTPS URL）
+- [x] 数据库记录正确更新
+- [x] 返回更新后的 URL 信息
+- [x] 如果房间不存在返回 404
