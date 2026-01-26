@@ -35,8 +35,8 @@ npm test -- redis-service.test.ts"
 
 ## Success Criteria
 
-- [ ] Redis 客户端可以成功连接
-- [ ] 可以实现基本的 SET/GET 操作
-- [ ] 可以实现 Set 操作（用于连接管理）
-- [ ] TTL 设置和自动过期工作正常
-- [ ] 连接错误可以正确处理和重试
+- [x] Redis 客户端可以成功连接
+- [x] 可以实现基本的 SET/GET 操作
+- [x] 可以实现 Set 操作（用于连接管理）
+- [x] TTL 设置和自动过期工作正常
+- [x] 连接错误可以正确处理和重试
