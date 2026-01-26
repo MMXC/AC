@@ -16,6 +16,7 @@ import {
   getMessagesQuerySchema,
   roomIdParamSchema,
 } from '../validation/schemas';
+import { getRoomCacheService } from '../services/roomCache';
 
 const router = Router();
 
@@ -193,54 +194,19 @@ router.get(
       const validatedParams = (req as Request & { validatedParams: { roomId: string } }).validatedParams;
       const roomId = validatedParams.roomId;
 
-      const prisma = getPrismaClient();
-
-      // 查询房间信息（包含成员列表，排除已删除的房间）
-      const room = await prisma.room.findFirst({
-        where: {
-          id: roomId,
-          deletedAt: null, // 排除已删除的房间
-        },
-        include: {
-          members: {
-            where: {
-              leftAt: null, // 只包含未离开的成员
-            },
-            orderBy: {
-              joinedAt: 'asc',
-            },
-          },
-        },
-      });
+      // 使用缓存服务获取房间信息（优先从缓存，缓存未命中时从数据库加载）
+      const roomCacheService = getRoomCacheService();
+      const roomData = await roomCacheService.getRoomWithFallback(roomId);
 
       // 如果房间不存在或已删除，返回 404
-      if (!room) {
+      if (!roomData) {
         throw createHttpError(404, ErrorCode.NOT_FOUND, 'Room not found');
       }
-
-      // 格式化成员列表
-      const members = room.members.map(member => ({
-        userId: member.userId,
-        nickname: member.nickname,
-        isHost: member.isHost,
-        joinedAt: member.joinedAt.toISOString(),
-        lastActiveAt: member.lastActiveAt.toISOString(),
-      }));
 
       // 返回成功响应
       res.status(200).json({
         success: true,
-        data: {
-          id: room.id,
-          name: room.name,
-          hostId: room.hostId,
-          currentUrl: room.currentUrl,
-          inviteLink: room.inviteLink,
-          createdAt: room.createdAt.toISOString(),
-          updatedAt: room.updatedAt.toISOString(),
-          members: members,
-          memberCount: members.length,
-        },
+        data: roomData,
       });
     } catch (error) {
       next(error);
@@ -325,6 +291,10 @@ router.put(
         data: updateData,
       });
 
+      // 失效房间缓存
+      const roomCacheService = getRoomCacheService();
+      await roomCacheService.invalidateRoom(roomId);
+
       // 返回成功响应
       res.status(200).json({
         success: true,
@@ -395,6 +365,10 @@ router.delete(
           deletedAt: new Date(),
         },
       });
+
+      // 失效房间缓存
+      const roomCacheService = getRoomCacheService();
+      await roomCacheService.invalidateRoom(roomId);
 
       // 返回成功响应
       res.status(200).json({
@@ -992,6 +966,10 @@ router.put(
           },
         },
       });
+
+      // 失效房间缓存
+      const roomCacheService = getRoomCacheService();
+      await roomCacheService.invalidateRoom(roomId);
 
       // 返回成功响应
       res.status(200).json({
