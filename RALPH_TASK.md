@@ -33,8 +33,8 @@ npm test -- --testNamePattern='成员管理'"
 
 ## Success Criteria
 
-- [ ] POST leave 可以成功移除成员
-- [ ] GET members 返回房间所有成员列表
-- [ ] 成员离开后数据库记录正确更新（设置 left_at）
-- [ ] 成员列表按加入时间排序
-- [ ] 返回格式符合 API 规范
+- [x] POST leave 可以成功移除成员
+- [x] GET members 返回房间所有成员列表
+- [x] 成员离开后数据库记录正确更新（设置 left_at）
+- [x] 成员列表按加入时间排序
+- [x] 返回格式符合 API 规范
