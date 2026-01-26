@@ -142,6 +142,145 @@ async function removeConnectionFromRedis(roomId: string, userId: string): Promis
 }
 
 /**
+ * 房间状态数据接口
+ */
+interface RoomState {
+  currentUrl: string | null;
+  members: Array<{
+    userId: string;
+    nickname: string;
+    isHost: boolean;
+    joinedAt: string;
+  }>;
+  recentMessages: Array<{
+    id: string;
+    userId: string;
+    nickname: string;
+    content: string;
+    timestamp: string;
+  }>;
+}
+
+/**
+ * 获取房间状态（从数据库和 Redis）
+ *
+ * @param roomId 房间 ID
+ * @returns Promise<RoomState> 房间状态
+ */
+async function getRoomState(roomId: string): Promise<RoomState> {
+  try {
+    const prisma = getPrismaClient();
+
+    // 获取房间信息（包含当前 URL）
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      select: {
+        currentUrl: true,
+      },
+    });
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    // 获取成员列表（只包含未离开的成员）
+    const members = await prisma.roomMember.findMany({
+      where: {
+        roomId: roomId,
+        leftAt: null, // 未离开的成员
+      },
+      orderBy: {
+        joinedAt: 'asc', // 按加入时间升序
+      },
+      select: {
+        userId: true,
+        nickname: true,
+        isHost: true,
+        joinedAt: true,
+      },
+    });
+
+    // 获取最近消息（最多 50 条，按时间倒序）
+    const messages = await prisma.message.findMany({
+      where: {
+        roomId: roomId,
+      },
+      orderBy: {
+        createdAt: 'desc', // 最新的在前
+      },
+      take: 50, // 最多 50 条
+      select: {
+        id: true,
+        userId: true,
+        nickname: true,
+        content: true,
+        createdAt: true,
+      },
+    });
+
+    // 格式化状态数据
+    const state: RoomState = {
+      currentUrl: room.currentUrl,
+      members: members.map(member => ({
+        userId: member.userId,
+        nickname: member.nickname,
+        isHost: member.isHost,
+        joinedAt: member.joinedAt.toISOString(),
+      })),
+      recentMessages: messages
+        .reverse() // 反转回时间正序（最旧的在前）
+        .map(msg => ({
+          id: msg.id,
+          userId: msg.userId,
+          nickname: msg.nickname,
+          content: msg.content,
+          timestamp: msg.createdAt.toISOString(),
+        })),
+    };
+
+    return state;
+  } catch (error) {
+    console.error('Error getting room state:', error);
+    // 返回空状态而不是抛出错误
+    return {
+      currentUrl: null,
+      members: [],
+      recentMessages: [],
+    };
+  }
+}
+
+/**
+ * 发送 SYNC_STATE 消息
+ *
+ * @param ws WebSocket 连接
+ * @param roomId 房间 ID
+ */
+async function sendSyncState(ws: WebSocket, roomId: string): Promise<void> {
+  try {
+    const state = await getRoomState(roomId);
+
+    const message = {
+      type: 'SYNC_STATE',
+      data: state,
+      timestamp: new Date().toISOString(),
+    };
+
+    ws.send(JSON.stringify(message));
+  } catch (error) {
+    console.error('Error sending SYNC_STATE:', error);
+    // 发送错误消息
+    ws.send(
+      JSON.stringify({
+        type: 'ERROR',
+        error: 'Failed to get room state',
+        timestamp: new Date().toISOString(),
+      })
+    );
+  }
+}
+
+/**
  * 处理 WebSocket 连接
  *
  * @param ws WebSocket 连接
@@ -204,17 +343,25 @@ async function handleConnection(ws: WebSocket, req: { url?: string }): Promise<v
     console.log(`WebSocket connected: roomId=${roomId}, userId=${userId}`);
 
     // 处理消息
-    ws.on('message', (data: Buffer) => {
+    ws.on('message', async (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString());
         console.log(`Received message from ${userId} in ${roomId}:`, message);
-        // 基础消息处理（后续任务会扩展）
+
+        // 处理 SYNC_REQUEST 消息
+        if (message.type === 'SYNC_REQUEST') {
+          await sendSyncState(ws, roomId);
+          return;
+        }
+
+        // 其他消息类型（后续任务会扩展）
       } catch (error) {
         console.error('Error parsing message:', error);
         ws.send(
           JSON.stringify({
             type: 'ERROR',
             error: 'Invalid message format',
+            timestamp: new Date().toISOString(),
           })
         );
       }
@@ -253,6 +400,9 @@ async function handleConnection(ws: WebSocket, req: { url?: string }): Promise<v
         timestamp: new Date().toISOString(),
       })
     );
+
+    // 连接建立时自动发送 SYNC_STATE 消息
+    await sendSyncState(ws, roomId);
   } catch (error) {
     console.error('Error handling WebSocket connection:', error);
     ws.close(1011, 'Internal server error');
