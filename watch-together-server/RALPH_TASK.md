@@ -1,39 +1,39 @@
 ---
-backlog_id: task-9
-task: Express 服务器基础框架
-test_command: "npm test -- express-server.test.ts"
+backlog_id: task-10
+task: 数据库连接和 Prisma Client 集成
+test_command: "npm test -- database-connection.test.ts"
 ---
 
-# Task: Express 服务器基础框架
+# Task: 数据库连接和 Prisma Client 集成
 
 ## Description
 
-创建 Express 应用，配置中间件（CORS、JSON 解析、错误处理），设置路由结构
+配置数据库连接，创建 Prisma Client 单例，实现连接池管理
 
-**Test Command**: `npm test -- express-server.test.ts`
+**Test Command**: `npm test -- database-connection.test.ts`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `HTTP GET 请求到 `/health``
-   预期输出: ``{status: 'ok', timestamp: '...'}``
+1. 输入: `有效的 DATABASE_URL`
+   预期输出: `数据库连接成功`
 
 **测试场景**:
-1. 服务器启动后，健康检查端点应该响应
-2. 发送无效 JSON 请求应该返回 400 错误
-3. 未处理的错误应该返回 500 错误
+1. 使用有效连接字符串应该成功连接
+2. 使用无效连接字符串应该抛出错误
+3. 连接池应该限制最大连接数
 
 **断言示例**:
-1. `const response = await request(app).get('/health')`
-2. `expect(response.status).toBe(200)`
-3. `expect(response.body.status).toBe('ok')`
+1. `await expect(prisma.$connect()).resolves.not.toThrow()`
+2. `const result = await prisma.$queryRaw`SELECT 1 as test``
+3. `expect(result[0].test).toBe(1)`
 
-**Test Command**: `npm test -- express-server.test.ts`
+**Test Command**: `npm test -- database-connection.test.ts`
 
 ## Success Criteria
 
-- [x] Express 应用可以启动（监听指定端口）
-- [x] CORS 中间件配置正确
-- [x] JSON 解析中间件工作正常
-- [x] 错误处理中间件可以捕获并格式化错误
-- [x] 健康检查端点 `/health` 返回 200
+- [x] 可以从环境变量读取 DATABASE_URL
+- [x] Prisma Client 可以成功连接数据库
+- [x] 连接池配置正确（最大连接数、超时等）
+- [x] 数据库连接错误可以正确处理
+- [x] 应用关闭时正确断开数据库连接

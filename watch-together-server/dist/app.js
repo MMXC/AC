@@ -19,7 +19,7 @@ function createApp() {
         origin: '*', // 生产环境应该配置具体的域名
         credentials: true,
     }));
-    // JSON 解析中间件
+    // JSON 解析中间件（带错误处理）
     app.use(express_1.default.json());
     // URL 编码解析中间件
     app.use(express_1.default.urlencoded({ extended: true }));
@@ -38,6 +38,7 @@ function createApp() {
         });
     });
     // 错误处理中间件（必须在所有路由之后，包括 404 处理）
+    // Express 5.x 会自动捕获同步错误，但我们需要确保中间件正确配置
     app.use((err, _req, res, _next) => {
         // 如果是 JSON 解析错误
         if (err instanceof SyntaxError && 'body' in err) {

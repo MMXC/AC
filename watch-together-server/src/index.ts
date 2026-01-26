@@ -4,10 +4,13 @@
 
 import { startServer } from './server';
 
-export function main(): void {
-  startServer();
+export async function main(): Promise<void> {
+  await startServer();
 }
 
 if (require.main === module) {
-  main();
+  main().catch((error) => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
 }
