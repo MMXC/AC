@@ -51,3 +51,5 @@ C: Connection stalled
 Cannot use this model: opus-4.5-thinking. Available models: auto, composer-1, grok
 /c/project/AC/.cursor/ralph-scripts/ralph-common.sh: line 789: cursor-agent: command not found
 Cannot use this model: opus-4.5-thinking. Available models: auto, composer-1, grok
+C: [canceled] http/2 stream closed with error code CANCEL (0x8)
+[16:30:55] cursor-agent exited with code: 1

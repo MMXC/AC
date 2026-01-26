@@ -4,8 +4,9 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.main = main;
+const server_1 = require("./server");
 function main() {
-    console.log('Watch Together application initialized');
+    (0, server_1.startServer)();
 }
 if (require.main === module) {
     main();

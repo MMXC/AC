@@ -2,8 +2,10 @@
  * Watch Together - 主入口文件
  */
 
+import { startServer } from './server';
+
 export function main(): void {
-  console.log('Watch Together application initialized');
+  startServer();
 }
 
 if (require.main === module) {
