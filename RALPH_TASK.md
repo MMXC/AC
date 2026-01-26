@@ -1,42 +1,40 @@
 ---
-backlog_id: backlog-23
-task: WebSocket 消息处理 - 聊天消息
-test_command: "npm test -- --testNamePattern='聊天消息'
-npm test -- --testNamePattern='聊天消息'"
+backlog_id: backlog-24
+task: WebSocket 消息处理 - URL 同步
+test_command: "npm test -- --testNamePattern='URL同步'
+npm test -- --testNamePattern='URL同步'"
 ---
 
-# Task: WebSocket 消息处理 - 聊天消息
+# Task: WebSocket 消息处理 - URL 同步
 
 ## Description
 
-实现 CHAT_MESSAGE 消息处理，接收客户端消息并广播给房间所有成员
+实现 URL_CHANGE 消息处理，更新房间 URL 并广播 URL_CHANGED
 
-**Test Command**: `npm test -- --testNamePattern='聊天消息'`
+**Test Command**: `npm test -- --testNamePattern='URL同步'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: ``{type: "CHAT_MESSAGE", userId: "user-1", nickname: "Alice", content: "Hello"}``
-   预期输出: `所有成员收到包含消息 ID 和时间戳的 CHAT_MESSAGE`
+1. 输入: ``{type: "URL_CHANGE", userId: "user-1", url: "https://example.com"}``
+   预期输出: `房间 URL 更新，所有成员收到 URL_CHANGED 消息`
 
 **测试场景**:
-1. 发送消息应该保存到数据库
-2. 所有房间成员应该收到消息
-3. 消息应该包含正确的字段
+1. 更改 URL 应该更新数据库
+2. 所有成员应该收到 URL_CHANGED 消息
+3. 无效 URL 应该返回错误
 
 **断言示例**:
-1. `ws.send(JSON.stringify({type: 'CHAT_MESSAGE', userId: 'user-1', nickname: 'Alice', content: 'Hello'}))`
-2. `// 等待消息处理`
-3. `const message = await prisma.message.findFirst({where: {content: 'Hello'}})`
-4. `expect(message).toBeDefined()`
-5. `expect(message.userId).toBe('user-1')`
+1. `ws.send(JSON.stringify({type: 'URL_CHANGE', userId: 'user-1', url: 'https://example.com'}))`
+2. `const room = await prisma.room.findUnique({where: {id: roomId}})`
+3. `expect(room.currentUrl).toBe('https://example.com')`
 
-**Test Command**: `npm test -- --testNamePattern='聊天消息'`
+**Test Command**: `npm test -- --testNamePattern='URL同步'`
 
 ## Success Criteria
 
-- [x] 客户端发送 CHAT_MESSAGE 可以成功接收
-- [x] 消息保存到数据库
-- [x] 消息广播给房间内所有成员
-- [x] 消息格式验证（内容长度、必需字段）
-- [x] 消息包含时间戳和唯一 ID
+- [ ] 客户端发送 URL_CHANGE 可以成功接收
+- [ ] URL 更新到数据库
+- [ ] URL_CHANGED 消息广播给所有成员
+- [ ] URL 格式验证
+- [ ] 消息包含 changedBy 字段

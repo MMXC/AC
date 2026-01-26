@@ -1,9 +1,10 @@
 ---
 id: TASK-24
 title: WebSocket 消息处理 - URL 同步
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:37'
+updated_date: '2026-01-26 17:36'
 labels: []
 dependencies: []
 ---
