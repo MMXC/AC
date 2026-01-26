@@ -34,8 +34,8 @@ test_command: "npm test -- --testNamePattern='日志系统'"
 
 ## Success Criteria
 
-- [ ] 所有日志使用 JSON 格式
-- [ ] 日志级别正确（DEBUG, INFO, WARN, ERROR）
-- [ ] API 请求和响应记录日志
-- [ ] WebSocket 连接和消息记录日志
-- [ ] 错误日志包含堆栈信息
+- [x] 所有日志使用 JSON 格式
+- [x] 日志级别正确（DEBUG, INFO, WARN, ERROR）
+- [x] API 请求和响应记录日志
+- [x] WebSocket 连接和消息记录日志
+- [x] 错误日志包含堆栈信息
