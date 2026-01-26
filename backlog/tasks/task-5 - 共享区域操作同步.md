@@ -1,9 +1,10 @@
 ---
-id: task-5
+id: TASK-5
 title: 共享区域操作同步
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-25 16:56'
+updated_date: '2026-01-26 05:08'
 labels: []
 dependencies: []
 ---
