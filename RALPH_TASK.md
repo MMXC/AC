@@ -1,42 +1,40 @@
 ---
-backlog_id: backlog-28
-task: 日志系统
-test_command: "npm test -- --testNamePattern='日志系统'
-npm test -- --testNamePattern='日志系统'"
+backlog_id: backlog-29
+task: 缓存策略优化
+test_command: "npm test -- --testNamePattern='缓存优化'
+npm test -- --testNamePattern='缓存优化'"
 ---
 
-# Task: 日志系统
+# Task: 缓存策略优化
 
 ## Description
 
-使用 Pino 实现结构化日志，记录所有关键操作和错误
+实现房间状态缓存（Redis），减少数据库查询，提高性能
 
-**Test Command**: `npm test -- --testNamePattern='日志系统'`
+**Test Command**: `npm test -- --testNamePattern='缓存优化'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `API 请求和错误`
-   预期输出: `日志文件包含结构化 JSON 日志`
+1. 输入: `多次查询同一房间`
+   预期输出: `第一次查询数据库，后续查询缓存`
 
 **测试场景**:
-1. API 请求应该记录日志
-2. 错误应该记录 ERROR 级别日志
-3. 日志应该包含时间戳和上下文
+1. 首次查询应该查询数据库并缓存
+2. 后续查询应该使用缓存
+3. 更新房间应该失效缓存
 
 **断言示例**:
-1. `const logContent = fs.readFileSync('logs/app.log', 'utf-8')`
-2. `const logLines = logContent.split('\n').filter(Boolean)`
-3. `const lastLog = JSON.parse(logLines[logLines.length - 1])`
-4. `expect(lastLog.level).toBeDefined()`
-5. `expect(lastLog.time).toBeDefined()`
+1. `const room1 = await getRoom(roomId) // 查询数据库`
+2. `const room2 = await getRoom(roomId) // 使用缓存`
+3. `expect(dbQueryCount).toBe(1) // 只查询一次数据库`
 
-**Test Command**: `npm test -- --testNamePattern='日志系统'`
+**Test Command**: `npm test -- --testNamePattern='缓存优化'`
 
 ## Success Criteria
 
-- [x] 所有日志使用 JSON 格式
-- [x] 日志级别正确（DEBUG, INFO, WARN, ERROR）
-- [x] API 请求和响应记录日志
-- [x] WebSocket 连接和消息记录日志
-- [x] 错误日志包含堆栈信息
+- [ ] 房间信息缓存到 Redis（TTL 1 小时）
+- [ ] 缓存命中时减少数据库查询
+- [ ] 房间更新时自动失效缓存
+- [ ] 缓存未命中时从数据库加载并缓存
+- [ ] 性能提升：P95 响应时间 < 200ms

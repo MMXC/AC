@@ -1,9 +1,10 @@
 ---
 id: TASK-29
 title: 缓存策略优化
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:38'
+updated_date: '2026-01-26 18:39'
 labels: []
 dependencies: []
 ---
