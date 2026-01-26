@@ -1,40 +1,48 @@
 /**
- * URL 同步 API 测试
+ * WebSocket URL 同步测试
  */
 
-import request from 'supertest';
+import { Server } from 'http';
+import WebSocket from 'ws';
 import { createApp } from '../src/app';
 import { getPrismaClient } from '../src/db';
+import { createWebSocketServer, closeWebSocketServer } from '../src/websocket';
 
 describe('URL同步', () => {
-  let app: ReturnType<typeof createApp>;
+  let httpServer: Server;
   const prisma = getPrismaClient();
-
   let testRoomId: string;
   let testHostId: string;
-  let testUserId: string;
+  let testUserId1: string;
+  let testUserId2: string;
 
   beforeAll(async () => {
-    app = createApp();
+    // 增加超时时间到 30 秒
+    jest.setTimeout(30000);
 
-    // 创建测试房间和成员
-    testRoomId = `room-${Math.random().toString(36).substring(2, 10)}`;
-    testHostId = `user-${Math.random().toString(36).substring(2, 10)}`;
-    testUserId = `user-${Math.random().toString(36).substring(2, 10)}`;
+    // 创建 HTTP 服务器
+    const app = createApp();
+    httpServer = app.listen(0); // 使用随机端口
+
+    // 创建 WebSocket 服务器
+    createWebSocketServer(httpServer);
 
     try {
-      // 创建房间
+      // 创建测试房间和用户
+      testHostId = 'user-host888';
+      testUserId1 = 'user-test888';
+      testUserId2 = 'user-test887';
+      testRoomId = 'room-test888';
+
       await prisma.room.create({
         data: {
           id: testRoomId,
-          name: 'Test Room',
+          name: 'Test Room for URL Sync',
           hostId: testHostId,
-          inviteLink: `/room/${testRoomId}`,
-          currentUrl: null,
+          currentUrl: 'https://example.com',
         },
       });
 
-      // 创建房主成员
       await prisma.roomMember.create({
         data: {
           roomId: testRoomId,
@@ -44,315 +52,716 @@ describe('URL同步', () => {
         },
       });
 
-      // 创建普通成员
       await prisma.roomMember.create({
         data: {
           roomId: testRoomId,
-          userId: testUserId,
-          nickname: 'Test User',
+          userId: testUserId1,
+          nickname: 'Test User 1',
+          isHost: false,
+        },
+      });
+
+      await prisma.roomMember.create({
+        data: {
+          roomId: testRoomId,
+          userId: testUserId2,
+          nickname: 'Test User 2',
           isHost: false,
         },
       });
     } catch (error) {
-      // 如果数据库不可用，测试会失败，这是预期的
-      console.warn('Database not available, some tests will fail:', error);
+      console.error('Error setting up test data:', error);
+      throw error;
     }
-  });
+  }, 30000);
 
   afterAll(async () => {
+    // 增加超时时间到 30 秒
+    jest.setTimeout(30000);
+
+    // 关闭 WebSocket 服务器
     try {
-      // 清理测试数据
-      await prisma.roomEvent.deleteMany({
-        where: { roomId: testRoomId },
-      });
-      await prisma.message.deleteMany({
-        where: { roomId: testRoomId },
-      });
-      await prisma.roomMember.deleteMany({
-        where: { roomId: testRoomId },
-      });
-      await prisma.room.deleteMany({
-        where: { id: testRoomId },
-      });
+      await closeWebSocketServer();
     } catch (error) {
-      // 忽略清理错误
-      console.warn('Cleanup error:', error);
+      console.error('Error closing WebSocket server:', error);
     }
+
+    // 关闭 HTTP 服务器
+    await new Promise<void>(resolve => {
+      httpServer.close(() => {
+        resolve();
+      });
+    });
+
+    // 清理测试数据
+    try {
+      if (testRoomId) {
+        await prisma.roomEvent.deleteMany({
+          where: {
+            roomId: testRoomId,
+          },
+        });
+        await prisma.roomMember.deleteMany({
+          where: {
+            roomId: testRoomId,
+          },
+        });
+        await prisma.room.delete({
+          where: {
+            id: testRoomId,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error cleaning up test data:', error);
+    }
+  }, 30000);
+
+  describe('客户端发送 URL_CHANGE 可以成功接收', () => {
+    it('应该能够接收并处理 URL_CHANGE 消息', async () => {
+      const port = (httpServer.address() as { port: number }).port;
+
+      // 连接 WebSocket
+      const ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+
+      // 等待连接建立
+      await new Promise<void>(resolve => {
+        ws.on('open', () => {
+          resolve();
+        });
+      });
+
+      // 跳过初始的 CONNECTED 和 SYNC_STATE 消息
+      await new Promise<void>(resolve => {
+        let messageCount = 0;
+        ws.on('message', () => {
+          messageCount++;
+          if (messageCount >= 2) {
+            resolve();
+          }
+        });
+      });
+
+      // 发送 URL_CHANGE
+      const urlChangeMessage = {
+        type: 'URL_CHANGE',
+        userId: testHostId,
+        url: 'https://newsite.com',
+      };
+
+      ws.send(JSON.stringify(urlChangeMessage));
+
+      // 等待收到 URL_CHANGED 响应
+      const response = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('URL_CHANGED response timeout'));
+        }, 10000);
+
+        ws.on('message', data => {
+          try {
+            const message = JSON.parse(data.toString());
+            if (message.type === 'URL_CHANGED') {
+              clearTimeout(timeout);
+              resolve(message);
+            } else if (message.type === 'ERROR') {
+              clearTimeout(timeout);
+              reject(new Error(message.error));
+            }
+          } catch (error) {
+            // 忽略解析错误
+          }
+        });
+
+        ws.on('error', error => {
+          clearTimeout(timeout);
+          reject(error);
+        });
+      });
+
+      // 验证响应格式
+      expect(response.type).toBe('URL_CHANGED');
+      expect(response.data).toBeDefined();
+      expect(response.data.url).toBe('https://newsite.com');
+      expect(response.data.changedBy).toBeDefined();
+      expect(response.data.changedBy.userId).toBe(testHostId);
+      expect(response.data.changedBy.nickname).toBe('Test Host');
+      expect(response.timestamp).toBeDefined();
+
+      // 关闭连接
+      ws.close();
+    });
   });
 
-  describe('PUT /api/v1/rooms/:roomId/url', () => {
-    it('应该成功更新有效的 HTTP URL', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'http://example.com',
-          userId: testUserId,
+  describe('URL 更新到数据库', () => {
+    it('发送 URL_CHANGE 后，数据库中的房间 URL 应该更新', async () => {
+      const port = (httpServer.address() as { port: number }).port;
+
+      // 连接 WebSocket
+      const ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+
+      // 等待连接建立
+      await new Promise<void>(resolve => {
+        ws.on('open', () => {
+          resolve();
         });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data.currentUrl).toBe('http://example.com');
-      expect(response.body.data.id).toBe(testRoomId);
-
-      // 验证数据库记录已更新
-      const room = await prisma.room.findUnique({
-        where: { id: testRoomId },
-      });
-      expect(room?.currentUrl).toBe('http://example.com');
-    });
-
-    it('应该成功更新有效的 HTTPS URL', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'https://www.bilibili.com/video/xxx',
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.currentUrl).toBe('https://www.bilibili.com/video/xxx');
-
-      // 验证数据库记录已更新
-      const room = await prisma.room.findUnique({
-        where: { id: testRoomId },
-      });
-      expect(room?.currentUrl).toBe('https://www.bilibili.com/video/xxx');
-    });
-
-    it('应该拒绝无效的 URL 格式', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'not-a-valid-url',
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toContain('valid HTTP or HTTPS URL');
-    });
-
-    it('应该拒绝非 HTTP/HTTPS 协议的 URL', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'ftp://example.com',
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toContain('valid HTTP or HTTPS URL');
-    });
-
-    it('应该拒绝缺少 url 字段的请求', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toContain('url is required');
-    });
-
-    it('应该拒绝缺少 userId 字段的请求', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'https://example.com',
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toContain('userId is required');
-    });
-
-    it('应该拒绝空字符串 url', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: '',
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-    });
-
-    it('应该拒绝空字符串 userId', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'https://example.com',
-          userId: '',
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-    });
-
-    it('应该拒绝不存在的房间', async () => {
-      const nonExistentRoomId = 'room-nonexistent';
-      const response = await request(app)
-        .put(`/api/v1/rooms/${nonExistentRoomId}/url`)
-        .send({
-          url: 'https://example.com',
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(404);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not Found');
-      expect(response.body.message).toBe('Room not found');
-    });
-
-    it('应该拒绝不在房间中的用户', async () => {
-      const nonExistentUserId = 'user-nonexistent';
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'https://example.com',
-          userId: nonExistentUserId,
-        });
-
-      expect(response.status).toBe(404);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not Found');
-      expect(response.body.message).toContain('User not found in room');
-    });
-
-    it('应该拒绝无效的 roomId 格式', async () => {
-      const response = await request(app)
-        .put('/api/v1/rooms//url')
-        .send({
-          url: 'https://example.com',
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-    });
-
-    it('应该正确处理 URL 前后的空格', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: '  https://example.com  ',
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.currentUrl).toBe('https://example.com');
-
-      // 验证数据库记录已更新（去除空格）
-      const room = await prisma.room.findUnique({
-        where: { id: testRoomId },
-      });
-      expect(room?.currentUrl).toBe('https://example.com');
-    });
-
-    it('应该返回更新后的完整房间信息', async () => {
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'https://test.com',
-          userId: testUserId,
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data.id).toBe(testRoomId);
-      expect(response.body.data.name).toBeDefined();
-      expect(response.body.data.hostId).toBe(testHostId);
-      expect(response.body.data.currentUrl).toBe('https://test.com');
-      expect(response.body.data.inviteLink).toBeDefined();
-      expect(response.body.data.createdAt).toBeDefined();
-      expect(response.body.data.updatedAt).toBeDefined();
-    });
-
-    it('应该记录 URL 变更事件到 RoomEvent 表', async () => {
-      const oldUrl = 'https://old.com';
-      
-      // 先设置一个旧 URL
-      await prisma.room.update({
-        where: { id: testRoomId },
-        data: { currentUrl: oldUrl },
       });
 
-      const newUrl = 'https://new.com';
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: newUrl,
-          userId: testUserId,
+      // 跳过初始的 CONNECTED 和 SYNC_STATE 消息
+      await new Promise<void>(resolve => {
+        let messageCount = 0;
+        ws.on('message', () => {
+          messageCount++;
+          if (messageCount >= 2) {
+            resolve();
+          }
         });
+      });
 
-      expect(response.status).toBe(200);
+      // 发送 URL_CHANGE
+      const newUrl = `https://updated-${Date.now()}.com`;
+      const urlChangeMessage = {
+        type: 'URL_CHANGE',
+        userId: testHostId,
+        url: newUrl,
+      };
 
-      // 验证事件已记录
-      const events = await prisma.roomEvent.findMany({
+      ws.send(JSON.stringify(urlChangeMessage));
+
+      // 等待消息处理
+      await new Promise<void>(resolve => {
+        ws.on('message', data => {
+          try {
+            const message = JSON.parse(data.toString());
+            if (message.type === 'URL_CHANGED' && message.data.url === newUrl) {
+              resolve();
+            }
+          } catch (error) {
+            // 忽略解析错误
+          }
+        });
+      });
+
+      // 验证数据库中的 URL 已更新
+      const updatedRoom = await prisma.room.findUnique({
+        where: {
+          id: testRoomId,
+        },
+      });
+
+      expect(updatedRoom).toBeDefined();
+      expect(updatedRoom?.currentUrl).toBe(newUrl);
+
+      // 验证 RoomEvent 已创建
+      const event = await prisma.roomEvent.findFirst({
         where: {
           roomId: testRoomId,
           eventType: 'URL_CHANGED',
+          userId: testHostId,
         },
         orderBy: {
           createdAt: 'desc',
         },
-        take: 1,
       });
 
-      expect(events.length).toBeGreaterThan(0);
-      const latestEvent = events[0];
-      expect(latestEvent.eventType).toBe('URL_CHANGED');
-      expect(latestEvent.userId).toBe(testUserId);
-      expect(latestEvent.eventData).toBeDefined();
-      if (latestEvent.eventData && typeof latestEvent.eventData === 'object') {
-        const eventData = latestEvent.eventData as { oldUrl?: string; newUrl?: string };
-        expect(eventData.oldUrl).toBe(oldUrl);
-        expect(eventData.newUrl).toBe(newUrl);
+      expect(event).toBeDefined();
+      expect(event?.eventData).toBeDefined();
+      if (event?.eventData && typeof event.eventData === 'object' && 'newUrl' in event.eventData) {
+        expect((event.eventData as { newUrl: string }).newUrl).toBe(newUrl);
       }
+
+      // 关闭连接
+      ws.close();
+    });
+  });
+
+  describe('URL_CHANGED 消息广播给所有成员', () => {
+    it('发送 URL_CHANGE 后，所有房间成员应该收到 URL_CHANGED 消息', async () => {
+      const port = (httpServer.address() as { port: number }).port;
+
+      // 连接多个 WebSocket
+      const hostWs = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+      const user1Ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testUserId1}`);
+      const user2Ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testUserId2}`);
+
+      // 等待所有连接建立
+      await Promise.all([
+        new Promise<void>(resolve => {
+          hostWs.on('open', () => resolve());
+        }),
+        new Promise<void>(resolve => {
+          user1Ws.on('open', () => resolve());
+        }),
+        new Promise<void>(resolve => {
+          user2Ws.on('open', () => resolve());
+        }),
+      ]);
+
+      // 跳过初始的 CONNECTED 和 SYNC_STATE 消息
+      await Promise.all([
+        new Promise<void>(resolve => {
+          let messageCount = 0;
+          hostWs.on('message', () => {
+            messageCount++;
+            if (messageCount >= 2) {
+              resolve();
+            }
+          });
+        }),
+        new Promise<void>(resolve => {
+          let messageCount = 0;
+          user1Ws.on('message', () => {
+            messageCount++;
+            if (messageCount >= 2) {
+              resolve();
+            }
+          });
+        }),
+        new Promise<void>(resolve => {
+          let messageCount = 0;
+          user2Ws.on('message', () => {
+            messageCount++;
+            if (messageCount >= 2) {
+              resolve();
+            }
+          });
+        }),
+      ]);
+
+      // 等待所有成员加入完成（MEMBER_JOINED 消息）
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 收集所有消息
+      const hostMessages: any[] = [];
+      const user1Messages: any[] = [];
+      const user2Messages: any[] = [];
+
+      hostWs.on('message', data => {
+        try {
+          const message = JSON.parse(data.toString());
+          hostMessages.push(message);
+        } catch (error) {
+          // 忽略解析错误
+        }
+      });
+
+      user1Ws.on('message', data => {
+        try {
+          const message = JSON.parse(data.toString());
+          user1Messages.push(message);
+        } catch (error) {
+          // 忽略解析错误
+        }
+      });
+
+      user2Ws.on('message', data => {
+        try {
+          const message = JSON.parse(data.toString());
+          user2Messages.push(message);
+        } catch (error) {
+          // 忽略解析错误
+        }
+      });
+
+      // 发送 URL_CHANGE（从 host 发送）
+      const testUrl = `https://broadcast-test-${Date.now()}.com`;
+      const urlChangeMessage = {
+        type: 'URL_CHANGE',
+        userId: testHostId,
+        url: testUrl,
+      };
+
+      hostWs.send(JSON.stringify(urlChangeMessage));
+
+      // 等待消息广播
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 验证所有成员都收到了消息
+      const hostReceived = hostMessages.find(
+        (msg: any) => msg.type === 'URL_CHANGED' && msg.data.url === testUrl
+      );
+      const user1Received = user1Messages.find(
+        (msg: any) => msg.type === 'URL_CHANGED' && msg.data.url === testUrl
+      );
+      const user2Received = user2Messages.find(
+        (msg: any) => msg.type === 'URL_CHANGED' && msg.data.url === testUrl
+      );
+
+      expect(hostReceived).toBeDefined();
+      expect(user1Received).toBeDefined();
+      expect(user2Received).toBeDefined();
+
+      // 验证消息内容一致
+      expect(hostReceived.data.url).toBe(user1Received.data.url);
+      expect(hostReceived.data.url).toBe(user2Received.data.url);
+      expect(hostReceived.data.changedBy.userId).toBe(testHostId);
+      expect(hostReceived.data.changedBy.nickname).toBe('Test Host');
+
+      // 关闭所有连接
+      hostWs.close();
+      user1Ws.close();
+      user2Ws.close();
+    });
+  });
+
+  describe('URL 格式验证', () => {
+    it('无效的 URL 应该返回错误', async () => {
+      const port = (httpServer.address() as { port: number }).port;
+
+      const ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+
+      await new Promise<void>(resolve => {
+        ws.on('open', () => {
+          resolve();
+        });
+      });
+
+      // 跳过初始消息
+      await new Promise<void>(resolve => {
+        let messageCount = 0;
+        ws.on('message', () => {
+          messageCount++;
+          if (messageCount >= 2) {
+            resolve();
+          }
+        });
+      });
+
+      // 发送无效 URL
+      ws.send(
+        JSON.stringify({
+          type: 'URL_CHANGE',
+          userId: testHostId,
+          url: 'not-a-valid-url',
+        })
+      );
+
+      const errorResponse = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Error response timeout'));
+        }, 10000);
+
+        ws.on('message', data => {
+          try {
+            const message = JSON.parse(data.toString());
+            if (message.type === 'ERROR') {
+              clearTimeout(timeout);
+              resolve(message);
+            }
+          } catch (error) {
+            // 忽略解析错误
+          }
+        });
+      });
+
+      expect(errorResponse.type).toBe('ERROR');
+      expect(errorResponse.error).toContain('valid HTTP or HTTPS URL');
+
+      ws.close();
     });
 
-    it('应该更新 updatedAt 时间戳', async () => {
-      // 获取当前房间的 updatedAt
-      const roomBefore = await prisma.room.findUnique({
-        where: { id: testRoomId },
-      });
-      const updatedAtBefore = roomBefore?.updatedAt;
+    it('非 HTTP/HTTPS URL 应该返回错误', async () => {
+      const port = (httpServer.address() as { port: number }).port;
 
-      // 等待一小段时间确保时间戳会变化
+      const ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+
+      await new Promise<void>(resolve => {
+        ws.on('open', () => {
+          resolve();
+        });
+      });
+
+      // 跳过初始消息
+      await new Promise<void>(resolve => {
+        let messageCount = 0;
+        ws.on('message', () => {
+          messageCount++;
+          if (messageCount >= 2) {
+            resolve();
+          }
+        });
+      });
+
+      // 发送非 HTTP/HTTPS URL
+      ws.send(
+        JSON.stringify({
+          type: 'URL_CHANGE',
+          userId: testHostId,
+          url: 'ftp://example.com',
+        })
+      );
+
+      const errorResponse = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Error response timeout'));
+        }, 10000);
+
+        ws.on('message', data => {
+          try {
+            const message = JSON.parse(data.toString());
+            if (message.type === 'ERROR') {
+              clearTimeout(timeout);
+              resolve(message);
+            }
+          } catch (error) {
+            // 忽略解析错误
+          }
+        });
+      });
+
+      expect(errorResponse.type).toBe('ERROR');
+      expect(errorResponse.error).toContain('valid HTTP or HTTPS URL');
+
+      ws.close();
+    });
+
+    it('缺少 url 字段应该返回错误', async () => {
+      const port = (httpServer.address() as { port: number }).port;
+
+      const ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+
+      await new Promise<void>(resolve => {
+        ws.on('open', () => {
+          resolve();
+        });
+      });
+
+      // 跳过初始消息
+      await new Promise<void>(resolve => {
+        let messageCount = 0;
+        ws.on('message', () => {
+          messageCount++;
+          if (messageCount >= 2) {
+            resolve();
+          }
+        });
+      });
+
+      // 发送缺少 url 的消息
+      ws.send(
+        JSON.stringify({
+          type: 'URL_CHANGE',
+          userId: testHostId,
+        })
+      );
+
+      const errorResponse = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Error response timeout'));
+        }, 10000);
+
+        ws.on('message', data => {
+          try {
+            const message = JSON.parse(data.toString());
+            if (message.type === 'ERROR') {
+              clearTimeout(timeout);
+              resolve(message);
+            }
+          } catch (error) {
+            // 忽略解析错误
+          }
+        });
+      });
+
+      expect(errorResponse.type).toBe('ERROR');
+      expect(errorResponse.error).toContain('url');
+
+      ws.close();
+    });
+
+    it('空 URL 应该返回错误', async () => {
+      const port = (httpServer.address() as { port: number }).port;
+
+      const ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+
+      await new Promise<void>(resolve => {
+        ws.on('open', () => {
+          resolve();
+        });
+      });
+
+      // 跳过初始消息
+      await new Promise<void>(resolve => {
+        let messageCount = 0;
+        ws.on('message', () => {
+          messageCount++;
+          if (messageCount >= 2) {
+            resolve();
+          }
+        });
+      });
+
+      // 发送空 URL
+      ws.send(
+        JSON.stringify({
+          type: 'URL_CHANGE',
+          userId: testHostId,
+          url: '   ',
+        })
+      );
+
+      const errorResponse = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Error response timeout'));
+        }, 10000);
+
+        ws.on('message', data => {
+          try {
+            const message = JSON.parse(data.toString());
+            if (message.type === 'ERROR') {
+              clearTimeout(timeout);
+              resolve(message);
+            }
+          } catch (error) {
+            // 忽略解析错误
+          }
+        });
+      });
+
+      expect(errorResponse.type).toBe('ERROR');
+      expect(errorResponse.error).toContain('empty');
+
+      ws.close();
+    });
+  });
+
+  describe('消息包含 changedBy 字段', () => {
+    it('URL_CHANGED 消息应该包含 changedBy 字段', async () => {
+      const port = (httpServer.address() as { port: number }).port;
+
+      const ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+
+      await new Promise<void>(resolve => {
+        ws.on('open', () => {
+          resolve();
+        });
+      });
+
+      // 跳过初始消息
+      await new Promise<void>(resolve => {
+        let messageCount = 0;
+        ws.on('message', () => {
+          messageCount++;
+          if (messageCount >= 2) {
+            resolve();
+          }
+        });
+      });
+
+      // 发送 URL_CHANGE
+      const urlChangeMessage = {
+        type: 'URL_CHANGE',
+        userId: testHostId,
+        url: 'https://test-changedby.com',
+      };
+
+      ws.send(JSON.stringify(urlChangeMessage));
+
+      // 等待响应
+      const response = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Response timeout'));
+        }, 10000);
+
+        ws.on('message', data => {
+          try {
+            const message = JSON.parse(data.toString());
+            if (message.type === 'URL_CHANGED' && message.data.url === urlChangeMessage.url) {
+              clearTimeout(timeout);
+              resolve(message);
+            }
+          } catch (error) {
+            // 忽略解析错误
+          }
+        });
+      });
+
+      // 验证消息包含 changedBy 字段
+      expect(response.data.changedBy).toBeDefined();
+      expect(response.data.changedBy.userId).toBe(testHostId);
+      expect(response.data.changedBy.nickname).toBe('Test Host');
+      expect(typeof response.data.changedBy.userId).toBe('string');
+      expect(typeof response.data.changedBy.nickname).toBe('string');
+
+      ws.close();
+    });
+
+    it('不同用户更改 URL 时，changedBy 字段应该正确', async () => {
+      const port = (httpServer.address() as { port: number }).port;
+
+      // 连接两个用户
+      const hostWs = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
+      const user1Ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testUserId1}`);
+
+      await Promise.all([
+        new Promise<void>(resolve => {
+          hostWs.on('open', () => resolve());
+        }),
+        new Promise<void>(resolve => {
+          user1Ws.on('open', () => resolve());
+        }),
+      ]);
+
+      // 跳过初始消息
+      await Promise.all([
+        new Promise<void>(resolve => {
+          let messageCount = 0;
+          hostWs.on('message', () => {
+            messageCount++;
+            if (messageCount >= 2) {
+              resolve();
+            }
+          });
+        }),
+        new Promise<void>(resolve => {
+          let messageCount = 0;
+          user1Ws.on('message', () => {
+            messageCount++;
+            if (messageCount >= 2) {
+              resolve();
+            }
+          });
+        }),
+      ]);
+
+      // 等待成员加入完成
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const response = await request(app)
-        .put(`/api/v1/rooms/${testRoomId}/url`)
-        .send({
-          url: 'https://updated.com',
-          userId: testUserId,
-        });
+      // 从 user1 发送 URL_CHANGE
+      const testUrl = `https://user1-changed-${Date.now()}.com`;
+      const urlChangeMessage = {
+        type: 'URL_CHANGE',
+        userId: testUserId1,
+        url: testUrl,
+      };
 
-      expect(response.status).toBe(200);
+      user1Ws.send(JSON.stringify(urlChangeMessage));
 
-      // 验证 updatedAt 已更新
-      const roomAfter = await prisma.room.findUnique({
-        where: { id: testRoomId },
+      // 收集消息
+      const hostMessages: any[] = [];
+      hostWs.on('message', data => {
+        try {
+          const message = JSON.parse(data.toString());
+          hostMessages.push(message);
+        } catch (error) {
+          // 忽略解析错误
+        }
       });
-      expect(roomAfter?.updatedAt).not.toEqual(updatedAtBefore);
-      expect(new Date(roomAfter?.updatedAt || '').getTime()).toBeGreaterThan(
-        new Date(updatedAtBefore || '').getTime()
+
+      // 等待消息广播
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 验证 host 收到的消息中 changedBy 是 user1
+      const urlChangedMessage = hostMessages.find(
+        (msg: any) => msg.type === 'URL_CHANGED' && msg.data.url === testUrl
       );
+
+      expect(urlChangedMessage).toBeDefined();
+      expect(urlChangedMessage.data.changedBy.userId).toBe(testUserId1);
+      expect(urlChangedMessage.data.changedBy.nickname).toBe('Test User 1');
+
+      // 关闭连接
+      hostWs.close();
+      user1Ws.close();
     });
   });
 });

@@ -339,6 +339,163 @@ function validateChatMessage(message) {
     return null;
 }
 /**
+ * 验证 URL 格式
+ * @param url - 要验证的 URL
+ * @returns 是否为有效的 HTTP/HTTPS URL
+ */
+function isValidUrl(url) {
+    try {
+        const urlObj = new url_1.URL(url);
+        // 只允许 http 和 https 协议
+        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    }
+    catch {
+        return false;
+    }
+}
+/**
+ * 验证 URL_CHANGE 消息格式
+ *
+ * @param message 消息对象
+ * @returns 验证错误信息，如果通过则返回 null
+ */
+function validateUrlChangeMessage(message) {
+    // 验证必需字段
+    if (!message.userId || typeof message.userId !== 'string') {
+        return 'userId is required and must be a string';
+    }
+    if (!message.url || typeof message.url !== 'string') {
+        return 'url is required and must be a string';
+    }
+    // 验证 URL 格式
+    const trimmedUrl = message.url.trim();
+    if (trimmedUrl.length === 0) {
+        return 'url must not be empty';
+    }
+    if (!isValidUrl(trimmedUrl)) {
+        return 'url must be a valid HTTP or HTTPS URL';
+    }
+    return null;
+}
+/**
+ * 处理 URL_CHANGE 消息
+ *
+ * @param ws WebSocket 连接
+ * @param message 消息对象
+ * @param roomId 房间 ID
+ * @param userId 用户 ID
+ */
+async function handleUrlChange(ws, message, roomId, userId) {
+    try {
+        // 验证消息格式
+        const validationError = validateUrlChangeMessage(message);
+        if (validationError) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: validationError,
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        // 验证 userId 是否匹配连接的用户 ID
+        if (message.userId !== userId) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: 'userId does not match the connection userId',
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        // 验证用户是否在房间中
+        const userInRoom = await validateUserInRoom(roomId, userId);
+        if (!userInRoom) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: 'User not in room',
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        const prisma = (0, db_1.getPrismaClient)();
+        // 获取当前房间信息
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+        });
+        if (!room) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: 'Room not found',
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        // 获取用户信息（用于 changedBy 字段）
+        const member = await prisma.roomMember.findFirst({
+            where: {
+                roomId: roomId,
+                userId: userId,
+                leftAt: null,
+            },
+            select: {
+                nickname: true,
+            },
+        });
+        if (!member) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: 'Member not found',
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        const trimmedUrl = message.url.trim();
+        const oldUrl = room.currentUrl;
+        // 更新房间 URL
+        await prisma.room.update({
+            where: {
+                id: roomId,
+            },
+            data: {
+                currentUrl: trimmedUrl,
+            },
+        });
+        // 记录 URL 变更事件到 RoomEvent 表
+        await prisma.roomEvent.create({
+            data: {
+                roomId: roomId,
+                eventType: 'URL_CHANGED',
+                userId: userId,
+                eventData: {
+                    oldUrl: oldUrl,
+                    newUrl: trimmedUrl,
+                },
+            },
+        });
+        // 构建 URL_CHANGED 广播消息
+        const broadcastMessage = {
+            type: 'URL_CHANGED',
+            data: {
+                url: trimmedUrl,
+                changedBy: {
+                    userId: userId,
+                    nickname: member.nickname,
+                },
+            },
+            timestamp: new Date().toISOString(),
+        };
+        // 广播给房间内所有成员（包括发送者）
+        broadcastToRoom(roomId, broadcastMessage);
+    }
+    catch (error) {
+        console.error('Error handling URL_CHANGE:', error);
+        ws.send(JSON.stringify({
+            type: 'ERROR',
+            error: 'Failed to process URL change',
+            timestamp: new Date().toISOString(),
+        }));
+    }
+}
+/**
  * 处理 CHAT_MESSAGE 消息
  *
  * @param ws WebSocket 连接
@@ -557,6 +714,11 @@ async function handleConnection(ws, req) {
                 // 处理 CHAT_MESSAGE 消息
                 if (message.type === 'CHAT_MESSAGE') {
                     await handleChatMessage(ws, message, roomId, userId);
+                    return;
+                }
+                // 处理 URL_CHANGE 消息
+                if (message.type === 'URL_CHANGE') {
+                    await handleUrlChange(ws, message, roomId, userId);
                     return;
                 }
                 // 未知消息类型
