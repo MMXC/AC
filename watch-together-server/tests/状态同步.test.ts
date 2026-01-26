@@ -24,7 +24,7 @@ describe('状态同步', () => {
     httpServer = app.listen(0); // 使用随机端口
 
     // 创建 WebSocket 服务器
-    wsServer = createWebSocketServer(httpServer);
+    createWebSocketServer(httpServer);
 
     try {
       // 创建测试房间和用户

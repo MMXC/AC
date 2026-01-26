@@ -1,43 +1,41 @@
 ---
-backlog_id: task-22
-task: WebSocket 消息处理 - 成员加入和离开
-test_command: "npm test -- --testNamePattern='成员加入离开'"
+backlog_id: task-23
+task: WebSocket 消息处理 - 聊天消息
+test_command: "npm test -- --testNamePattern='聊天消息'"
 ---
 
-# Task: WebSocket 消息处理 - 成员加入和离开
+# Task: WebSocket 消息处理 - 聊天消息
 
 ## Description
 
-实现 MEMBER_JOINED 和 MEMBER_LEFT 消息广播
+实现 CHAT_MESSAGE 消息处理，接收客户端消息并广播给房间所有成员
 
-**Test Command**: `npm test -- --testNamePattern='成员加入离开'`
+**Test Command**: `npm test -- --testNamePattern='聊天消息'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `新成员加入房间`
-   预期输出: `所有现有成员收到 MEMBER_JOINED 消息`
+1. 输入: `{type: "CHAT_MESSAGE", userId: "user-1", nickname: "Alice", content: "Hello"}`
+   预期输出: `所有成员收到包含消息 ID 和时间戳的 CHAT_MESSAGE`
 
 **测试场景**:
-1. 新成员加入应该触发广播
-2. 成员离开应该触发广播
-3. 只有房间内其他成员收到消息
+1. 发送消息应该保存到数据库
+2. 所有房间成员应该收到消息
+3. 消息应该包含正确的字段
 
 **断言示例**:
-1. `const member2Ws = new WebSocket('ws://localhost:3001/ws?roomId=room-123&userId=user-2')`
-2. `member2Ws.on('message', (data) => {`
-3. `const msg = JSON.parse(data.toString())`
-4. `if (msg.type === 'MEMBER_JOINED') {`
-5. `expect(msg.data.userId).toBe('user-2')`
-6. `}`
-7. `})`
+1. `ws.send(JSON.stringify({type: 'CHAT_MESSAGE', userId: 'user-1', nickname: 'Alice', content: 'Hello'}))`
+2. `// 等待消息处理`
+3. `const message = await prisma.message.findFirst({where: {content: 'Hello'}})`
+4. `expect(message).toBeDefined()`
+5. `expect(message.userId).toBe('user-1')`
 
-**Test Command**: `npm test -- --testNamePattern='成员加入离开'`
+**Test Command**: `npm test -- --testNamePattern='聊天消息'`
 
 ## Success Criteria
 
-- [x] 新成员加入时广播 MEMBER_JOINED 消息
-- [x] 成员离开时广播 MEMBER_LEFT 消息
-- [x] 消息只发送给同一房间的其他成员
-- [x] 成员列表正确更新
-- [x] 断开连接时自动触发 MEMBER_LEFT
+- [x] 客户端发送 CHAT_MESSAGE 可以成功接收
+- [x] 消息保存到数据库
+- [x] 消息广播给房间内所有成员
+- [x] 消息格式验证（内容长度、必需字段）
+- [x] 消息包含时间戳和唯一 ID

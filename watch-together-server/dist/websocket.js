@@ -293,6 +293,149 @@ async function broadcastMemberJoined(roomId, userId) {
     }
 }
 /**
+ * 生成唯一的消息 ID
+ * 格式：msg-{随机字符串}
+ *
+ * @returns 消息 ID
+ */
+function generateMessageId() {
+    // 生成 8 位随机字符串（小写字母和数字）
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let randomString = '';
+    for (let i = 0; i < 8; i++) {
+        randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `msg-${randomString}`;
+}
+/**
+ * 验证聊天消息格式
+ *
+ * @param message 消息对象
+ * @returns 验证错误信息，如果通过则返回 null
+ */
+function validateChatMessage(message) {
+    // 验证必需字段
+    if (!message.userId || typeof message.userId !== 'string') {
+        return 'userId is required and must be a string';
+    }
+    if (!message.nickname || typeof message.nickname !== 'string') {
+        return 'nickname is required and must be a string';
+    }
+    if (!message.content || typeof message.content !== 'string') {
+        return 'content is required and must be a string';
+    }
+    // 验证内容长度（最大 1000 字符）
+    if (message.content.length > 1000) {
+        return 'content must not exceed 1000 characters';
+    }
+    // 验证内容不能为空
+    if (message.content.trim().length === 0) {
+        return 'content must not be empty';
+    }
+    // 验证昵称长度（最大 50 字符）
+    if (message.nickname.length > 50) {
+        return 'nickname must not exceed 50 characters';
+    }
+    return null;
+}
+/**
+ * 处理 CHAT_MESSAGE 消息
+ *
+ * @param ws WebSocket 连接
+ * @param message 消息对象
+ * @param roomId 房间 ID
+ * @param userId 用户 ID
+ */
+async function handleChatMessage(ws, message, roomId, userId) {
+    try {
+        // 验证消息格式
+        const validationError = validateChatMessage(message);
+        if (validationError) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: validationError,
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        // 验证 userId 是否匹配连接的用户 ID
+        if (message.userId !== userId) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: 'userId does not match the connection userId',
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        // 验证用户是否在房间中
+        const userInRoom = await validateUserInRoom(roomId, userId);
+        if (!userInRoom) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: 'User not in room',
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        // 从数据库获取用户信息（确保昵称一致）
+        const prisma = (0, db_1.getPrismaClient)();
+        const member = await prisma.roomMember.findFirst({
+            where: {
+                roomId: roomId,
+                userId: userId,
+                leftAt: null,
+            },
+            select: {
+                nickname: true,
+            },
+        });
+        if (!member) {
+            ws.send(JSON.stringify({
+                type: 'ERROR',
+                error: 'Member not found',
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+        // 使用数据库中的昵称（确保一致性）
+        const actualNickname = member.nickname;
+        // 生成消息 ID
+        const messageId = generateMessageId();
+        // 保存消息到数据库
+        const savedMessage = await prisma.message.create({
+            data: {
+                id: messageId,
+                roomId: roomId,
+                userId: userId,
+                nickname: actualNickname,
+                content: message.content.trim(),
+            },
+        });
+        // 构建广播消息
+        const broadcastMessage = {
+            type: 'CHAT_MESSAGE',
+            data: {
+                id: savedMessage.id,
+                userId: savedMessage.userId,
+                nickname: savedMessage.nickname,
+                content: savedMessage.content,
+                timestamp: savedMessage.createdAt.toISOString(),
+            },
+            timestamp: new Date().toISOString(),
+        };
+        // 广播给房间内所有成员（包括发送者）
+        broadcastToRoom(roomId, broadcastMessage);
+    }
+    catch (error) {
+        console.error('Error handling CHAT_MESSAGE:', error);
+        ws.send(JSON.stringify({
+            type: 'ERROR',
+            error: 'Failed to process chat message',
+            timestamp: new Date().toISOString(),
+        }));
+    }
+}
+/**
  * 广播 MEMBER_LEFT 消息给房间内其他成员
  *
  * @param roomId 房间 ID
@@ -411,7 +554,17 @@ async function handleConnection(ws, req) {
                     await sendSyncState(ws, roomId);
                     return;
                 }
-                // 其他消息类型（后续任务会扩展）
+                // 处理 CHAT_MESSAGE 消息
+                if (message.type === 'CHAT_MESSAGE') {
+                    await handleChatMessage(ws, message, roomId, userId);
+                    return;
+                }
+                // 未知消息类型
+                ws.send(JSON.stringify({
+                    type: 'ERROR',
+                    error: `Unknown message type: ${message.type}`,
+                    timestamp: new Date().toISOString(),
+                }));
             }
             catch (error) {
                 console.error('Error parsing message:', error);
