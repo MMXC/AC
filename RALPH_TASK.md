@@ -35,8 +35,8 @@ npm test -- --testNamePattern='WebSocket服务器'"
 
 ## Success Criteria
 
-- [ ] WebSocket 服务器可以启动
-- [ ] 客户端可以成功连接（通过 roomId 和 userId 参数）
-- [ ] 连接时验证 roomId 和 userId 的有效性
-- [ ] 连接信息存储到 Redis（用于多实例支持）
-- [ ] 连接断开时正确清理资源
+- [x] WebSocket 服务器可以启动
+- [x] 客户端可以成功连接（通过 roomId 和 userId 参数）
+- [x] 连接时验证 roomId 和 userId 的有效性
+- [x] 连接信息存储到 Redis（用于多实例支持）
+- [x] 连接断开时正确清理资源
