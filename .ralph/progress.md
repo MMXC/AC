@@ -1362,3 +1362,29 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-26 19:32:56
 **Session 1 started** (model: auto)
+
+### 2026-01-26 [current time]
+**Session 1 completed** - 实现日志系统功能
+- 安装了 Pino 日志库和相关依赖（pino, pino-pretty, pino-http）
+- 创建了日志配置模块（src/logger.ts），包含：
+  ✓ Pino logger 实例配置
+  ✓ 日志级别管理（DEBUG, INFO, WARN, ERROR）
+  ✓ 开发环境使用 pino-pretty 格式化输出
+  ✓ 生产环境输出 JSON 格式到文件
+  ✓ 子 logger 创建功能
+- 在 app.ts 中添加了 API 请求/响应日志中间件（使用 pino-http）
+- 在 errorHandler.ts 中使用 Pino 记录错误日志（包含堆栈信息）
+- 在 websocket.ts 中替换所有 console 调用为 Pino logger：
+  ✓ WebSocket 连接和断开日志
+  ✓ WebSocket 消息日志
+  ✓ WebSocket 错误日志
+  ✓ 心跳和超时日志
+- 创建了完整的测试文件（tests/日志系统.test.ts）
+- 实现了所有成功标准：
+  ✓ 所有日志使用 JSON 格式
+  ✓ 日志级别正确（DEBUG, INFO, WARN, ERROR）
+  ✓ API 请求和响应记录日志
+  ✓ WebSocket 连接和消息记录日志
+  ✓ 错误日志包含堆栈信息
+- 所有代码编译通过，类型检查通过
+- 提交了更改到 git
