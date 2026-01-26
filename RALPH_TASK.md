@@ -1,40 +1,42 @@
 ---
-backlog_id: backlog-24
-task: WebSocket 消息处理 - URL 同步
-test_command: "npm test -- --testNamePattern='URL同步'
-npm test -- --testNamePattern='URL同步'"
+backlog_id: backlog-25
+task: WebSocket 心跳和连接管理
+test_command: "npm test -- --testNamePattern='心跳连接管理'
+npm test -- --testNamePattern='心跳连接管理'"
 ---
 
-# Task: WebSocket 消息处理 - URL 同步
+# Task: WebSocket 心跳和连接管理
 
 ## Description
 
-实现 URL_CHANGE 消息处理，更新房间 URL 并广播 URL_CHANGED
+实现心跳机制（ping/pong），连接超时处理，自动清理断开的连接
 
-**Test Command**: `npm test -- --testNamePattern='URL同步'`
+**Test Command**: `npm test -- --testNamePattern='心跳连接管理'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: ``{type: "URL_CHANGE", userId: "user-1", url: "https://example.com"}``
-   预期输出: `房间 URL 更新，所有成员收到 URL_CHANGED 消息`
+1. 输入: `WebSocket 连接，5 分钟无活动`
+   预期输出: `连接自动断开，资源清理`
 
 **测试场景**:
-1. 更改 URL 应该更新数据库
-2. 所有成员应该收到 URL_CHANGED 消息
-3. 无效 URL 应该返回错误
+1. ping/pong 应该正常工作
+2. 超时连接应该自动断开
+3. Redis 连接记录应该清理
 
 **断言示例**:
-1. `ws.send(JSON.stringify({type: 'URL_CHANGE', userId: 'user-1', url: 'https://example.com'}))`
-2. `const room = await prisma.room.findUnique({where: {id: roomId}})`
-3. `expect(room.currentUrl).toBe('https://example.com')`
+1. `// 模拟 5 分钟无活动`
+2. `jest.advanceTimersByTime(5 * 60 * 1000)`
+3. `expect(ws.readyState).toBe(WebSocket.CLOSED)`
+4. `const connections = await redis.smembers(`ws:room:${roomId}:connections`)`
+5. `expect(connections).not.toContain(userId)`
 
-**Test Command**: `npm test -- --testNamePattern='URL同步'`
+**Test Command**: `npm test -- --testNamePattern='心跳连接管理'`
 
 ## Success Criteria
 
-- [x] 客户端发送 URL_CHANGE 可以成功接收
-- [x] URL 更新到数据库
-- [x] URL_CHANGED 消息广播给所有成员
-- [x] URL 格式验证
-- [x] 消息包含 changedBy 字段
+- [ ] 服务器定期发送 ping，客户端响应 pong
+- [ ] 无响应 5 分钟后自动断开连接
+- [ ] 断开连接时清理 Redis 中的连接记录
+- [ ] 断开连接时更新成员 last_active_at
+- [ ] 连接数限制（每 IP 最多 10 个连接）
