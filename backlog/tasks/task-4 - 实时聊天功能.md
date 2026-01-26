@@ -1,9 +1,10 @@
 ---
-id: task-4
+id: TASK-4
 title: 实时聊天功能
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-25 16:56'
+updated_date: '2026-01-26 04:50'
 labels: []
 dependencies: []
 ---

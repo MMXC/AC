@@ -4,9 +4,10 @@ title: 房间页面布局 - 侧边栏信息
 status: In Progress
 assignee: []
 created_date: '2026-01-25 16:56'
-updated_date: '2026-01-25 19:04'
+updated_date: '2026-01-25 19:10'
 labels: []
 dependencies: []
+ordinal: 2000
 ---
 
 ## Description
