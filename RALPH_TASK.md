@@ -33,8 +33,8 @@ npm test -- express-server.test.ts"
 
 ## Success Criteria
 
-- [ ] Express 应用可以启动（监听指定端口）
-- [ ] CORS 中间件配置正确
-- [ ] JSON 解析中间件工作正常
-- [ ] 错误处理中间件可以捕获并格式化错误
-- [ ] 健康检查端点 `/health` 返回 200
+- [x] Express 应用可以启动（监听指定端口）
+- [x] CORS 中间件配置正确
+- [x] JSON 解析中间件工作正常
+- [x] 错误处理中间件可以捕获并格式化错误
+- [x] 健康检查端点 `/health` 返回 200
