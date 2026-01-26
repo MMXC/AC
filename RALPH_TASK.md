@@ -34,8 +34,8 @@ npm test -- --testNamePattern='消息历史'"
 
 ## Success Criteria
 
-- [ ] GET 请求可以获取消息列表
-- [ ] 支持 limit 和 offset 参数
-- [ ] 返回分页信息（total, limit, offset, hasMore）
-- [ ] 消息按时间倒序排列（最新的在前）
-- [ ] limit 最大值为 100
+- [x] GET 请求可以获取消息列表
+- [x] 支持 limit 和 offset 参数
+- [x] 返回分页信息（total, limit, offset, hasMore）
+- [x] 消息按时间倒序排列（最新的在前）
+- [x] limit 最大值为 100
