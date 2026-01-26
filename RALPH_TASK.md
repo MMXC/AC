@@ -1,41 +1,40 @@
 ---
-backlog_id: task-28
-task: 日志系统
-test_command: "npm test -- --testNamePattern='日志系统'"
+backlog_id: backlog-9
+task: Express 服务器基础框架
+test_command: "npm test -- express-server.test.ts
+npm test -- express-server.test.ts"
 ---
 
-# Task: 日志系统
+# Task: Express 服务器基础框架
 
 ## Description
 
-使用 Pino 实现结构化日志，记录所有关键操作和错误
+创建 Express 应用，配置中间件（CORS、JSON 解析、错误处理），设置路由结构
 
-**Test Command**: `npm test -- --testNamePattern='日志系统'`
+**Test Command**: `npm test -- express-server.test.ts`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `API 请求和错误`
-   预期输出: `日志文件包含结构化 JSON 日志`
+1. 输入: `HTTP GET 请求到 `/health``
+   预期输出: ``{status: 'ok', timestamp: '...'}``
 
 **测试场景**:
-1. API 请求应该记录日志
-2. 错误应该记录 ERROR 级别日志
-3. 日志应该包含时间戳和上下文
+1. 服务器启动后，健康检查端点应该响应
+2. 发送无效 JSON 请求应该返回 400 错误
+3. 未处理的错误应该返回 500 错误
 
 **断言示例**:
-1. `const logContent = fs.readFileSync('logs/app.log', 'utf-8')`
-2. `const logLines = logContent.split('\n').filter(Boolean)`
-3. `const lastLog = JSON.parse(logLines[logLines.length - 1])`
-4. `expect(lastLog.level).toBeDefined()`
-5. `expect(lastLog.time).toBeDefined()`
+1. `const response = await request(app).get('/health')`
+2. `expect(response.status).toBe(200)`
+3. `expect(response.body.status).toBe('ok')`
 
-**Test Command**: `npm test -- --testNamePattern='日志系统'`
+**Test Command**: `npm test -- express-server.test.ts`
 
 ## Success Criteria
 
-- [x] 所有日志使用 JSON 格式
-- [x] 日志级别正确（DEBUG, INFO, WARN, ERROR）
-- [x] API 请求和响应记录日志
-- [x] WebSocket 连接和消息记录日志
-- [x] 错误日志包含堆栈信息
+- [ ] Express 应用可以启动（监听指定端口）
+- [ ] CORS 中间件配置正确
+- [ ] JSON 解析中间件工作正常
+- [ ] 错误处理中间件可以捕获并格式化错误
+- [ ] 健康检查端点 `/health` 返回 200

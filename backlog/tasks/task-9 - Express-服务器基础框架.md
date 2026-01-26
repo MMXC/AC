@@ -1,9 +1,10 @@
 ---
 id: TASK-9
 title: Express 服务器基础框架
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:36'
+updated_date: '2026-01-26 12:16'
 labels: []
 dependencies: []
 ---

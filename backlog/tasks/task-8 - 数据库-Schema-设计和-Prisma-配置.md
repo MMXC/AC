@@ -1,12 +1,13 @@
 ---
 id: TASK-8
 title: 数据库 Schema 设计和 Prisma 配置
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-26 06:36'
-updated_date: '2026-01-26 07:26'
+updated_date: '2026-01-26 12:16'
 labels: []
 dependencies: []
+ordinal: 8000
 ---
 
 ## Description
