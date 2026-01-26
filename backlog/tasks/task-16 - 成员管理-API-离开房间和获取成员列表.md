@@ -1,9 +1,10 @@
 ---
 id: TASK-16
 title: 成员管理 API - 离开房间和获取成员列表
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:37'
+updated_date: '2026-01-26 14:39'
 labels: []
 dependencies: []
 ---
