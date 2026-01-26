@@ -722,5 +722,150 @@ router.post('/:roomId/messages', async (req, res) => {
         });
     }
 });
+/**
+ * GET /api/v1/rooms/:roomId/messages
+ * 获取消息历史
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 查询参数：
+ * - limit: number - 每页消息数量（可选，默认 50，最大 100）
+ * - offset: number - 偏移量（可选，默认 0）
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     messages: [
+ *       {
+ *         id: string,        // 消息 ID
+ *         roomId: string,    // 房间 ID
+ *         userId: string,    // 用户 ID
+ *         nickname: string,  // 用户昵称
+ *         content: string,  // 消息内容
+ *         createdAt: string  // 创建时间（ISO 字符串）
+ *       }
+ *     ],
+ *     pagination: {
+ *       total: number,      // 总消息数
+ *       limit: number,     // 每页数量
+ *       offset: number,    // 偏移量
+ *       hasMore: boolean   // 是否有更多消息
+ *     }
+ *   }
+ * }
+ *
+ * 响应（失败）：
+ * {
+ *   success: false,
+ *   error: "Not Found",
+ *   message: "Room not found"
+ * }
+ */
+router.get('/:roomId/messages', async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const { limit: limitParam, offset: offsetParam } = req.query;
+        // 验证 roomId 格式
+        if (!roomId || typeof roomId !== 'string' || roomId.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Bad Request',
+                message: 'roomId is required and must be a non-empty string',
+            });
+        }
+        // 解析 limit 参数（默认 50，最大 100）
+        let limit = 50;
+        if (limitParam !== undefined) {
+            const parsedLimit = parseInt(limitParam, 10);
+            if (isNaN(parsedLimit) || parsedLimit < 1) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Bad Request',
+                    message: 'limit must be a positive integer',
+                });
+            }
+            limit = Math.min(parsedLimit, 100); // 最大值为 100
+        }
+        // 解析 offset 参数（默认 0）
+        let offset = 0;
+        if (offsetParam !== undefined) {
+            const parsedOffset = parseInt(offsetParam, 10);
+            if (isNaN(parsedOffset) || parsedOffset < 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Bad Request',
+                    message: 'offset must be a non-negative integer',
+                });
+            }
+            offset = parsedOffset;
+        }
+        const prisma = (0, db_1.getPrismaClient)();
+        // 检查房间是否存在且未删除
+        const room = await prisma.room.findFirst({
+            where: {
+                id: roomId.trim(),
+                deletedAt: null,
+            },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: 'Not Found',
+                message: 'Room not found',
+            });
+        }
+        // 获取总消息数
+        const total = await prisma.message.count({
+            where: {
+                roomId: roomId.trim(),
+            },
+        });
+        // 获取消息列表（按时间倒序，最新的在前）
+        const messages = await prisma.message.findMany({
+            where: {
+                roomId: roomId.trim(),
+            },
+            orderBy: {
+                createdAt: 'desc', // 按创建时间倒序排列
+            },
+            take: limit,
+            skip: offset,
+        });
+        // 格式化消息数据
+        const formattedMessages = messages.map((message) => ({
+            id: message.id,
+            roomId: message.roomId,
+            userId: message.userId,
+            nickname: message.nickname,
+            content: message.content,
+            createdAt: message.createdAt.toISOString(),
+        }));
+        // 计算是否有更多消息
+        const hasMore = offset + limit < total;
+        // 返回成功响应
+        return res.status(200).json({
+            success: true,
+            data: {
+                messages: formattedMessages,
+                pagination: {
+                    total,
+                    limit,
+                    offset,
+                    hasMore,
+                },
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error getting messages:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal Server Error',
+            message: 'Failed to get messages',
+        });
+    }
+});
 exports.default = router;
 //# sourceMappingURL=rooms.js.map
