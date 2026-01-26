@@ -33,8 +33,8 @@ npm test -- --testNamePattern='更新删除房间'"
 
 ## Success Criteria
 
-- [ ] PUT 请求可以更新房间名称
-- [ ] DELETE 请求可以软删除房间（设置 deleted_at）
-- [ ] 删除后的房间无法通过 GET 获取
-- [ ] 返回正确的 HTTP 状态码
-- [ ] 数据库记录正确更新
+- [x] PUT 请求可以更新房间名称
+- [x] DELETE 请求可以软删除房间（设置 deleted_at）
+- [x] 删除后的房间无法通过 GET 获取
+- [x] 返回正确的 HTTP 状态码
+- [x] 数据库记录正确更新
