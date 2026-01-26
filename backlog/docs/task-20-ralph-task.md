@@ -1,18 +1,14 @@
 ---
-id: TASK-20
-title: WebSocket 服务器基础框架
-status: Done
-assignee: []
-created_date: '2026-01-26 06:37'
-updated_date: '2026-01-26 16:12'
-labels: []
-dependencies: []
-ordinal: 20000
+backlog_id: backlog-20
+task: WebSocket 服务器基础框架
+test_command: "npm test -- --testNamePattern='WebSocket服务器'
+npm test -- --testNamePattern='WebSocket服务器'"
 ---
+
+# Task: WebSocket 服务器基础框架
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 使用 ws 库创建 WebSocket 服务器，实现连接管理和基础消息处理
 
 **Test Command**: `npm test -- --testNamePattern='WebSocket服务器'`
@@ -36,13 +32,11 @@ ordinal: 20000
 5. `expect(connections).toContain('valid-user')`
 
 **Test Command**: `npm test -- --testNamePattern='WebSocket服务器'`
-<!-- SECTION:DESCRIPTION:END -->
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 WebSocket 服务器可以启动
-- [ ] #2 客户端可以成功连接（通过 roomId 和 userId 参数）
-- [ ] #3 连接时验证 roomId 和 userId 的有效性
-- [ ] #4 连接信息存储到 Redis（用于多实例支持）
-- [ ] #5 连接断开时正确清理资源
-<!-- AC:END -->
+## Success Criteria
+
+- [x] WebSocket 服务器可以启动
+- [x] 客户端可以成功连接（通过 roomId 和 userId 参数）
+- [x] 连接时验证 roomId 和 userId 的有效性
+- [x] 连接信息存储到 Redis（用于多实例支持）
+- [x] 连接断开时正确清理资源

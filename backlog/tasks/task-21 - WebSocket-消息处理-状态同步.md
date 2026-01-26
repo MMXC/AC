@@ -1,9 +1,10 @@
 ---
 id: TASK-21
 title: WebSocket 消息处理 - 状态同步
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:37'
+updated_date: '2026-01-26 16:12'
 labels: []
 dependencies: []
 ---
