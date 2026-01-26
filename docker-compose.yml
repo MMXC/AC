@@ -45,8 +45,26 @@ services:
     networks:
       - watch-together-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: watch-together-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - watch-together-network
+    command: redis-server --appendonly yes
+
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   watch-together-network:

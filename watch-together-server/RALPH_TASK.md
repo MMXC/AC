@@ -1,39 +1,41 @@
 ---
-backlog_id: task-10
-task: 数据库连接和 Prisma Client 集成
-test_command: "npm test -- database-connection.test.ts"
+backlog_id: task-11
+task: Redis 连接和缓存服务
+test_command: "npm test -- redis-service.test.ts"
 ---
 
-# Task: 数据库连接和 Prisma Client 集成
+# Task: Redis 连接和缓存服务
 
 ## Description
 
-配置数据库连接，创建 Prisma Client 单例，实现连接池管理
+配置 Redis 连接，创建缓存服务封装（房间状态缓存、WebSocket 连接管理）
 
-**Test Command**: `npm test -- database-connection.test.ts`
+**Test Command**: `npm test -- redis-service.test.ts`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `有效的 DATABASE_URL`
-   预期输出: `数据库连接成功`
+1. 输入: `SET room:123:state '{"url": "https://example.com"}' EX 3600`
+   预期输出: `值成功存储，1 小时后过期`
 
 **测试场景**:
-1. 使用有效连接字符串应该成功连接
-2. 使用无效连接字符串应该抛出错误
-3. 连接池应该限制最大连接数
+1. 存储房间状态应该成功
+2. 获取房间状态应该返回正确值
+3. TTL 过期后应该自动删除
 
 **断言示例**:
-1. `await expect(prisma.$connect()).resolves.not.toThrow()`
-2. `const result = await prisma.$queryRaw`SELECT 1 as test``
-3. `expect(result[0].test).toBe(1)`
+1. `await redis.set('test:key', 'value', 'EX', 60)`
+2. `const value = await redis.get('test:key')`
+3. `expect(value).toBe('value')`
+4. `const ttl = await redis.ttl('test:key')`
+5. `expect(ttl).toBeGreaterThan(0)`
 
-**Test Command**: `npm test -- database-connection.test.ts`
+**Test Command**: `npm test -- redis-service.test.ts`
 
 ## Success Criteria
 
-- [x] 可以从环境变量读取 DATABASE_URL
-- [x] Prisma Client 可以成功连接数据库
-- [x] 连接池配置正确（最大连接数、超时等）
-- [x] 数据库连接错误可以正确处理
-- [x] 应用关闭时正确断开数据库连接
+- [x] Redis 客户端可以成功连接
+- [x] 可以实现基本的 SET/GET 操作
+- [x] 可以实现 Set 操作（用于连接管理）
+- [x] TTL 设置和自动过期工作正常
+- [x] 连接错误可以正确处理和重试
