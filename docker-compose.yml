@@ -24,7 +24,9 @@ services:
       - postgres
 
   postgres:
-    image: postgres:15-alpine
+    build:
+      context: ./watch-together-server
+      dockerfile: Dockerfile.postgres
     container_name: watch-together-postgres
     environment:
       POSTGRES_USER: watchtogether

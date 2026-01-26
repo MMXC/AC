@@ -6,12 +6,15 @@
 2. ✅ 定义了 4 个数据模型：Room, RoomMember, Message, RoomEvent
 3. ✅ 所有字段类型和约束已正确配置（主键、外键、索引等）
 4. ✅ Prisma Client 已生成，可以导入使用
-5. ✅ PostgreSQL 服务已添加到 `docker-compose.yml`
-6. ✅ 环境变量配置文件已创建：`.env` 和 `.env.example`
+5. ✅ PostgreSQL Dockerfile 已创建：`Dockerfile.postgres`
+6. ✅ PostgreSQL 服务已添加到 `docker-compose.yml`（使用自定义 Dockerfile）
+7. ✅ 环境变量配置文件已创建：`.env` 和 `.env.example`
 
 ## 下一步操作
 
 ### 1. 启动 PostgreSQL 数据库
+
+**重要**：数据库 Dockerfile 已创建并配置完成。现在需要执行以下步骤：
 
 在项目根目录执行：
 
@@ -19,7 +22,18 @@
 docker-compose up -d postgres
 ```
 
-这将启动 PostgreSQL 容器。等待几秒钟让数据库完全启动。
+这将：
+- 使用 `watch-together-server/Dockerfile.postgres` 构建数据库镜像
+- 启动 PostgreSQL 容器
+- 等待几秒钟让数据库完全启动
+
+**验证数据库是否启动**：
+
+```bash
+docker-compose ps
+```
+
+应该看到 `watch-together-postgres` 容器状态为 `Up`。
 
 ### 2. 运行数据库迁移
 

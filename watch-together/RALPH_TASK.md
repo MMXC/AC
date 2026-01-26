@@ -37,6 +37,7 @@ npx prisma migrate dev --name init && npx prisma generate"
 - [x] Prisma schema 文件创建完成（prisma/schema.prisma）
 - [x] 定义了 4 个数据模型：Room, RoomMember, Message, RoomEvent
 - [x] 所有字段类型和约束正确（主键、外键、索引等）
+- [x] 数据库 Dockerfile 创建完成（watch-together-server/Dockerfile.postgres）并已加入 docker-compose.yml
 - [x] 迁移文件生成准备完成（已创建说明文件和自动化脚本，需要先启动数据库：`docker-compose up -d postgres`，然后运行 `npx prisma migrate dev --name init`）
 - [x] Prisma Client 生成成功，可以导入使用
 - [x] 创建了迁移测试文件（tests/migration.test.ts）用于验证迁移结果
