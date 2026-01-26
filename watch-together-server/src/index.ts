@@ -9,7 +9,7 @@ export async function main(): Promise<void> {
 }
 
 if (require.main === module) {
-  main().catch((error) => {
+  main().catch(error => {
     console.error('Failed to start server:', error);
     process.exit(1);
   });

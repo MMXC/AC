@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createApp = createApp;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const rooms_1 = __importDefault(require("./routes/rooms"));
 /**
  * 创建并配置 Express 应用
  */
@@ -30,6 +31,8 @@ function createApp() {
             timestamp: new Date().toISOString(),
         });
     });
+    // API 路由
+    app.use('/api/v1/rooms', rooms_1.default);
     // 404 处理（必须在错误处理中间件之前）
     app.use((req, res) => {
         res.status(404).json({

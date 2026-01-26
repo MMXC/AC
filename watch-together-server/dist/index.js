@@ -9,7 +9,7 @@ async function main() {
     await (0, server_1.startServer)();
 }
 if (require.main === module) {
-    main().catch((error) => {
+    main().catch(error => {
         console.error('Failed to start server:', error);
         process.exit(1);
     });

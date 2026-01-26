@@ -1,41 +1,43 @@
 ---
-backlog_id: task-11
-task: Redis 连接和缓存服务
-test_command: "npm test -- redis-service.test.ts"
+backlog_id: task-12
+task: 房间管理 API - 创建房间
+test_command: "npm test -- --testNamePattern='创建房间'"
 ---
 
-# Task: Redis 连接和缓存服务
+# Task: 房间管理 API - 创建房间
 
 ## Description
 
-配置 Redis 连接，创建缓存服务封装（房间状态缓存、WebSocket 连接管理）
+实现 POST /api/v1/rooms 接口，创建房间并返回房间信息
 
-**Test Command**: `npm test -- redis-service.test.ts`
+**Test Command**: `npm test -- --testNamePattern='创建房间'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `SET room:123:state '{"url": "https://example.com"}' EX 3600`
-   预期输出: `值成功存储，1 小时后过期`
+1. 输入: `{name: "我的房间", hostNickname: "房主"}`
+   预期输出: `{success: true, data: {id: "room-xxx", name: "我的房间", ...}}`
 
 **测试场景**:
-1. 存储房间状态应该成功
-2. 获取房间状态应该返回正确值
-3. TTL 过期后应该自动删除
+1. 创建房间应该返回 201 状态码
+2. 房间 ID 应该是唯一的
+3. 房主应该自动添加到成员列表
+4. 数据库应该保存房间记录
 
 **断言示例**:
-1. `await redis.set('test:key', 'value', 'EX', 60)`
-2. `const value = await redis.get('test:key')`
-3. `expect(value).toBe('value')`
-4. `const ttl = await redis.ttl('test:key')`
-5. `expect(ttl).toBeGreaterThan(0)`
+1. `const response = await request(app).post('/api/v1/rooms').send({name: 'Test Room'})`
+2. `expect(response.status).toBe(201)`
+3. `expect(response.body.success).toBe(true)`
+4. `expect(response.body.data.id).toMatch(/^room-[a-z0-9]+$/)`
+5. `const room = await prisma.room.findUnique({where: {id: response.body.data.id}})`
+6. `expect(room).toBeDefined()`
 
-**Test Command**: `npm test -- redis-service.test.ts`
+**Test Command**: `npm test -- --testNamePattern='创建房间'`
 
 ## Success Criteria
 
-- [x] Redis 客户端可以成功连接
-- [x] 可以实现基本的 SET/GET 操作
-- [x] 可以实现 Set 操作（用于连接管理）
-- [x] TTL 设置和自动过期工作正常
-- [x] 连接错误可以正确处理和重试
+- [x] POST 请求可以成功创建房间
+- [x] 返回的房间 ID 格式正确（如 room-abc12345）
+- [x] 自动创建房主成员记录
+- [x] 返回的响应格式符合 API 规范
+- [x] 房间信息正确保存到数据库

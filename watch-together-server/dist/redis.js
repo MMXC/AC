@@ -78,7 +78,7 @@ function getRedisClient() {
         redis.on('ready', () => {
             console.log('Redis client ready');
         });
-        redis.on('error', (error) => {
+        redis.on('error', error => {
             console.error('Redis client error:', error);
         });
         redis.on('close', () => {

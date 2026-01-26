@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 /**
  * 启动服务器
- * 
+ *
  * 连接数据库并启动 HTTP 服务器
  */
 export async function startServer(): Promise<void> {
@@ -30,10 +30,10 @@ export async function startServer(): Promise<void> {
   // 优雅关闭处理函数
   const gracefulShutdown = async (signal: string) => {
     console.log(`${signal} signal received: closing HTTP server`);
-    
+
     server.close(async () => {
       console.log('HTTP server closed');
-      
+
       try {
         // 断开数据库连接
         await disconnectDatabase();
@@ -63,7 +63,7 @@ export async function startServer(): Promise<void> {
   });
 
   // 处理未捕获的异常
-  process.on('uncaughtException', async (error) => {
+  process.on('uncaughtException', async error => {
     console.error('Uncaught Exception:', error);
     await gracefulShutdown('uncaughtException');
   });

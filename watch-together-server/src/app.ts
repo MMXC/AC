@@ -4,6 +4,7 @@
 
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import roomsRouter from './routes/rooms';
 
 /**
  * 创建并配置 Express 应用
@@ -32,6 +33,9 @@ export function createApp(): Express {
       timestamp: new Date().toISOString(),
     });
   });
+
+  // API 路由
+  app.use('/api/v1/rooms', roomsRouter);
 
   // 404 处理（必须在错误处理中间件之前）
   app.use((req: Request, res: Response) => {

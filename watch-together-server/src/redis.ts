@@ -1,6 +1,6 @@
 /**
  * Watch Together - Redis 连接和缓存服务模块
- * 
+ *
  * 提供 Redis 客户端单例，管理缓存服务（房间状态缓存、WebSocket 连接管理）
  */
 
@@ -8,7 +8,7 @@ import Redis, { RedisOptions } from 'ioredis';
 
 /**
  * Redis 客户端单例
- * 
+ *
  * 使用单例模式确保整个应用只有一个 Redis 客户端实例，
  * 避免连接池耗尽问题
  */
@@ -16,19 +16,19 @@ let redis: Redis | null = null;
 
 /**
  * 获取 Redis 客户端实例
- * 
+ *
  * 如果实例不存在，创建一个新的实例并配置连接选项
- * 
+ *
  * @returns Redis 客户端实例
  */
 export function getRedisClient(): Redis {
   if (!redis) {
     // 从环境变量读取 REDIS_URL，如果没有则使用默认值
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    
+
     // 尝试解析 Redis URL，如果失败则使用默认配置
     let options: RedisOptions | string = redisUrl;
-    
+
     try {
       // 验证 URL 格式是否有效
       new URL(redisUrl);
@@ -42,7 +42,7 @@ export function getRedisClient(): Redis {
         port: 6379,
       };
     }
-    
+
     // 添加连接选项（如果 options 是字符串，这些选项会被合并）
     const connectionOptions: RedisOptions = {
       // 连接重试配置
@@ -76,7 +76,7 @@ export function getRedisClient(): Redis {
       console.log('Redis client ready');
     });
 
-    redis.on('error', (error) => {
+    redis.on('error', error => {
       console.error('Redis client error:', error);
     });
 
@@ -94,15 +94,15 @@ export function getRedisClient(): Redis {
 
 /**
  * 连接 Redis
- * 
+ *
  * 显式连接到 Redis，验证连接是否正常
- * 
+ *
  * @returns Promise<void>
  * @throws 如果连接失败，抛出错误
  */
 export async function connectRedis(): Promise<void> {
   const client = getRedisClient();
-  
+
   try {
     // 执行 PING 命令验证连接
     const result = await client.ping();
@@ -112,15 +112,17 @@ export async function connectRedis(): Promise<void> {
     console.log('Redis connected successfully');
   } catch (error) {
     console.error('Failed to connect to Redis:', error);
-    throw new Error(`Redis connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Redis connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * 断开 Redis 连接
- * 
+ *
  * 优雅地关闭 Redis 连接，释放资源
- * 
+ *
  * @returns Promise<void>
  */
 export async function disconnectRedis(): Promise<void> {
@@ -140,7 +142,7 @@ export async function disconnectRedis(): Promise<void> {
 
 /**
  * 缓存服务封装类
- * 
+ *
  * 提供房间状态缓存、WebSocket 连接管理等常用操作
  */
 export class CacheService {
@@ -152,7 +154,7 @@ export class CacheService {
 
   /**
    * 设置键值对（带过期时间）
-   * 
+   *
    * @param key 键
    * @param value 值（字符串或对象，对象会自动序列化为 JSON）
    * @param ttlSeconds 过期时间（秒），可选
@@ -160,7 +162,7 @@ export class CacheService {
    */
   async set(key: string, value: string | object, ttlSeconds?: number): Promise<'OK'> {
     const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-    
+
     if (ttlSeconds !== undefined) {
       return await this.client.set(key, stringValue, 'EX', ttlSeconds);
     } else {
@@ -170,7 +172,7 @@ export class CacheService {
 
   /**
    * 获取键对应的值
-   * 
+   *
    * @param key 键
    * @returns Promise<string | null> 值，如果不存在返回 null
    */
@@ -180,7 +182,7 @@ export class CacheService {
 
   /**
    * 获取键对应的值并解析为 JSON
-   * 
+   *
    * @param key 键
    * @returns Promise<T | null> 解析后的对象，如果不存在或解析失败返回 null
    */
@@ -199,7 +201,7 @@ export class CacheService {
 
   /**
    * 删除键
-   * 
+   *
    * @param key 键
    * @returns Promise<number> 删除的键数量（0 或 1）
    */
@@ -209,7 +211,7 @@ export class CacheService {
 
   /**
    * 检查键是否存在
-   * 
+   *
    * @param key 键
    * @returns Promise<boolean> 键是否存在
    */
@@ -220,7 +222,7 @@ export class CacheService {
 
   /**
    * 获取键的剩余过期时间（TTL）
-   * 
+   *
    * @param key 键
    * @returns Promise<number> 剩余秒数，-1 表示永不过期，-2 表示键不存在
    */
@@ -230,7 +232,7 @@ export class CacheService {
 
   /**
    * 设置键的过期时间
-   * 
+   *
    * @param key 键
    * @param ttlSeconds 过期时间（秒）
    * @returns Promise<number> 1 表示设置成功，0 表示键不存在
@@ -241,7 +243,7 @@ export class CacheService {
 
   /**
    * 向 Set 添加成员
-   * 
+   *
    * @param key Set 的键
    * @param members 要添加的成员（可以是多个）
    * @returns Promise<number> 添加的新成员数量
@@ -252,7 +254,7 @@ export class CacheService {
 
   /**
    * 从 Set 移除成员
-   * 
+   *
    * @param key Set 的键
    * @param members 要移除的成员（可以是多个）
    * @returns Promise<number> 移除的成员数量
@@ -263,7 +265,7 @@ export class CacheService {
 
   /**
    * 获取 Set 的所有成员
-   * 
+   *
    * @param key Set 的键
    * @returns Promise<string[]> Set 的所有成员
    */
@@ -273,7 +275,7 @@ export class CacheService {
 
   /**
    * 检查成员是否在 Set 中
-   * 
+   *
    * @param key Set 的键
    * @param member 成员
    * @returns Promise<boolean> 成员是否在 Set 中
@@ -285,7 +287,7 @@ export class CacheService {
 
   /**
    * 获取 Set 的成员数量
-   * 
+   *
    * @param key Set 的键
    * @returns Promise<number> Set 的成员数量
    */
@@ -296,7 +298,7 @@ export class CacheService {
 
 /**
  * 获取缓存服务实例
- * 
+ *
  * @returns CacheService 实例
  */
 export function getCacheService(): CacheService {
