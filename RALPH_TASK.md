@@ -33,8 +33,8 @@ npm test -- database-connection.test.ts"
 
 ## Success Criteria
 
-- [ ] 可以从环境变量读取 DATABASE_URL
-- [ ] Prisma Client 可以成功连接数据库
-- [ ] 连接池配置正确（最大连接数、超时等）
-- [ ] 数据库连接错误可以正确处理
-- [ ] 应用关闭时正确断开数据库连接
+- [x] 可以从环境变量读取 DATABASE_URL
+- [x] Prisma Client 可以成功连接数据库
+- [x] 连接池配置正确（最大连接数、超时等）
+- [x] 数据库连接错误可以正确处理
+- [x] 应用关闭时正确断开数据库连接
