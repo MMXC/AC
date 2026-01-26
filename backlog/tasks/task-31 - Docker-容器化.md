@@ -1,9 +1,10 @@
 ---
 id: TASK-31
 title: Docker 容器化
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-26 06:38'
+updated_date: '2026-01-26 19:02'
 labels: []
 dependencies: []
 ---
