@@ -35,8 +35,8 @@ npm test -- --testNamePattern='发送消息'"
 
 ## Success Criteria
 
-- [ ] POST 请求可以成功发送消息
-- [ ] 消息正确保存到数据库
-- [ ] 返回的消息包含所有必需字段（id, userId, nickname, content, timestamp）
-- [ ] 消息内容长度验证（最大 1000 字符）
-- [ ] 如果房间不存在返回 404
+- [x] POST 请求可以成功发送消息
+- [x] 消息正确保存到数据库
+- [x] 返回的消息包含所有必需字段（id, userId, nickname, content, timestamp）
+- [x] 消息内容长度验证（最大 1000 字符）
+- [x] 如果房间不存在返回 404

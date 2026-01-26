@@ -1,0 +1,1899 @@
+
+> watch-together@0.1.0 test
+> jest --testNamePattern=发送消息
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 50ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 100ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 150ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 200ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 250ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 300ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 350ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 400ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 450ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 500ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 550ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 600ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 650ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 700ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.log
+    prisma:error 
+    Invalid `prisma.room.create()` invocation in
+    C:\project\AC\watch-together-server\tests\输入验证.test.ts:23:25
+    
+      20 testRoomId = 'room-test123';
+      21 
+      22 try {
+    → 23   await prisma.room.create(
+    Can't reach database server at `localhost:5432`
+    
+    Please make sure your database server is running at `localhost:5432`.
+
+      at Object.zc (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+  console.log
+    prisma:error 
+    Invalid `prisma.roomEvent.deleteMany()` invocation in
+    C:\project\AC\watch-together-server\tests\输入验证.test.ts:57:30
+    
+      54 afterAll(async () => {
+      55   // 清理测试数据
+      56   try {
+    → 57     await prisma.roomEvent.deleteMany(
+    Can't reach database server at `localhost:5432`
+    
+    Please make sure your database server is running at `localhost:5432`.
+
+      at Object.zc (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+FAIL tests\输入验证.test.ts (19.096 s)
+  输入验证
+    POST /api/v1/rooms - 创建房间
+      ○ skipped 缺少必需字段应该返回 400
+      ○ skipped hostNickname 为空字符串应该返回 400
+      ○ skipped hostNickname 超过最大长度应该返回 400
+      ○ skipped name 超过最大长度应该返回 400
+      ○ skipped 类型错误应该返回 400
+      ○ skipped 有效输入应该返回 201
+    GET /api/v1/rooms/:roomId - 获取房间信息
+      ○ skipped 无效的 roomId 格式应该返回 400
+      ○ skipped 有效的 roomId 应该返回 200
+    PUT /api/v1/rooms/:roomId - 更新房间
+      ○ skipped 无效的 roomId 格式应该返回 400
+      ○ skipped name 超过最大长度应该返回 400
+    POST /api/v1/rooms/:roomId/join - 加入房间
+      ○ skipped 缺少必需字段应该返回 400
+      ○ skipped nickname 超过最大长度应该返回 400
+    POST /api/v1/rooms/:roomId/messages - 发送消息
+      × 缺少必需字段应该返回 400 (6 ms)
+      × 无效的 userId 格式应该返回 400 (1 ms)
+      × content 超过最大长度应该返回 400
+    GET /api/v1/rooms/:roomId/messages - 获取消息历史
+      ○ skipped 无效的 limit 参数应该返回 400
+      ○ skipped limit 超过最大值应该被限制为 100
+      ○ skipped 无效的 offset 参数应该返回 400
+    PUT /api/v1/rooms/:roomId/url - 更新房间 URL
+      ○ skipped 缺少必需字段应该返回 400
+      ○ skipped 无效的 URL 格式应该返回 400
+      ○ skipped 非 HTTP/HTTPS URL 应该返回 400
+    错误响应格式
+      ○ skipped 错误响应应该包含 code 和 message
+    数据库错误处理
+      ○ skipped 数据库错误应该被正确捕获和转换
+
+  ● 输入验证 › POST /api/v1/rooms - 创建房间 › 缺少必需字段应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms - 创建房间 › hostNickname 为空字符串应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms - 创建房间 › hostNickname 超过最大长度应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms - 创建房间 › name 超过最大长度应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms - 创建房间 › 类型错误应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms - 创建房间 › 有效输入应该返回 201
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › GET /api/v1/rooms/:roomId - 获取房间信息 › 无效的 roomId 格式应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › GET /api/v1/rooms/:roomId - 获取房间信息 › 有效的 roomId 应该返回 200
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › PUT /api/v1/rooms/:roomId - 更新房间 › 无效的 roomId 格式应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › PUT /api/v1/rooms/:roomId - 更新房间 › name 超过最大长度应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms/:roomId/join - 加入房间 › 缺少必需字段应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms/:roomId/join - 加入房间 › nickname 超过最大长度应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms/:roomId/messages - 发送消息 › 缺少必需字段应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms/:roomId/messages - 发送消息 › 无效的 userId 格式应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › POST /api/v1/rooms/:roomId/messages - 发送消息 › content 超过最大长度应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › GET /api/v1/rooms/:roomId/messages - 获取消息历史 › 无效的 limit 参数应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › GET /api/v1/rooms/:roomId/messages - 获取消息历史 › limit 超过最大值应该被限制为 100
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › GET /api/v1/rooms/:roomId/messages - 获取消息历史 › 无效的 offset 参数应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › PUT /api/v1/rooms/:roomId/url - 更新房间 URL › 缺少必需字段应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › PUT /api/v1/rooms/:roomId/url - 更新房间 URL › 无效的 URL 格式应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › PUT /api/v1/rooms/:roomId/url - 更新房间 URL › 非 HTTP/HTTPS URL 应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › 错误响应格式 › 错误响应应该包含 code 和 message
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  ● 输入验证 › 数据库错误处理 › 数据库错误应该被正确捕获和转换
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 14 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 15 |[39m
+    [31m[1m>[22m[39m[90m 16 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 17 |[39m     [90m// 创建测试房间和用户[39m
+     [90m 18 |[39m     testHostId [33m=[39m [32m'user-test123'[39m[33m;[39m
+     [90m 19 |[39m     testUserId [33m=[39m [32m'user-test456'[39m[33m;[39m[0m
+
+      at tests\输入验证.test.ts:16:3
+      at Object.<anonymous> (tests\输入验证.test.ts:9:1)
+
+  console.error
+    Redis client error: AggregateError: 
+        at internalConnectMultiple (node:net:1139:18)
+        at afterConnectMultiple (node:net:1714:7) {
+      code: 'ECONNREFUSED',
+      [errors]: [
+        Error: connect ECONNREFUSED ::1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '::1',
+          port: 6379
+        },
+        Error: connect ECONNREFUSED 127.0.0.1:6379
+            at createConnectionError (node:net:1677:14)
+            at afterConnectMultiple (node:net:1707:16) {
+          errno: -4078,
+          code: 'ECONNREFUSED',
+          syscall: 'connect',
+          address: '127.0.0.1',
+          port: 6379
+        }
+      ]
+    }
+
+    [0m [90m 80 |[39m       console[33m.[39merror([32m'Redis client error:'[39m[33m,[39m error)[33m;[39m
+     [90m 81 |[39m     })[33m;[39m
+    [31m[1m>[22m[39m[90m 82 |[39m
+     [90m    |[39m [31m[1m^[22m[39m
+     [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+     [90m 85 |[39m     })[33m;[39m[0m
+
+      at EventEmitter.<anonymous> (src/redis.ts:82:21)
+      at EventEmitter.silentEmit (node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client connection closed".
+
+    [0m [90m 83 |[39m     redis[33m.[39mon([32m'close'[39m[33m,[39m () [33m=>[39m {
+     [90m 84 |[39m       console[33m.[39mlog([32m'Redis client connection closed'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     })[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+     [90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:85:21)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "Redis client reconnecting in 750ms".
+
+    [0m [90m 86 |[39m
+     [90m 87 |[39m     redis[33m.[39mon([32m'reconnecting'[39m[33m,[39m (time[33m:[39m number) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       console[33m.[39mlog([32m`Redis client reconnecting in ${time}ms`[39m)[33m;[39m
+     [90m    |[39m                     [31m[1m^[22m[39m
+     [90m 89 |[39m     })[33m;[39m
+     [90m 90 |[39m   }
+     [90m 91 |[39m[0m
+
+      at console.log (node_modules/@jest/console/build/CustomConsole.js:141:10)
+      at EventEmitter.<anonymous> (src/redis.ts:88:21)
+
+  console.log
+    prisma:error 
+    Invalid `prisma.room.create()` invocation in
+    C:\project\AC\watch-together-server\tests\发送消息.test.ts:27:25
+    
+      24 
+      25 try {
+      26   // 创建房间
+    → 27   await prisma.room.create(
+    Can't reach database server at `localhost:5432`
+    
+    Please make sure your database server is running at `localhost:5432`.
+
+      at Object.zc (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+  console.log
+    prisma:error 
+    Invalid `prisma.message.deleteMany()` invocation in
+    C:\project\AC\watch-together-server\tests\发送消息.test.ts:63:28
+    
+      60 afterAll(async () => {
+      61   // 清理测试数据
+      62   try {
+    → 63     await prisma.message.deleteMany(
+    Can't reach database server at `localhost:5432`
+    
+    Please make sure your database server is running at `localhost:5432`.
+
+      at Object.zc (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+  console.error
+    Error setting up test data: PrismaClientInitializationError: 
+    Invalid `prisma.room.create()` invocation in
+    C:\project\AC\watch-together-server\tests\发送消息.test.ts:27:25
+    
+      24 
+      25 try {
+      26   // 创建房间
+    → 27   await prisma.room.create(
+    Can't reach database server at `localhost:5432`
+    
+    Please make sure your database server is running at `localhost:5432`.
+        at ei.handleRequestError (C:\project\AC\watch-together-server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:242:13)
+        at ei.handleAndLogRequestError (C:\project\AC\watch-together-server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+        at ei.request (C:\project\AC\watch-together-server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+        at a (C:\project\AC\watch-together-server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+        at Object.<anonymous> (C:\project\AC\watch-together-server\tests\发送消息.test.ts:27:7) {
+      clientVersion: '6.19.2',
+      errorCode: undefined,
+      retryable: undefined
+    }
+
+    [0m [90m 54 |[39m       })[33m;[39m
+     [90m 55 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 56 |[39m       console[33m.[39merror([32m'Error setting up test data:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m               [31m[1m^[22m[39m
+     [90m 57 |[39m     }
+     [90m 58 |[39m   })[33m;[39m
+     [90m 59 |[39m[0m
+
+      at Object.<anonymous> (tests\发送消息.test.ts:56:15)
+
+  console.error
+    Error cleaning up test data: PrismaClientInitializationError: 
+    Invalid `prisma.message.deleteMany()` invocation in
+    C:\project\AC\watch-together-server\tests\发送消息.test.ts:63:28
+    
+      60 afterAll(async () => {
+      61   // 清理测试数据
+      62   try {
+    → 63     await prisma.message.deleteMany(
+    Can't reach database server at `localhost:5432`
+    
+    Please make sure your database server is running at `localhost:5432`.
+        at ei.handleRequestError (C:\project\AC\watch-together-server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:242:13)
+        at ei.handleAndLogRequestError (C:\project\AC\watch-together-server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+        at ei.request (C:\project\AC\watch-together-server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+        at a (C:\project\AC\watch-together-server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+        at Object.<anonymous> (C:\project\AC\watch-together-server\tests\发送消息.test.ts:63:7) {
+      clientVersion: '6.19.2',
+      errorCode: undefined,
+      retryable: undefined
+    }
+
+    [0m [90m 77 |[39m       })[33m;[39m
+     [90m 78 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 79 |[39m       console[33m.[39merror([32m'Error cleaning up test data:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m               [31m[1m^[22m[39m
+     [90m 80 |[39m     }
+     [90m 81 |[39m   })[33m;[39m
+     [90m 82 |[39m[0m
+
+      at Object.<anonymous> (tests\发送消息.test.ts:79:15)
+
+FAIL tests\发送消息.test.ts (19.717 s)
+  发送消息
+    POST /api/v1/rooms/:roomId/messages
+      × 应该返回 201 状态码 (5 ms)
+      × 应该返回消息包含所有必需字段
+      × 应该正确保存消息到数据库
+      × 应该返回正确的用户昵称
+      × 应该返回正确的房间 ID
+      × 应该返回正确的用户 ID
+      × 应该返回 ISO 格式的时间戳
+      × 如果房间不存在应该返回 404
+      × 如果用户不在房间中应该返回 404
+      × 如果消息内容超过 1000 字符应该返回 400
+      × 如果消息内容为空应该返回 400
+      × 如果消息内容只包含空格应该返回 400
+      × 如果 userId 为空应该返回 400
+      × 如果 userId 缺失应该返回 400
+      × 如果 content 缺失应该返回 400
+      × 如果 roomId 为空应该返回 400
+      × 应该正确处理消息内容的前后空格
+      × 应该正确处理最大长度的消息（1000 字符）
+      × 如果用户已离开房间应该返回 404
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该返回 201 状态码
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该返回消息包含所有必需字段
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该正确保存消息到数据库
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该返回正确的用户昵称
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该返回正确的房间 ID
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该返回正确的用户 ID
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该返回 ISO 格式的时间戳
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果房间不存在应该返回 404
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果用户不在房间中应该返回 404
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果消息内容超过 1000 字符应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果消息内容为空应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果消息内容只包含空格应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果 userId 为空应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果 userId 缺失应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果 content 缺失应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果 roomId 为空应该返回 400
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该正确处理消息内容的前后空格
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 应该正确处理最大长度的消息（1000 字符）
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+  ● 发送消息 › POST /api/v1/rooms/:roomId/messages › 如果用户已离开房间应该返回 404
+
+    thrown: "Exceeded timeout of 5000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 15 |[39m   [36mlet[39m testUserId[33m:[39m string[33m;[39m
+     [90m 16 |[39m
+    [31m[1m>[22m[39m[90m 17 |[39m   beforeAll([36masync[39m () [33m=>[39m {
+     [90m    |[39m   [31m[1m^[22m[39m
+     [90m 18 |[39m     app [33m=[39m createApp()[33m;[39m
+     [90m 19 |[39m
+     [90m 20 |[39m     [90m// 创建测试房间和成员[39m[0m
+
+      at tests\发送消息.test.ts:17:3
+      at Object.<anonymous> (tests\发送消息.test.ts:9:1)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+Test Suites: 2 failed, 18 skipped, 2 of 20 total
+Tests:       22 failed, 276 skipped, 298 total
+Snapshots:   0 total
+Time:        22.004 s, estimated 98 s
+Ran all test suites with tests matching "发送消息".
