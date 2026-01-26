@@ -1,45 +1,44 @@
 ---
-backlog_id: backlog-21
-task: WebSocket 消息处理 - 状态同步
-test_command: "npm test -- --testNamePattern='状态同步'
-npm test -- --testNamePattern='状态同步'"
+backlog_id: backlog-22
+task: WebSocket 消息处理 - 成员加入和离开
+test_command: "npm test -- --testNamePattern='成员加入离开'
+npm test -- --testNamePattern='成员加入离开'"
 ---
 
-# Task: WebSocket 消息处理 - 状态同步
+# Task: WebSocket 消息处理 - 成员加入和离开
 
 ## Description
 
-实现 SYNC_STATE 消息类型，连接时自动发送房间状态
+实现 MEMBER_JOINED 和 MEMBER_LEFT 消息广播
 
-**Test Command**: `npm test -- --testNamePattern='状态同步'`
+**Test Command**: `npm test -- --testNamePattern='成员加入离开'`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `WebSocket 连接建立`
-   预期输出: `收到 SYNC_STATE 消息，包含完整房间状态`
+1. 输入: `新成员加入房间`
+   预期输出: `所有现有成员收到 MEMBER_JOINED 消息`
 
 **测试场景**:
-1. 连接时应该立即收到 SYNC_STATE
-2. 发送 SYNC_REQUEST 应该收到 SYNC_STATE 响应
-3. 状态应该包含所有必需字段
+1. 新成员加入应该触发广播
+2. 成员离开应该触发广播
+3. 只有房间内其他成员收到消息
 
 **断言示例**:
-1. `ws.on('message', (data) => {`
-2. `const message = JSON.parse(data.toString())`
-3. `if (message.type === 'SYNC_STATE') {`
-4. `expect(message.data.currentUrl).toBeDefined()`
-5. `expect(message.data.members).toBeArray()`
-6. `expect(message.data.recentMessages).toBeArray()`
-7. `}`
-8. `})`
+1. `const member2Ws = new WebSocket('ws://localhost:3001/ws?roomId=room-123&userId=user-2')`
+2. `member2Ws.on('message', (data) => {`
+3. `const msg = JSON.parse(data.toString())`
+4. `if (msg.type === 'MEMBER_JOINED') {`
+5. `expect(msg.data.userId).toBe('user-2')`
+6. `}`
+7. `})`
 
-**Test Command**: `npm test -- --testNamePattern='状态同步'`
+**Test Command**: `npm test -- --testNamePattern='成员加入离开'`
 
 ## Success Criteria
 
-- [x] 连接建立时自动发送 SYNC_STATE 消息
-- [x] 消息包含当前 URL、成员列表、最近消息
-- [x] 客户端发送 SYNC_REQUEST 时响应 SYNC_STATE
-- [x] 消息格式符合 WebSocket 协议规范
-- [x] 状态数据从数据库和 Redis 正确获取
+- [ ] 新成员加入时广播 MEMBER_JOINED 消息
+- [ ] 成员离开时广播 MEMBER_LEFT 消息
+- [ ] 消息只发送给同一房间的其他成员
+- [ ] 成员列表正确更新
+- [ ] 断开连接时自动触发 MEMBER_LEFT
