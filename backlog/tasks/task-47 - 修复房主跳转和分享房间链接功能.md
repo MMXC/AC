@@ -1,9 +1,10 @@
 ---
 id: TASK-47
 title: 修复房主跳转和分享房间链接功能
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 15:49'
+updated_date: '2026-01-27 16:17'
 labels: []
 dependencies: []
 ---

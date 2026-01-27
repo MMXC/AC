@@ -1,39 +1,40 @@
 ---
-backlog_id: backlog-46
-task: 修复 WebSocket 消息 JSON 解析错误
-test_command: "cd watch-together && npm test -- screen-streaming
-cd watch-together && npm test -- screen-streaming"
+backlog_id: backlog-47
+task: 修复房主跳转和分享房间链接功能
+test_command: "cd watch-together && npm test -- create-room-ui
+cd watch-together && npm test -- create-room-ui"
 ---
 
-# Task: 修复 WebSocket 消息 JSON 解析错误
+# Task: 修复房主跳转和分享房间链接功能
 
 ## Description
 
-修复 `screen-streaming.js` 中 WebSocket 消息解析错误。`chat.js` 已经解析了 `event.data` 为对象，但 `screen-streaming.js` 再次尝试 `JSON.parse` 导致错误。需要检查 `event.data` 类型，如果已是对象则直接使用。
+修复创建房间后房主未自动跳转的问题，确保创建成功后正确跳转到 `/room/:roomId` 页面。在房间页面添加分享房间链接按钮，房主可见。
 
-**Test Command**: `cd watch-together && npm test -- screen-streaming`
+**Test Command**: `cd watch-together && npm test -- create-room-ui`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `WebSocket 消息（字符串或对象格式）`
-   预期输出: `消息正确解析，无 JSON 解析错误`
+1. 输入: `创建房间表单提交`
+   预期输出: `自动跳转到房间页面，显示分享按钮`
 
 **测试场景**:
-1. 接收字符串格式的 WebSocket 消息应正确解析
-2. 接收对象格式的 WebSocket 消息应直接使用
-3. 画面流相关消息应正确处理
+1. 创建房间后应自动跳转到房间页面
+2. 房主进入房间后应看到分享链接按钮
+3. 普通成员进入房间后不应看到分享按钮
+4. 点击分享按钮应复制房间链接到剪贴板
 
 **断言示例**:
-1. `expect(() => handleWebSocketMessage({data: '{"type":"test"}'})).not.toThrow()`
-2. `expect(() => handleWebSocketMessage({data: {type: 'test'}})).not.toThrow()`
+1. `expect(window.location.pathname).toBe(`/room/${roomId}`)`
+2. `expect(document.getElementById('shareRoomButton')).not.toBeNull()`
 
-**Test Command**: `cd watch-together && npm test -- screen-streaming`
+**Test Command**: `cd watch-together && npm test -- create-room-ui`
 
 ## Success Criteria
 
-- [x] `screen-streaming.js` 的 `handleWebSocketMessage` 函数检查 `event.data` 类型
-- [x] 如果 `event.data` 是字符串，使用 `JSON.parse` 解析
-- [x] 如果 `event.data` 已经是对象，直接使用
-- [x] 浏览器控制台无 `"[object Object]" is not valid JSON` 错误
-- [x] 画面流功能正常工作
+- [ ] 创建房间成功后，房主自动跳转到 `/room/:roomId` 页面
+- [ ] 跳转逻辑正确执行，无错误阻止跳转
+- [ ] 房间页面显示分享房间链接按钮（仅房主可见）
+- [ ] 点击分享按钮可以复制房间链接
+- [ ] 普通成员不显示分享按钮
