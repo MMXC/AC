@@ -32,8 +32,8 @@ cd watch-together && npm test -- operation-source"
 
 ## Success Criteria
 
-- [ ] `operation-source.js` 中不再使用 `let API_BASE` 声明，改为使用 `window.API_BASE`
-- [ ] `room.js` 中统一使用 `window.API_BASE` 或检查是否已定义
-- [ ] 浏览器控制台无 `Identifier 'API_BASE' has already been declared` 错误
-- [ ] 两个文件都能正确访问 API_BASE 变量
-- [ ] API 请求功能正常工作
+- [x] `operation-source.js` 中不再使用 `let API_BASE` 声明，改为使用 `window.API_BASE`
+- [x] `room.js` 中统一使用 `window.API_BASE` 或检查是否已定义
+- [x] 浏览器控制台无 `Identifier 'API_BASE' has already been declared` 错误
+- [x] 两个文件都能正确访问 API_BASE 变量
+- [x] API 请求功能正常工作

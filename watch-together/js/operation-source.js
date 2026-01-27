@@ -2,13 +2,20 @@
  * 操作来源管理功能
  */
 
-// API 基础 URL（复用 room.js 的配置）
-let API_BASE = 'http://localhost:3001';
-if (typeof window !== 'undefined' && window.API_BASE_URL) {
-    API_BASE = window.API_BASE_URL;
-} else if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
-    API_BASE = process.env.API_BASE;
+// API 基础 URL（使用全局变量，避免重复声明）
+if (typeof window !== 'undefined') {
+    // 如果 window.API_BASE 已定义，使用它；否则设置默认值
+    if (!window.API_BASE) {
+        if (window.API_BASE_URL) {
+            window.API_BASE = window.API_BASE_URL;
+        } else if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
+            window.API_BASE = process.env.API_BASE;
+        } else {
+            window.API_BASE = 'http://localhost:3001';
+        }
+    }
 }
+const API_BASE = typeof window !== 'undefined' ? window.API_BASE : 'http://localhost:3001';
 
 let currentOperationSourceUserId = null;
 

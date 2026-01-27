@@ -2,14 +2,20 @@
  * 房间页面功能
  */
 
-// API 基础 URL（可以根据环境配置）
-let API_BASE = 'http://localhost:3001';
-// 优先使用 window 对象中的配置（由服务器注入）
-if (typeof window !== 'undefined' && window.API_BASE_URL) {
-    API_BASE = window.API_BASE_URL;
-} else if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
-    API_BASE = process.env.API_BASE;
+// API 基础 URL（使用全局变量，避免重复声明）
+if (typeof window !== 'undefined') {
+    // 如果 window.API_BASE 已定义，使用它；否则设置默认值
+    if (!window.API_BASE) {
+        if (window.API_BASE_URL) {
+            window.API_BASE = window.API_BASE_URL;
+        } else if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
+            window.API_BASE = process.env.API_BASE;
+        } else {
+            window.API_BASE = 'http://localhost:3001';
+        }
+    }
 }
+const API_BASE = typeof window !== 'undefined' ? window.API_BASE : 'http://localhost:3001';
 
 // 成员列表数据
 let membersList = [];
