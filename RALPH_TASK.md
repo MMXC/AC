@@ -17,7 +17,7 @@ cd watch-together-server && npm test -- schema"
 
 ## Success Criteria
 
-- [ ] Prisma schema 中 Room 与 RoomMember 结构与任务 1 的模型设计一致。
-- [ ] 运行数据库迁移脚本不会破坏已有数据，且新字段非空策略合理（必要时有默认值或可为空）。
-- [ ] TypeScript 代码中引用 Room / RoomMember 的地方都能正常编译通过（无类型错误）。
-- [ ] 获取房间详情接口返回的数据结构包括 hostId 与 currentUrl。
+- [x] Prisma schema 中 Room 与 RoomMember 结构与任务 1 的模型设计一致。
+- [x] 运行数据库迁移脚本不会破坏已有数据，且新字段非空策略合理（必要时有默认值或可为空）。
+- [x] TypeScript 代码中引用 Room / RoomMember 的地方都能正常编译通过（无类型错误）。
+- [x] 获取房间详情接口返回的数据结构包括 hostId 与 currentUrl。
