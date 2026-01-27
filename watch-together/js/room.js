@@ -450,6 +450,7 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         // 处理 URL 加载逻辑（根据角色区分）
         if (isHost) {
             // 房主端逻辑
+            showShareRoomButton(); // 显示分享按钮
             if (roomCurrentUrl) {
                 // 房主首次进入房间时，真实 iframe 自动加载 currentUrl，且有"修改 URL"按钮
                 console.log('房主进入房间，房间已有 URL，自动加载:', roomCurrentUrl);
@@ -466,6 +467,7 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         } else {
             // 普通成员端逻辑：不显示 URL 输入框，只显示画面容器占位
             console.log('普通成员进入房间，显示画面容器占位');
+            hideShareRoomButton(); // 隐藏分享按钮
             hideUrlInputContainer();
             hideUrlControlButton();
             hideBrowserFrame();
@@ -620,6 +622,80 @@ function hideUrlControlButton() {
     const urlControlContainer = document.getElementById('urlControlContainer');
     if (urlControlContainer) {
         urlControlContainer.style.display = 'none';
+    }
+}
+
+/**
+ * 显示分享房间链接按钮（仅房主可见）
+ */
+function showShareRoomButton() {
+    const shareButton = document.getElementById('shareRoomButton');
+    if (shareButton && window.isHost) {
+        shareButton.style.display = 'block';
+    }
+}
+
+/**
+ * 隐藏分享房间链接按钮
+ */
+function hideShareRoomButton() {
+    const shareButton = document.getElementById('shareRoomButton');
+    if (shareButton) {
+        shareButton.style.display = 'none';
+    }
+}
+
+/**
+ * 生成房间链接
+ */
+function generateRoomLink(roomId) {
+    if (!roomId) return '';
+    // 使用当前页面的 origin 和路径
+    let baseUrl = 'http://localhost:3000';
+    if (typeof window !== 'undefined' && window.location) {
+        baseUrl = window.location.origin;
+    }
+    return `${baseUrl}/room/${roomId}`;
+}
+
+/**
+ * 复制房间链接到剪贴板
+ */
+async function copyRoomLink() {
+    const roomId = window.currentRoomId;
+    if (!roomId) {
+        alert('房间号不存在，无法生成链接');
+        return false;
+    }
+
+    const roomLink = generateRoomLink(roomId);
+    
+    try {
+        // 尝试使用现代 Clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(roomLink);
+            return true;
+        } else {
+            // 降级方案：使用传统方法
+            const textarea = document.createElement('textarea');
+            textarea.value = roomLink;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                return true;
+            } catch (err) {
+                document.body.removeChild(textarea);
+                return false;
+            }
+        }
+    } catch (err) {
+        console.error('复制失败:', err);
+        return false;
     }
 }
 
@@ -864,6 +940,28 @@ async function init() {
         });
     }
 
+    // 分享房间链接按钮事件（仅房主可见）
+    const shareRoomButton = document.getElementById('shareRoomButton');
+    if (shareRoomButton) {
+        shareRoomButton.addEventListener('click', async () => {
+            const success = await copyRoomLink();
+            if (success) {
+                // 临时改变按钮文本提示已复制
+                const originalText = shareRoomButton.textContent;
+                shareRoomButton.textContent = '已复制！';
+                shareRoomButton.disabled = true;
+                setTimeout(() => {
+                    shareRoomButton.textContent = originalText;
+                    shareRoomButton.disabled = false;
+                }, 2000);
+            } else {
+                // 如果复制失败，显示提示框
+                const roomLink = generateRoomLink(window.currentRoomId);
+                alert(`复制失败，请手动复制链接：\n${roomLink}`);
+            }
+        });
+    }
+
     // 不再从 URL 参数加载网页，改为在加入房间后根据房间状态加载
     // 如果房间已有 currentUrl，会在加入房间后自动加载
     // 如果房间没有 currentUrl 且用户是房主，会显示 URL 输入框
@@ -910,6 +1008,10 @@ if (typeof module !== 'undefined' && module.exports) {
         hideBrowserFrame,
         showUrlControlButton,
         hideUrlControlButton,
+        showShareRoomButton,
+        hideShareRoomButton,
+        generateRoomLink,
+        copyRoomLink,
         API_BASE,
     };
 }

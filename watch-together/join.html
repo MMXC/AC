@@ -367,6 +367,29 @@
         .start-sharing-button.streaming:hover {
             background: #c0392b;
         }
+
+        .share-room-button {
+            width: 100%;
+            padding: 10px 20px;
+            background: #4a9eff;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .share-room-button:hover {
+            background: #3a8eef;
+        }
+
+        .share-room-button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -380,6 +403,7 @@
             <div class="sidebar-section">
                 <h2>房间信息</h2>
                 <div class="room-id-display" id="sidebarRoomId">加载中...</div>
+                <button id="shareRoomButton" class="share-room-button" style="display: none;">分享房间链接</button>
             </div>
             <div class="sidebar-section" id="userInfoSection">
                 <h2>我的信息</h2>
