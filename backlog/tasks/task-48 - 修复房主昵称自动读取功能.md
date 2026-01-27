@@ -4,9 +4,10 @@ title: 修复房主昵称自动读取功能
 status: Done
 assignee: []
 created_date: '2026-01-27 15:49'
-updated_date: '2026-01-27 17:09'
+updated_date: '2026-01-27 22:02'
 labels: []
 dependencies: []
+ordinal: 47000
 ---
 
 ## Description

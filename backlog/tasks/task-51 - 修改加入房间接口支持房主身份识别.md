@@ -1,14 +1,17 @@
 ---
-backlog_id: backlog-51
-task: 修改加入房间接口支持房主身份识别
-test_command: "cd watch-together-server && npm test -- rooms-join
-cd watch-together-server && npm test -- rooms-join"
+id: TASK-51
+title: 修改加入房间接口支持房主身份识别
+status: In Progress
+assignee: []
+created_date: '2026-01-27 22:04'
+updated_date: '2026-01-27 22:05'
+labels: []
+dependencies: []
 ---
-
-# Task: 修改加入房间接口支持房主身份识别
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 修改 `POST /api/v1/rooms/:roomId/join` 接口，支持可选的 `userId` 参数。如果请求中传入 `userId` 且该 `userId` 等于 `Room.hostId`，则识别为房主，复用现有的 RoomMember 记录（更新 `leftAt` 为 null，`lastActiveAt` 为当前时间），返回 `isHost: true`。如果 `userId` 不等于 `hostId` 或未传入，则按现有逻辑创建新成员。
 
 **Test Command**: `cd watch-together-server && npm test -- rooms-join`
@@ -28,13 +31,15 @@ cd watch-together-server && npm test -- rooms-join"
 4. `expect(member.leftAt).toBeNull()`
 
 **Test Command**: `cd watch-together-server && npm test -- rooms-join`
+<!-- SECTION:DESCRIPTION:END -->
 
-## Success Criteria
-
-- [ ] `/join` 接口支持可选的 `userId` 请求参数
-- [ ] 当传入的 `userId` 等于 `Room.hostId` 时，识别为房主
-- [ ] 房主加入时复用现有 RoomMember 记录，更新 `leftAt` 为 null
-- [ ] 房主加入时返回 `isHost: true`
-- [ ] 普通成员加入时仍生成新的 `userId`，返回 `isHost: false`
-- [ ] 传入无效的 `userId`（不等于 hostId）时，仍创建新成员
-- [ ] 接口向后兼容，不传 `userId` 时行为不变
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 `/join` 接口支持可选的 `userId` 请求参数
+- [ ] #2 当传入的 `userId` 等于 `Room.hostId` 时，识别为房主
+- [ ] #3 房主加入时复用现有 RoomMember 记录，更新 `leftAt` 为 null
+- [ ] #4 房主加入时返回 `isHost: true`
+- [ ] #5 普通成员加入时仍生成新的 `userId`，返回 `isHost: false`
+- [ ] #6 传入无效的 `userId`（不等于 hostId）时，仍创建新成员
+- [ ] #7 接口向后兼容，不传 `userId` 时行为不变
+<!-- AC:END -->

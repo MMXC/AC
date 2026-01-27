@@ -4,9 +4,10 @@ title: 修复 API_BASE 变量重复声明错误
 status: Done
 assignee: []
 created_date: '2026-01-27 15:49'
-updated_date: '2026-01-27 15:57'
+updated_date: '2026-01-27 22:02'
 labels: []
 dependencies: []
+ordinal: 50000
 ---
 
 ## Description

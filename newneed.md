@@ -1,6 +1,25 @@
-# 修复房间页面功能问题与错误 - 任务分解
+# 修复房主跳转后以普通成员身份加入房间的问题 - 任务分解
 
-基于 `newneed.md` 需求的正交分解结果。
+基于控制台日志分析的问题分解结果。
+
+## 问题分析
+
+### 问题现象
+从控制台日志可以看到：
+1. `room.js:840 检测到房主身份，自动使用昵称加入房间: alex` - 前端正确检测到房主身份
+2. `room.js:417 加入房间成功，服务器返回的 userId: user-8z8eh2gf` - 服务器返回了新的 userId（不是创建房间时的 hostUserId）
+3. `room.js:469 普通成员进入房间，显示画面容器占位` - 最终被识别为普通成员
+
+### 根本原因
+1. **后端接口设计问题**：`POST /api/v1/rooms/:roomId/join` 接口设计为只创建普通成员，始终生成新的 `userId`，`isHost` 始终为 `false`（见 `watch-together-server/src/routes/rooms.ts:518-520`）
+2. **房主加入逻辑缺失**：房主创建房间时已有 `hostUserId`，但跳转后使用 `/join` 接口时，服务器会忽略传入的 `userId`，生成新的 `userId`，导致房主身份丢失
+3. **前端判断逻辑问题**：前端在 `room.js:415` 通过 `serverUserId === roomHostId` 判断是否为房主，但由于服务器返回的是新生成的 `userId`，判断结果始终为 `false`
+
+### 解决方案
+根据 `room-roles-and-state-model.md` 文档，房主应该使用 `hostId` 重新连接，而不是创建新成员。需要：
+1. 修改 `/join` 接口支持可选的 `userId` 参数，如果传入的 `userId` 等于 `Room.hostId`，则识别为房主并复用现有 RoomMember 记录
+2. 或者创建新的接口 `/api/v1/rooms/:roomId/host-join` 专门处理房主加入
+3. 前端在检测到房主身份时，使用正确的接口和参数
 
 ## 分解原则
 
@@ -10,161 +29,116 @@
 
 ---
 
-### 任务 1: 修复 API_BASE 变量重复声明错误
-- **ID**: frontend-fix-001
-- **描述**: 修复 `operation-source.js` 和 `room.js` 中 `API_BASE` 变量重复声明导致的语法错误。统一使用 `window.API_BASE` 作为全局变量，各文件检查并设置，避免重复声明。
-- **测试命令**: `cd watch-together && npm test -- operation-source`
+### 任务 1: 修改加入房间接口支持房主身份识别
+- **ID**: backend-fix-001
+- **描述**: 修改 `POST /api/v1/rooms/:roomId/join` 接口，支持可选的 `userId` 参数。如果请求中传入 `userId` 且该 `userId` 等于 `Room.hostId`，则识别为房主，复用现有的 RoomMember 记录（更新 `leftAt` 为 null，`lastActiveAt` 为当前时间），返回 `isHost: true`。如果 `userId` 不等于 `hostId` 或未传入，则按现有逻辑创建新成员。
+- **测试命令**: `cd watch-together-server && npm test -- rooms-join`
 - **成功标准**:
-  1. [ ] `operation-source.js` 中不再使用 `let API_BASE` 声明，改为使用 `window.API_BASE`
-  2. [ ] `room.js` 中统一使用 `window.API_BASE` 或检查是否已定义
-  3. [ ] 浏览器控制台无 `Identifier 'API_BASE' has already been declared` 错误
-  4. [ ] 两个文件都能正确访问 API_BASE 变量
-  5. [ ] API 请求功能正常工作
+  1. [ ] `/join` 接口支持可选的 `userId` 请求参数
+  2. [ ] 当传入的 `userId` 等于 `Room.hostId` 时，识别为房主
+  3. [ ] 房主加入时复用现有 RoomMember 记录，更新 `leftAt` 为 null
+  4. [ ] 房主加入时返回 `isHost: true`
+  5. [ ] 普通成员加入时仍生成新的 `userId`，返回 `isHost: false`
+  6. [ ] 传入无效的 `userId`（不等于 hostId）时，仍创建新成员
+  7. [ ] 接口向后兼容，不传 `userId` 时行为不变
 - **依赖**: 无
 - **测试用例**:
   - **测试数据**: 
-    - 输入: 打开房间页面，加载所有 JavaScript 文件
-    - 预期输出: 控制台无重复声明错误，API 请求正常
+    - 输入1: `{ nickname: "房主", userId: "user-abc123" }` (userId = Room.hostId)
+    - 预期输出1: `{ userId: "user-abc123", isHost: true }`，复用现有 RoomMember
+    - 输入2: `{ nickname: "成员" }` (不传 userId)
+    - 预期输出2: `{ userId: "user-new123", isHost: false }`，创建新成员
   - **测试场景**:
-    1. 打开房间页面，检查浏览器控制台应无 `API_BASE` 重复声明错误
-    2. 验证 API 请求功能正常（如获取房间信息）
-    3. 验证操作来源相关 API 调用正常
+    1. 房主使用 hostUserId 加入房间应识别为房主
+    2. 普通成员加入房间应创建新成员
+    3. 传入无效 userId 应创建新成员
+    4. 不传 userId 应保持向后兼容
   - **断言示例**:
-    ```javascript
-    expect(typeof window.API_BASE).toBe('string')
-    expect(() => { const test = window.API_BASE }).not.toThrow()
+    ```typescript
+    expect(response.body.data.isHost).toBe(true)
+    expect(response.body.data.userId).toBe(hostUserId)
+    const member = await prisma.roomMember.findUnique({ where: { userId: hostUserId } })
+    expect(member.leftAt).toBeNull()
     ```
 
-### 任务 2: 修复 WebSocket 消息 JSON 解析错误
-- **ID**: frontend-fix-002
-- **描述**: 修复 `screen-streaming.js` 中 WebSocket 消息解析错误。`chat.js` 已经解析了 `event.data` 为对象，但 `screen-streaming.js` 再次尝试 `JSON.parse` 导致错误。需要检查 `event.data` 类型，如果已是对象则直接使用。
-- **测试命令**: `cd watch-together && npm test -- screen-streaming`
-- **成功标准**:
-  1. [ ] `screen-streaming.js` 的 `handleWebSocketMessage` 函数检查 `event.data` 类型
-  2. [ ] 如果 `event.data` 是字符串，使用 `JSON.parse` 解析
-  3. [ ] 如果 `event.data` 已经是对象，直接使用
-  4. [ ] 浏览器控制台无 `"[object Object]" is not valid JSON` 错误
-  5. [ ] 画面流功能正常工作
-- **依赖**: 无
-- **测试用例**:
-  - **测试数据**: 
-    - 输入: WebSocket 消息（字符串或对象格式）
-    - 预期输出: 消息正确解析，无 JSON 解析错误
-  - **测试场景**:
-    1. 接收字符串格式的 WebSocket 消息应正确解析
-    2. 接收对象格式的 WebSocket 消息应直接使用
-    3. 画面流相关消息应正确处理
-  - **断言示例**:
-    ```javascript
-    expect(() => handleWebSocketMessage({data: '{"type":"test"}'})).not.toThrow()
-    expect(() => handleWebSocketMessage({data: {type: 'test'}})).not.toThrow()
-    ```
-
-### 任务 3: 修复房主跳转和分享房间链接功能
-- **ID**: frontend-fix-003
-- **描述**: 修复创建房间后房主未自动跳转的问题，确保创建成功后正确跳转到 `/room/:roomId` 页面。在房间页面添加分享房间链接按钮，房主可见。
-- **测试命令**: `cd watch-together && npm test -- create-room-ui`
-- **成功标准**:
-  1. [ ] 创建房间成功后，房主自动跳转到 `/room/:roomId` 页面
-  2. [ ] 跳转逻辑正确执行，无错误阻止跳转
-  3. [ ] 房间页面显示分享房间链接按钮（仅房主可见）
-  4. [ ] 点击分享按钮可以复制房间链接
-  5. [ ] 普通成员不显示分享按钮
-- **依赖**: 无
-- **测试用例**:
-  - **测试数据**: 
-    - 输入: 创建房间表单提交
-    - 预期输出: 自动跳转到房间页面，显示分享按钮
-  - **测试场景**:
-    1. 创建房间后应自动跳转到房间页面
-    2. 房主进入房间后应看到分享链接按钮
-    3. 普通成员进入房间后不应看到分享按钮
-    4. 点击分享按钮应复制房间链接到剪贴板
-  - **断言示例**:
-    ```javascript
-    expect(window.location.pathname).toBe(`/room/${roomId}`)
-    expect(document.getElementById('shareRoomButton')).not.toBeNull()
-    ```
-
-### 任务 4: 修复房主昵称自动读取功能
-- **ID**: frontend-fix-004
-- **描述**: 房主创建房间时填写的昵称应在跳转后自动读取，无需重新输入。在 `create-room.js` 中将 `hostNickname` 保存到 localStorage，在 `room.js` 的 `init()` 函数中检查是否为房主，如果是则从 localStorage 读取昵称并自动加入房间。
+### 任务 2: 更新前端房主加入逻辑
+- **ID**: frontend-fix-007
+- **描述**: 修改 `watch-together/js/room.js` 中的 `joinRoomWithNickname` 函数，当检测到房主身份时（通过 localStorage 中的 `isHost` 标识），在调用 `/join` 接口时传入 `userId` 参数（从 localStorage 读取的 `watch-together.userId`）。确保房主使用正确的 `hostUserId` 加入房间。
 - **测试命令**: `cd watch-together && npm test -- room-init`
 - **成功标准**:
-  1. [ ] `create-room.js` 创建房间成功后保存 `hostNickname` 到 localStorage
-  2. [ ] `room.js` 的 `init()` 函数检查 localStorage 中的 `isHost` 标识
-  3. [ ] 如果是房主，从 localStorage 读取昵称
-  4. [ ] 房主跳过昵称输入界面，直接调用 `joinRoomWithNickname`
-  5. [ ] 普通成员仍显示昵称输入框，功能正常
-- **依赖**: 任务 3
+  1. [ ] `joinRoomWithNickname` 函数检查是否为房主（通过 localStorage 或参数）
+  2. [ ] 如果是房主，在 API 请求中传入 `userId` 参数
+  3. [ ] 传入的 `userId` 来自 localStorage 中的 `watch-together.userId`
+  4. [ ] 普通成员加入时不传 `userId` 参数
+  5. [ ] 房主加入后正确识别为房主（`isHost: true`）
+  6. [ ] 房主加入后显示房主界面（iframe、修改 URL 按钮等）
+- **依赖**: 任务 1
 - **测试用例**:
   - **测试数据**: 
-    - 输入: 创建房间时填写昵称 "房主A"
-    - 预期输出: 跳转后自动使用 "房主A" 作为昵称加入房间
+    - 输入: localStorage 中有 `watch-together.isHost: 'true'` 和 `watch-together.userId: 'user-abc123'`
+    - 预期输出: API 请求包含 `{ nickname: "alex", userId: "user-abc123" }`，返回 `isHost: true`
   - **测试场景**:
-    1. 房主创建房间后跳转，应自动使用创建时的昵称
-    2. 房主不应看到昵称输入界面
-    3. 普通成员进入房间应看到昵称输入界面
-    4. localStorage 中正确保存房主信息
+    1. 房主自动加入时应传入 hostUserId
+    2. 普通成员加入时不应传入 userId
+    3. 房主加入后应显示房主界面
+    4. 普通成员加入后应显示成员界面
   - **断言示例**:
     ```javascript
-    expect(localStorage.getItem('watch-together.hostNickname')).toBe('房主A')
-    expect(localStorage.getItem('watch-together.isHost')).toBe('true')
-    expect(document.getElementById('nicknameInputContainer').style.display).toBe('none')
+    expect(requestBody.userId).toBe(hostUserId)
+    expect(joinData.data.isHost).toBe(true)
+    expect(window.isHost).toBe(true)
     ```
 
-### 任务 5: 修复成员列表显示问题
-- **ID**: frontend-fix-005
-- **描述**: 修复成员列表显示问题，确保相同房间内所有成员都能完整显示，包括同 IP 打开多个标签页的情况。检查 WebSocket 消息中的成员列表同步逻辑，确保 `MEMBER_JOINED` 事件正确触发并更新成员列表。
-- **测试命令**: `cd watch-together && npm test -- room-init`
+### 任务 3: 更新加入房间接口的请求验证 Schema
+- **ID**: backend-fix-002
+- **描述**: 更新 `watch-together-server/src/validation/schemas.ts` 中的 `joinRoomSchema`，添加可选的 `userId` 字段验证。确保 `userId` 格式正确（如果提供），并更新接口文档注释。
+- **测试命令**: `cd watch-together-server && npm test -- validation`
 - **成功标准**:
-  1. [ ] WebSocket `MEMBER_JOINED` 事件正确触发
-  2. [ ] 成员列表正确更新，显示所有已加入的成员
-  3. [ ] 同 IP 多个标签页的成员都能正确显示
-  4. [ ] 成员离开时正确从列表移除
-  5. [ ] 成员列表 UI 正确渲染
+  1. [ ] `joinRoomSchema` 包含可选的 `userId` 字段
+  2. [ ] `userId` 字段验证格式（如果提供）
+  3. [ ] 接口文档注释更新，说明 `userId` 参数的用途
+  4. [ ] 验证逻辑正确，无效 `userId` 格式返回 400
+  5. [ ] 向后兼容，不传 `userId` 时验证通过
 - **依赖**: 无
 - **测试用例**:
   - **测试数据**: 
-    - 输入: 多个用户（包括同 IP）加入同一房间
-    - 预期输出: 成员列表显示所有成员
+    - 输入1: `{ nickname: "test", userId: "user-abc123" }` (有效格式)
+    - 预期输出1: 验证通过
+    - 输入2: `{ nickname: "test", userId: "invalid" }` (无效格式)
+    - 预期输出2: 返回 400 错误
   - **测试场景**:
-    1. 打开多个标签页加入同一房间，所有成员应显示在列表中
-    2. 成员加入时应触发 `MEMBER_JOINED` 事件
-    3. 成员离开时应从列表中移除
-    4. 成员列表应实时更新
+    1. 有效的 userId 格式应通过验证
+    2. 无效的 userId 格式应返回 400
+    3. 不传 userId 应通过验证
   - **断言示例**:
-    ```javascript
-    expect(membersList.length).toBeGreaterThan(0)
-    expect(membersList.find(m => m.id === userId)).toBeDefined()
+    ```typescript
+    expect(() => joinRoomSchema.parse({ nickname: "test", userId: "user-abc123" })).not.toThrow()
+    expect(() => joinRoomSchema.parse({ nickname: "test", userId: "invalid" })).toThrow()
     ```
 
-### 任务 6: 修复消息显示问题
-- **ID**: frontend-fix-006
-- **描述**: 修复聊天消息显示问题，确保自己和其它成员发送的消息都能正确显示，包括消息历史同步。检查 `handleWebSocketMessage` 中的 `CHAT_MESSAGE` 处理逻辑，检查 `SYNC_STATE` 中的消息历史加载逻辑，确保 `renderMessage` 和 `renderMessages` 正确渲染所有消息。
-- **测试命令**: `cd watch-together && npm test -- 实时聊天`
+### 任务 4: 添加房主加入房间的集成测试
+- **ID**: backend-fix-003
+- **描述**: 在 `watch-together-server/tests/` 中添加或更新测试文件，测试房主使用 `hostUserId` 加入房间的场景。验证房主身份识别、RoomMember 记录复用、返回数据正确性。
+- **测试命令**: `cd watch-together-server && npm test -- rooms-join-host`
 - **成功标准**:
-  1. [ ] `CHAT_MESSAGE` 消息正确处理并添加到历史记录
-  2. [ ] `SYNC_STATE` 消息历史正确加载
-  3. [ ] `renderMessage` 正确渲染单条消息
-  4. [ ] `renderMessages` 正确渲染所有消息历史
-  5. [ ] 自己发送的消息正确显示
-  6. [ ] 其他成员发送的消息正确显示
-  7. [ ] 消息发送后立即显示在聊天区域
-- **依赖**: 无
+  1. [ ] 测试文件创建或更新完成
+  2. [ ] 测试房主使用 hostUserId 加入房间的场景
+  3. [ ] 验证返回的 `isHost` 为 `true`
+  4. [ ] 验证 RoomMember 记录被正确复用（leftAt 为 null）
+  5. [ ] 验证普通成员加入场景不受影响
+  6. [ ] 所有测试用例通过
+- **依赖**: 任务 1, 任务 3
 - **测试用例**:
   - **测试数据**: 
-    - 输入: 发送聊天消息和接收消息
-    - 预期输出: 所有消息正确显示在聊天区域
+    - 输入: 创建房间后，使用 hostUserId 调用 `/join` 接口
+    - 预期输出: 返回 `isHost: true`，RoomMember 记录更新
   - **测试场景**:
-    1. 发送消息后应立即显示在聊天区域
-    2. 接收其他成员消息应正确显示
-    3. 连接 WebSocket 后应加载消息历史
-    4. 消息历史应正确渲染
-    5. 消息格式正确（发送者、时间、内容）
+    1. 房主首次加入房间（创建时已创建 RoomMember）
+    2. 房主重新加入房间（RoomMember 的 leftAt 不为 null）
+    3. 普通成员加入房间（不应受影响）
   - **断言示例**:
-    ```javascript
-    expect(messageHistory.length).toBeGreaterThan(0)
-    expect(document.querySelectorAll('.chat-message').length).toBe(messageHistory.length)
-    expect(messageHistory.find(m => m.userId === currentUserId)).toBeDefined()
+    ```typescript
+    expect(response.body.data.isHost).toBe(true)
+    expect(member.leftAt).toBeNull()
+    expect(member.lastActiveAt).toBeDefined()
     ```

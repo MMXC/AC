@@ -4,9 +4,10 @@ title: 修复成员列表显示问题
 status: Done
 assignee: []
 created_date: '2026-01-27 15:49'
-updated_date: '2026-01-27 17:16'
+updated_date: '2026-01-27 22:02'
 labels: []
 dependencies: []
+ordinal: 46000
 ---
 
 ## Description

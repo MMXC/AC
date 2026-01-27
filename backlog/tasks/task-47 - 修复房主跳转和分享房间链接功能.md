@@ -4,9 +4,10 @@ title: 修复房主跳转和分享房间链接功能
 status: Done
 assignee: []
 created_date: '2026-01-27 15:49'
-updated_date: '2026-01-27 16:35'
+updated_date: '2026-01-27 22:02'
 labels: []
 dependencies: []
+ordinal: 48000
 ---
 
 ## Description

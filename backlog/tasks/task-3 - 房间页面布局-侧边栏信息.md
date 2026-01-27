@@ -4,10 +4,10 @@ title: 房间页面布局 - 侧边栏信息
 status: Done
 assignee: []
 created_date: '2026-01-25 16:56'
-updated_date: '2026-01-26 06:36'
+updated_date: '2026-01-27 22:02'
 labels: []
 dependencies: []
-ordinal: 2000
+ordinal: 51000
 ---
 
 ## Description
