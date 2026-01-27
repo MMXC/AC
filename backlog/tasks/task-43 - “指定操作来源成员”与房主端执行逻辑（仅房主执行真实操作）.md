@@ -4,9 +4,10 @@ title: “指定操作来源成员”与房主端执行逻辑（仅房主执行�
 status: Done
 assignee: []
 created_date: '2026-01-27 09:44'
-updated_date: '2026-01-27 14:58'
+updated_date: '2026-01-27 15:23'
 labels: []
 dependencies: []
+ordinal: 38000
 ---
 
 ## Description

@@ -4,9 +4,10 @@ title: 房间页前端初始化与房主/成员 UI 区分（成员只看画面�
 status: Done
 assignee: []
 created_date: '2026-01-27 09:43'
-updated_date: '2026-01-27 14:14'
+updated_date: '2026-01-27 15:23'
 labels: []
 dependencies: []
+ordinal: 40000
 ---
 
 ## Description

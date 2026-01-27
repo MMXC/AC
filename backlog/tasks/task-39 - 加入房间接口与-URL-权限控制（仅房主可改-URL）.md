@@ -1,12 +1,13 @@
 ---
 id: TASK-39
 title: 加入房间接口与 URL 权限控制（仅房主可改 URL）
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-27 09:43'
-updated_date: '2026-01-27 11:51'
+updated_date: '2026-01-27 15:23'
 labels: []
 dependencies: []
+ordinal: 44000
 ---
 
 ## Description

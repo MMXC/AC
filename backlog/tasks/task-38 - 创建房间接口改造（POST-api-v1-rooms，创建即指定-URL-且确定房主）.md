@@ -1,12 +1,13 @@
 ---
 id: TASK-38
 title: 创建房间接口改造（POST /api/v1/rooms，创建即指定 URL 且确定房主）
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-27 09:43'
-updated_date: '2026-01-27 11:07'
+updated_date: '2026-01-27 15:23'
 labels: []
 dependencies: []
+ordinal: 43000
 ---
 
 ## Description
