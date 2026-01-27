@@ -1,11 +1,13 @@
 ---
 id: TASK-26
 title: 输入验证和错误处理
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-26 06:38'
+updated_date: '2026-01-27 07:46'
 labels: []
 dependencies: []
+ordinal: 32000
 ---
 
 ## Description

@@ -22,8 +22,9 @@ COPY prisma ./prisma
 # 生成 Prisma Client
 RUN npx prisma generate
 
-# 复制源代码
+# 复制源代码和脚本
 COPY src ./src
+COPY scripts ./scripts
 
 # 编译 TypeScript
 RUN npm run build
@@ -46,6 +47,15 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 
+# 复制启动脚本
+COPY --from=builder --chown=nodejs:nodejs /app/scripts ./scripts
+
+# 创建 logs 目录并设置权限（在切换到非 root 用户之前）
+RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app/logs
+
+# 确保启动脚本可执行
+RUN chmod +x /app/scripts/start.sh
+
 # 切换到非 root 用户
 USER nodejs
 
@@ -60,5 +70,5 @@ ENV PORT=3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:${PORT}/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# 启动服务器
-CMD ["node", "dist/index.js"]
+# 启动服务器（使用启动脚本，会自动运行迁移）
+CMD ["/app/scripts/start.sh"]

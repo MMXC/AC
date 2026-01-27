@@ -292,6 +292,38 @@
                 <h2>房间信息</h2>
                 <div class="room-id-display" id="sidebarRoomId">加载中...</div>
             </div>
+            <div class="sidebar-section" id="userInfoSection">
+                <h2>我的信息</h2>
+                <div id="userInfoDisplay" style="margin-bottom: 15px;">
+                    <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">用户ID:</div>
+                    <div class="room-id-display" id="currentUserId" style="font-size: 0.9em;">生成中...</div>
+                </div>
+                <div id="nicknameInputContainer" style="display: none;">
+                    <input 
+                        type="text" 
+                        id="nicknameInput" 
+                        placeholder="输入昵称（可选）" 
+                        style="width: 100%; padding: 8px; background: #3a3a3a; border: 1px solid #404040; border-radius: 4px; color: #fff; font-size: 0.9em; margin-bottom: 10px;"
+                        maxlength="20"
+                    />
+                    <button 
+                        id="joinRoomButton" 
+                        style="width: 100%; padding: 8px; background: #4a9eff; border: none; border-radius: 4px; color: #fff; font-size: 0.9em; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+                    >
+                        加入房间
+                    </button>
+                </div>
+                <div id="nicknameDisplay" style="display: none;">
+                    <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">昵称:</div>
+                    <div style="color: #4a9eff; font-weight: 600; margin-bottom: 10px;" id="currentNickname"></div>
+                    <button 
+                        id="changeNicknameButton" 
+                        style="width: 100%; padding: 6px; background: #3a3a3a; border: 1px solid #404040; border-radius: 4px; color: #fff; font-size: 0.85em; cursor: pointer; transition: background 0.2s;"
+                    >
+                        修改昵称
+                    </button>
+                </div>
+            </div>
             <div class="sidebar-section" style="flex: 0 0 auto; max-height: 200px; overflow-y: auto;">
                 <h2>成员列表</h2>
                 <ul class="members-list" id="membersList">
@@ -331,8 +363,8 @@
         </div>
     </div>
     
-    <script src="js/room.js"></script>
-    <script src="js/chat.js"></script>
-    <script src="js/sync.js"></script>
+    <script src="/js/room.js"></script>
+    <script src="/js/chat.js"></script>
+    <script src="/js/sync.js"></script>
 </body>
 </html>

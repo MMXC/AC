@@ -149,14 +149,25 @@ export class RoomCacheService {
    * @returns 房间信息，如果房间不存在返回 null
    */
   async getRoomWithFallback(roomId: string): Promise<RoomCacheData | null> {
-    // 先尝试从缓存获取
-    const cached = await this.getRoom(roomId);
-    if (cached) {
-      return cached;
-    }
+    try {
+      // 先尝试从缓存获取
+      const cached = await this.getRoom(roomId);
+      if (cached) {
+        return cached;
+      }
 
-    // 缓存未命中，从数据库加载并缓存
-    return await this.loadRoomFromDatabase(roomId);
+      // 缓存未命中，从数据库加载并缓存
+      return await this.loadRoomFromDatabase(roomId);
+    } catch (error) {
+      // 如果缓存操作失败，尝试直接从数据库加载
+      console.error('Error getting room from cache, falling back to database:', error);
+      try {
+        return await this.loadRoomFromDatabase(roomId);
+      } catch (dbError) {
+        console.error('Error loading room from database:', dbError);
+        throw dbError;
+      }
+    }
   }
 
   /**

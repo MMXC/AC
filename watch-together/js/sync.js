@@ -4,8 +4,9 @@
 
 // WebSocket 连接（复用 chat.js 的连接或创建新连接）
 let syncWs = null;
-let currentUserId = null;
-let currentRoomId = null;
+// 注意：currentUserId 和 currentRoomId 应该从 chat.js 或 room.js 中获取，避免重复声明
+let syncCurrentUserId = null;
+let syncCurrentRoomId = null;
 let isApplyingRemoteOperation = false; // 防止循环同步
 let lastScrollPosition = { x: 0, y: 0 };
 let scrollThrottleTimer = null;
@@ -15,31 +16,49 @@ let scrollThrottleTimer = null;
  */
 function initSync() {
     // 获取房间ID和用户ID
-    currentRoomId = getRoomIdFromPath();
-    if (!currentRoomId) {
+    syncCurrentRoomId = getRoomIdFromPath();
+    if (!syncCurrentRoomId) {
         console.error('无法获取房间ID');
         return;
     }
 
-    // 获取当前用户信息
-    const members = getMembersList();
-    if (members.length > 0) {
-        currentUserId = members[0].id;
+    // 检查用户是否已加入房间
+    // 确保 window.currentUserId 是字符串类型，而不是 DOM 元素
+    if (typeof window !== 'undefined' && window.currentUserId && typeof window.currentUserId === 'string') {
+        syncCurrentUserId = window.currentUserId;
+        
+        console.log('用户已加入房间，准备连接操作同步 WebSocket', { syncCurrentUserId, syncCurrentRoomId });
+        
+        // 连接 WebSocket（如果 chat.js 已经连接，可以复用，这里先创建独立连接）
+        connectSyncWebSocket();
+
+        // 等待 iframe 加载完成后设置事件监听
+        setupIframeEventListeners();
     } else {
-        currentUserId = 'user-' + Date.now();
+        // 用户尚未加入房间，等待加入事件
+        console.log('等待用户加入房间...', { syncCurrentRoomId });
+        // 不在这里添加事件监听器，在 DOMContentLoaded 中统一处理
+        return;
     }
-
-    // 连接 WebSocket（如果 chat.js 已经连接，可以复用，这里先创建独立连接）
-    connectSyncWebSocket();
-
-    // 等待 iframe 加载完成后设置事件监听
-    setupIframeEventListeners();
 }
 
 /**
  * 连接 WebSocket
  */
 function connectSyncWebSocket() {
+    // 验证必要参数
+    if (!syncCurrentRoomId || !syncCurrentUserId) {
+        console.error('无法连接操作同步 WebSocket: 缺少必要参数', { syncCurrentRoomId, syncCurrentUserId });
+        return;
+    }
+    
+    // 验证 userId 格式（应该符合后端要求：user-{8位小写字母或数字}）
+    const userIdPattern = /^user-[a-z0-9]{8}$/;
+    if (!userIdPattern.test(syncCurrentUserId)) {
+        console.error('无法连接操作同步 WebSocket: userId 格式不正确', syncCurrentUserId);
+        return;
+    }
+    
     // 如果 chat.js 已经创建了 WebSocket，可以复用
     // 这里先尝试获取全局的 ws 连接
     if (typeof ws !== 'undefined' && ws && ws.readyState === WebSocket.OPEN) {
@@ -49,7 +68,17 @@ function connectSyncWebSocket() {
     }
 
     // 否则创建新的连接
-    const wsUrl = `ws://localhost:3001?roomId=${currentRoomId}&userId=${currentUserId}`;
+    // 获取 WebSocket URL（优先使用 window 配置，否则使用默认值）
+    let wsBaseUrl = 'ws://localhost:3001';
+    if (typeof window !== 'undefined' && window.WS_BASE_URL) {
+        wsBaseUrl = window.WS_BASE_URL;
+    } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
+        // 如果只有 API_BASE_URL，转换为 WebSocket URL
+        wsBaseUrl = window.API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+    }
+    const wsUrl = `${wsBaseUrl}/ws?roomId=${syncCurrentRoomId}&userId=${syncCurrentUserId}`;
+    
+    console.log('正在连接操作同步 WebSocket:', wsUrl);
     
     if (typeof WebSocket !== 'undefined') {
         syncWs = new WebSocket(wsUrl);
@@ -75,13 +104,17 @@ function connectSyncWebSocket() {
         console.error('操作同步 WebSocket 错误:', error);
     };
 
-    syncWs.onclose = () => {
-        console.log('操作同步 WebSocket 连接已关闭');
-        setTimeout(() => {
-            if (currentRoomId) {
-                connectSyncWebSocket();
-            }
-        }, 3000);
+    syncWs.onclose = (event) => {
+        console.log('操作同步 WebSocket 连接已关闭', event.code, event.reason);
+        // 只有在用户已加入房间且不是主动关闭的情况下才重连
+        // 确保 syncCurrentUserId 是字符串类型
+        if (syncCurrentRoomId && syncCurrentUserId && typeof syncCurrentUserId === 'string' && event.code !== 1000) {
+            setTimeout(() => {
+                if (syncCurrentRoomId && syncCurrentUserId && typeof syncCurrentUserId === 'string') {
+                    connectSyncWebSocket();
+                }
+            }, 3000);
+        }
     };
 }
 
@@ -90,7 +123,7 @@ function connectSyncWebSocket() {
  */
 function handleSyncMessage(message) {
     // 忽略自己发送的消息
-    if (message.userId === currentUserId) {
+    if (message.userId === syncCurrentUserId) {
         return;
     }
 
@@ -266,7 +299,7 @@ function sendScrollSync(x, y) {
 
     const message = {
         type: 'SCROLL_SYNC',
-        userId: currentUserId,
+        userId: syncCurrentUserId,
         data: {
             x: x,
             y: y,
@@ -287,7 +320,7 @@ function sendClickSync(x, y) {
 
     const message = {
         type: 'CLICK_SYNC',
-        userId: currentUserId,
+        userId: syncCurrentUserId,
         data: {
             x: x,
             y: y,
@@ -308,7 +341,7 @@ function sendUrlChange(url) {
 
     const message = {
         type: 'URL_CHANGED',
-        userId: currentUserId,
+        userId: syncCurrentUserId,
         data: {
             url: url,
             timestamp: Date.now()
@@ -427,6 +460,27 @@ if (typeof document !== 'undefined') {
         setTimeout(() => {
             initSync();
         }, 200);
+        
+        // 监听用户加入房间事件（支持多次触发，比如修改昵称后重新加入）
+        window.addEventListener('userJoinedRoom', (event) => {
+            console.log('收到 userJoinedRoom 事件（操作同步）', event.detail);
+            // 如果已经有连接，先关闭
+            if (syncWs && syncWs.readyState !== WebSocket.CLOSED) {
+                console.log('关闭现有操作同步 WebSocket 连接');
+                syncWs.close();
+            }
+            // 确保使用事件中的 userId（必须是字符串）
+            if (event.detail && event.detail.userId && typeof event.detail.userId === 'string') {
+                window.currentUserId = event.detail.userId;
+                window.currentUserNickname = event.detail.nickname;
+            } else {
+                console.error('userJoinedRoom 事件中的 userId 无效:', event.detail);
+            }
+            // 重新初始化
+            setTimeout(() => {
+                initSync();
+            }, 200);
+        });
     });
 }
 
@@ -443,7 +497,7 @@ if (typeof module !== 'undefined' && module.exports) {
         applyClickSync,
         applyUrlChange,
         setupIframeEventListeners,
-        getCurrentUserId: () => currentUserId,
-        getCurrentRoomId: () => currentRoomId,
+        getCurrentUserId: () => syncCurrentUserId,
+        getCurrentRoomId: () => syncCurrentRoomId,
     };
 }

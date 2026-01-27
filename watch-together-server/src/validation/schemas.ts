@@ -105,7 +105,12 @@ export const offsetSchema = z
  */
 export const createRoomSchema = z.object({
   name: roomNameSchema,
-  hostNickname: nicknameSchema,
+  hostNickname: z
+    .string()
+    .trim()
+    .max(100, 'nickname must be a string with maximum 100 characters')
+    .optional()
+    .transform(val => val && val.length > 0 ? val : '房主'), // 如果为空或未提供，使用默认值
 });
 
 /**

@@ -20,19 +20,22 @@ function initChat() {
         return;
     }
 
-    // 获取当前用户信息（从成员列表中获取，或生成临时ID）
-    const members = getMembersList();
-    if (members.length > 0) {
-        currentUserId = members[0].id;
-        currentUserNickname = members[0].name;
+    // 检查用户是否已加入房间
+    // 确保 window.currentUserId 是字符串类型，而不是 DOM 元素
+    if (typeof window !== 'undefined' && window.currentUserId && typeof window.currentUserId === 'string') {
+        currentUserId = window.currentUserId;
+        currentUserNickname = window.currentUserNickname || '我';
+        
+        console.log('用户已加入房间，准备连接 WebSocket', { currentUserId, currentRoomId });
+        
+        // 用户已加入，连接 WebSocket
+        connectWebSocket();
     } else {
-        // 如果没有成员信息，生成临时ID
-        currentUserId = 'user-' + Date.now();
-        currentUserNickname = '我';
+        // 用户尚未加入房间，等待加入事件
+        console.log('等待用户加入房间...', { currentRoomId });
+        // 不在这里添加事件监听器，在 DOMContentLoaded 中统一处理
+        return;
     }
-
-    // 连接 WebSocket
-    connectWebSocket();
 
     // 绑定发送按钮事件
     const sendButton = document.getElementById('chatSendButton');
@@ -53,7 +56,30 @@ function initChat() {
  * 连接 WebSocket
  */
 function connectWebSocket() {
-    const wsUrl = `ws://localhost:3001?roomId=${currentRoomId}&userId=${currentUserId}`;
+    // 验证必要参数
+    if (!currentRoomId || !currentUserId) {
+        console.error('无法连接 WebSocket: 缺少必要参数', { currentRoomId, currentUserId });
+        return;
+    }
+    
+    // 验证 userId 格式（应该符合后端要求：user-{8位小写字母或数字}）
+    const userIdPattern = /^user-[a-z0-9]{8}$/;
+    if (!userIdPattern.test(currentUserId)) {
+        console.error('无法连接 WebSocket: userId 格式不正确', currentUserId);
+        return;
+    }
+    
+    // 获取 WebSocket URL（优先使用 window 配置，否则使用默认值）
+    let wsBaseUrl = 'ws://localhost:3001';
+    if (typeof window !== 'undefined' && window.WS_BASE_URL) {
+        wsBaseUrl = window.WS_BASE_URL;
+    } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
+        // 如果只有 API_BASE_URL，转换为 WebSocket URL
+        wsBaseUrl = window.API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+    }
+    const wsUrl = `${wsBaseUrl}/ws?roomId=${currentRoomId}&userId=${currentUserId}`;
+    
+    console.log('正在连接 WebSocket:', wsUrl);
     
     // 在浏览器环境中使用原生 WebSocket
     if (typeof WebSocket !== 'undefined') {
@@ -80,14 +106,17 @@ function connectWebSocket() {
         console.error('WebSocket 错误:', error);
     };
 
-    ws.onclose = () => {
-        console.log('WebSocket 连接已关闭');
-        // 尝试重连
-        setTimeout(() => {
-            if (currentRoomId) {
-                connectWebSocket();
-            }
-        }, 3000);
+    ws.onclose = (event) => {
+        console.log('WebSocket 连接已关闭', event.code, event.reason);
+        // 只有在用户已加入房间且不是主动关闭的情况下才重连
+        // 确保 window.currentUserId 是字符串类型
+        if (currentRoomId && window.currentUserId && typeof window.currentUserId === 'string' && event.code !== 1000) {
+            setTimeout(() => {
+                if (currentRoomId && window.currentUserId && typeof window.currentUserId === 'string') {
+                    connectWebSocket();
+                }
+            }, 3000);
+        }
     };
 }
 
@@ -95,25 +124,46 @@ function connectWebSocket() {
  * 处理 WebSocket 消息
  */
 function handleWebSocketMessage(message) {
+    console.log('收到 WebSocket 消息:', message.type, message);
+    
     switch (message.type) {
         case 'SYNC_STATE':
             // 同步状态，加载消息历史
-            if (message.data && message.data.messages) {
-                messageHistory = message.data.messages || [];
+            // 后端返回的是 recentMessages，不是 messages
+            if (message.data && message.data.recentMessages) {
+                messageHistory = message.data.recentMessages || [];
+                console.log('加载消息历史:', messageHistory.length, '条消息');
                 renderMessages();
+            } else {
+                console.log('SYNC_STATE 消息中没有 recentMessages');
             }
             break;
 
         case 'CHAT_MESSAGE':
             // 收到新消息
+            console.log('收到聊天消息:', message.data);
             addMessageToHistory(message.data);
             renderMessage(message.data);
+            break;
+
+        case 'CONNECTED':
+            // 连接成功消息（可以忽略或显示）
+            console.log('WebSocket 连接确认:', message.data);
+            break;
+
+        case 'ERROR':
+            // 错误消息
+            console.error('WebSocket 错误:', message.error);
             break;
 
         case 'MEMBER_JOINED':
         case 'MEMBER_LEFT':
             // 成员变化，可以显示系统消息（可选）
+            console.log('成员变化:', message.type, message.data);
             break;
+            
+        default:
+            console.log('未知消息类型:', message.type);
     }
 }
 
@@ -122,11 +172,17 @@ function handleWebSocketMessage(message) {
  */
 function sendMessage(content) {
     if (!content || !content.trim()) {
+        console.warn('消息内容为空，无法发送');
         return;
     }
 
     if (!ws || ws.readyState !== WebSocket.OPEN) {
-        console.error('WebSocket 未连接');
+        console.error('WebSocket 未连接，当前状态:', ws ? ws.readyState : 'null');
+        return;
+    }
+
+    if (!currentUserId || !currentUserNickname) {
+        console.error('用户信息不完整，无法发送消息', { currentUserId, currentUserNickname });
         return;
     }
 
@@ -137,6 +193,7 @@ function sendMessage(content) {
         content: content.trim()
     };
 
+    console.log('发送聊天消息:', message);
     ws.send(JSON.stringify(message));
 }
 
@@ -308,6 +365,27 @@ if (typeof document !== 'undefined') {
         setTimeout(() => {
             initChat();
         }, 100);
+        
+        // 监听用户加入房间事件（支持多次触发，比如修改昵称后重新加入）
+        window.addEventListener('userJoinedRoom', (event) => {
+            console.log('收到 userJoinedRoom 事件', event.detail);
+            // 如果已经有连接，先关闭
+            if (ws && ws.readyState !== WebSocket.CLOSED) {
+                console.log('关闭现有 WebSocket 连接');
+                ws.close();
+            }
+            // 确保使用事件中的 userId（必须是字符串）
+            if (event.detail && event.detail.userId && typeof event.detail.userId === 'string') {
+                window.currentUserId = event.detail.userId;
+                window.currentUserNickname = event.detail.nickname;
+            } else {
+                console.error('userJoinedRoom 事件中的 userId 无效:', event.detail);
+            }
+            // 重新初始化
+            setTimeout(() => {
+                initChat();
+            }, 100);
+        });
     });
 }
 

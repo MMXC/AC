@@ -16,7 +16,7 @@ import {
   getMessagesQuerySchema,
   roomIdParamSchema,
 } from '../validation/schemas';
-import { getRoomCacheService } from '../services/roomCache';
+import { getRoomCacheService, RoomCacheData } from '../services/roomCache';
 
 const router = Router();
 
@@ -105,6 +105,7 @@ router.post(
       const roomId = generateRoomId();
       const hostId = generateUserId();
       const roomName = name || '未命名房间';
+      const hostNicknameValue = hostNickname || '房主'; // 确保有默认值
       const inviteLink = `/room/${roomId}`;
 
       // 创建房间和房主成员记录（使用事务确保数据一致性）
@@ -124,7 +125,7 @@ router.post(
           data: {
             roomId: roomId,
             userId: hostId,
-            nickname: hostNickname,
+            nickname: hostNicknameValue,
             isHost: true,
           },
         });
@@ -139,7 +140,7 @@ router.post(
           id: result.id,
           name: result.name,
           hostId: result.hostId,
-          hostNickname: hostNickname,
+          hostNickname: hostNicknameValue,
           createdAt: result.createdAt.toISOString(),
           inviteLink: result.inviteLink,
         },
@@ -196,7 +197,55 @@ router.get(
 
       // 使用缓存服务获取房间信息（优先从缓存，缓存未命中时从数据库加载）
       const roomCacheService = getRoomCacheService();
-      const roomData = await roomCacheService.getRoomWithFallback(roomId);
+      let roomData: RoomCacheData | null;
+      
+      try {
+        roomData = await roomCacheService.getRoomWithFallback(roomId);
+      } catch (error) {
+        // 如果缓存服务失败，记录错误并继续处理
+        console.error('Error getting room data:', error);
+        // 尝试直接从数据库查询
+        const prisma = getPrismaClient();
+        const room = await prisma.room.findFirst({
+          where: {
+            id: roomId,
+            deletedAt: null,
+          },
+          include: {
+            members: {
+              where: {
+                leftAt: null,
+              },
+              orderBy: {
+                joinedAt: 'asc',
+              },
+            },
+          },
+        });
+        
+        if (!room) {
+          throw createHttpError(404, ErrorCode.NOT_FOUND, 'Room not found');
+        }
+        
+        // 格式化数据
+        roomData = {
+          id: room.id,
+          name: room.name,
+          hostId: room.hostId,
+          currentUrl: room.currentUrl,
+          inviteLink: room.inviteLink,
+          createdAt: room.createdAt.toISOString(),
+          updatedAt: room.updatedAt.toISOString(),
+          members: room.members.map(member => ({
+            userId: member.userId,
+            nickname: member.nickname,
+            isHost: member.isHost,
+            joinedAt: member.joinedAt.toISOString(),
+            lastActiveAt: member.lastActiveAt.toISOString(),
+          })),
+          memberCount: room.members.length,
+        };
+      }
 
       // 如果房间不存在或已删除，返回 404
       if (!roomData) {

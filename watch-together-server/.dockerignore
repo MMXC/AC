@@ -45,10 +45,11 @@ coverage
 .eslintrc.json
 .prettierrc.json
 .prettierignore
-tsconfig.json
+# tsconfig.json is needed for TypeScript compilation during build
 
-# Scripts (not needed in production)
-scripts
+# Scripts (保留 start.sh，排除开发脚本)
+scripts/check-migration-status.sh
+scripts/setup-db.sh
 
 # Logs
 logs

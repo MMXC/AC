@@ -17,15 +17,27 @@ app.use(express.json());
 const staticPath = path.join(__dirname, '..');
 app.use(express.static(staticPath));
 
+// 获取 API 基础 URL（从环境变量或使用默认值）
+// 在 Docker 环境中，应该连接到后端 API 服务器（端口 3000）
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+// WebSocket 基础 URL（默认与 API_BASE_URL 相同，但可以单独配置）
+const WS_BASE_URL = process.env.WS_BASE_URL || API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+
 // 路由处理
 // 首页路由 /
 app.get('/', (req, res) => {
-  res.sendFile(path.join(staticPath, 'index.html'));
+  let html = fs.readFileSync(path.join(staticPath, 'index.html'), 'utf-8');
+  // 注入 API_BASE_URL 和 WS_BASE_URL 配置
+  html = html.replace('</head>', `<script>window.API_BASE_URL = '${API_BASE_URL}'; window.WS_BASE_URL = '${WS_BASE_URL}';</script></head>`);
+  res.send(html);
 });
 
 // 房间路由 /room/:roomId
 app.get('/room/:roomId', (req, res) => {
-  res.sendFile(path.join(staticPath, 'join.html'));
+  let html = fs.readFileSync(path.join(staticPath, 'join.html'), 'utf-8');
+  // 注入 API_BASE_URL 和 WS_BASE_URL 配置
+  html = html.replace('</head>', `<script>window.API_BASE_URL = '${API_BASE_URL}'; window.WS_BASE_URL = '${WS_BASE_URL}';</script></head>`);
+  res.send(html);
 });
 
 // 加载 mock 数据

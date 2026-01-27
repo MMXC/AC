@@ -4,7 +4,10 @@
 
 // API 基础 URL（可以根据环境配置）
 let API_BASE = 'http://localhost:3001';
-if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
+// 优先使用 window 对象中的配置（由服务器注入）
+if (typeof window !== 'undefined' && window.API_BASE_URL) {
+    API_BASE = window.API_BASE_URL;
+} else if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
     API_BASE = process.env.API_BASE;
 }
 
@@ -205,10 +208,30 @@ async function validateRoom(roomId) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/api/rooms/${roomId}`);
+        const response = await fetch(`${API_BASE}/api/v1/rooms/${roomId}`);
+        
+        if (!response.ok) {
+            // 如果是 500 错误，尝试解析错误信息
+            if (response.status === 500) {
+                try {
+                    const errorData = await response.json();
+                    return { valid: false, error: errorData.error?.message || '服务器错误，请稍后重试' };
+                } catch {
+                    return { valid: false, error: '服务器错误，请稍后重试' };
+                }
+            }
+            // 其他错误
+            try {
+                const data = await response.json();
+                return { valid: false, error: data.error?.message || '房间不存在或已关闭' };
+            } catch {
+                return { valid: false, error: '无法连接到服务器' };
+            }
+        }
+        
         const data = await response.json();
 
-        if (!response.ok || !data.success) {
+        if (!data.success) {
             return { valid: false, error: data.error?.message || '房间不存在或已关闭' };
         }
 
@@ -216,6 +239,85 @@ async function validateRoom(roomId) {
     } catch (error) {
         console.error('验证房间错误:', error);
         return { valid: false, error: '无法连接到服务器，请稍后重试' };
+    }
+}
+
+/**
+ * 使用昵称加入房间
+ */
+async function joinRoomWithNickname(roomId, userId, nickname) {
+    const nicknameInputContainer = document.getElementById('nicknameInputContainer');
+    const nicknameDisplay = document.getElementById('nicknameDisplay');
+    const joinRoomButton = document.getElementById('joinRoomButton');
+    const nicknameInput = document.getElementById('nicknameInput');
+    const currentNickname = document.getElementById('currentNickname');
+    
+    if (joinRoomButton) {
+        joinRoomButton.disabled = true;
+        joinRoomButton.textContent = '加入中...';
+    }
+    
+    try {
+        // 调用加入房间 API
+        const joinResponse = await fetch(`${API_BASE}/api/v1/rooms/${roomId}/join`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                nickname: nickname,
+            }),
+        });
+
+        const joinData = await joinResponse.json();
+        
+        if (!joinResponse.ok || !joinData.success) {
+            throw new Error(joinData.error?.message || '加入房间失败');
+        }
+
+        // 使用服务器返回的 userId
+        const serverUserId = joinData.data.userId || userId;
+        const serverNickname = joinData.data.nickname || nickname;
+        
+        console.log('加入房间成功，服务器返回的 userId:', serverUserId);
+        
+        // 添加当前用户到成员列表
+        addMember(serverUserId, serverNickname);
+        
+        // 将 userId 设置为全局变量，供其他脚本使用
+        if (typeof window !== 'undefined') {
+            window.currentUserId = serverUserId;
+            window.currentUserNickname = serverNickname;
+            window.tempUserId = null; // 清除临时ID
+            window.currentRoomId = roomId; // 确保房间ID已设置
+        }
+        
+        // 更新显示的 userId（使用服务器返回的真实 userId）
+        const userIdDisplay = document.getElementById('currentUserId');
+        if (userIdDisplay) {
+            userIdDisplay.textContent = serverUserId;
+        }
+        
+        // 隐藏输入界面，显示昵称
+        if (nicknameInputContainer) nicknameInputContainer.style.display = 'none';
+        if (nicknameDisplay) nicknameDisplay.style.display = 'block';
+        if (currentNickname) currentNickname.textContent = serverNickname;
+        
+        // 触发自定义事件，通知其他脚本用户已加入房间
+        if (typeof window !== 'undefined') {
+            console.log('用户已成功加入房间，触发 userJoinedRoom 事件', { userId: serverUserId, nickname: serverNickname, roomId });
+            window.dispatchEvent(new CustomEvent('userJoinedRoom', {
+                detail: { userId: serverUserId, nickname: serverNickname, roomId }
+            }));
+        }
+        
+    } catch (error) {
+        console.error('加入房间错误:', error);
+        alert('加入房间失败：' + (error.message || '请稍后重试'));
+        if (joinRoomButton) {
+            joinRoomButton.disabled = false;
+            joinRoomButton.textContent = '加入房间';
+        }
     }
 }
 
@@ -239,9 +341,31 @@ function showError(message) {
 }
 
 /**
+ * 生成临时用户ID（符合后端格式要求）
+ */
+function generateTempUserId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let randomString = '';
+    for (let i = 0; i < 8; i++) {
+        randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `user-${randomString}`;
+}
+
+/**
  * 页面初始化
  */
 async function init() {
+    // 立即生成并显示用户ID（不等待异步操作）
+    const tempUserId = generateTempUserId();
+    const userIdDisplay = document.getElementById('currentUserId');
+    if (userIdDisplay) {
+        userIdDisplay.textContent = tempUserId;
+        console.log('已设置临时用户ID:', tempUserId);
+    } else {
+        console.error('未找到 currentUserId 元素');
+    }
+    
     // 获取房间ID
     const roomId = getRoomIdFromPath();
     
@@ -264,12 +388,79 @@ async function init() {
 
     // 初始化成员列表显示
     updateMembersDisplay();
-
-    // 模拟添加当前用户（在实际应用中，这应该从服务器获取）
-    // 这里使用一个简单的用户ID生成方式
-    const currentUserId = 'user-' + Date.now();
-    const currentUserName = '我';
-    addMember(currentUserId, currentUserName);
+    
+    // 将临时 userId 和 roomId 设置为全局变量（tempUserId 已在函数开始处生成）
+    if (typeof window !== 'undefined') {
+        window.tempUserId = tempUserId;
+        window.currentUserId = null; // 尚未加入房间
+        window.currentUserNickname = null;
+        window.currentRoomId = roomId; // 保存房间ID
+    }
+    
+    // 显示昵称输入界面
+    const nicknameInputContainer = document.getElementById('nicknameInputContainer');
+    const nicknameDisplay = document.getElementById('nicknameDisplay');
+    const joinRoomButton = document.getElementById('joinRoomButton');
+    const changeNicknameButton = document.getElementById('changeNicknameButton');
+    const nicknameInput = document.getElementById('nicknameInput');
+    
+    if (nicknameInputContainer) {
+        nicknameInputContainer.style.display = 'block';
+    }
+    
+    // 加入房间按钮点击事件
+    if (joinRoomButton) {
+        joinRoomButton.addEventListener('click', async () => {
+            await joinRoomWithNickname(roomId, tempUserId, nicknameInput?.value.trim() || '访客');
+        });
+    }
+    
+    // 修改昵称按钮点击事件
+    if (changeNicknameButton) {
+        changeNicknameButton.addEventListener('click', async () => {
+            // 如果用户已加入房间，先离开房间
+            if (window.currentUserId && window.currentRoomId) {
+                try {
+                    await fetch(`${API_BASE}/api/v1/rooms/${window.currentRoomId}/leave`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId: window.currentUserId,
+                        }),
+                    });
+                    
+                    // 从成员列表中移除
+                    removeMember(window.currentUserId);
+                    
+                    // 清除全局变量
+                    window.currentUserId = null;
+                    window.currentUserNickname = null;
+                } catch (error) {
+                    console.error('离开房间错误:', error);
+                }
+            }
+            
+            // 显示输入界面
+            if (nicknameDisplay) nicknameDisplay.style.display = 'none';
+            if (nicknameInputContainer) nicknameInputContainer.style.display = 'block';
+            if (nicknameInput) {
+                nicknameInput.value = window.currentUserNickname || '';
+                nicknameInput.focus();
+            }
+        });
+    }
+    
+    // 昵称输入框回车键事件
+    if (nicknameInput) {
+        nicknameInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                await joinRoomWithNickname(roomId, tempUserId, nicknameInput.value.trim() || '访客');
+            }
+        });
+    }
 
     // 从 URL 参数获取要加载的网页地址
     const url = getUrlParameter('url');
@@ -296,7 +487,20 @@ async function init() {
 
 // 页面加载完成后初始化
 if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', init);
+    // 如果 DOM 已经加载完成，立即执行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        // DOM 已经加载完成，立即执行
+        init();
+    }
+}
+
+/**
+ * 获取成员列表（全局函数，供其他脚本使用）
+ */
+function getMembersList() {
+    return membersList;
 }
 
 // 导出函数供测试使用
@@ -311,9 +515,10 @@ if (typeof module !== 'undefined' && module.exports) {
         removeMember,
         updateMembersDisplay,
         getMemberInitial,
-        getMembersList: () => membersList,
+        getMembersList,
         validateRoom,
         showError,
+        joinRoomWithNickname,
         API_BASE,
     };
 }

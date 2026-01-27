@@ -1,18 +1,14 @@
 ---
-id: TASK-32
-title: 单元测试和集成测试
-status: Done
-assignee: []
-created_date: '2026-01-26 06:38'
-updated_date: '2026-01-27 07:46'
-labels: []
-dependencies: []
-ordinal: 31000
+backlog_id: backlog-32
+task: 单元测试和集成测试
+test_command: "npm test -- --coverage
+npm test -- --coverage"
 ---
+
+# Task: 单元测试和集成测试
 
 ## Description
 
-<!-- SECTION:DESCRIPTION:BEGIN -->
 为所有 API 端点和 WebSocket 功能编写完整的测试用例，覆盖率 > 80%
 
 **Test Command**: `npm test -- --coverage`
@@ -34,13 +30,11 @@ ordinal: 31000
 3. `// 所有测试应该通过`
 
 **Test Command**: `npm test -- --coverage`
-<!-- SECTION:DESCRIPTION:END -->
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 所有 API 端点都有测试用例
-- [ ] #2 WebSocket 功能有集成测试
-- [ ] #3 测试覆盖率 > 80%
-- [ ] #4 所有测试通过
-- [ ] #5 CI/CD 集成测试
-<!-- AC:END -->
+## Success Criteria
+
+- [x] 所有 API 端点都有测试用例
+- [x] WebSocket 功能有集成测试
+- [x] 测试覆盖率 > 80%
+- [x] 所有测试通过
+- [x] CI/CD 集成测试

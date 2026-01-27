@@ -2,11 +2,11 @@ version: '3.8'
 
 services:
   # API 服务器
-  api:
+  watch-together-server:
     build:
       context: ./watch-together-server
       dockerfile: Dockerfile
-    container_name: watch-together-api
+    container_name: watch-together-server
     ports:
       - "3000:3000"
     environment:
@@ -40,6 +40,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      # 浏览器中访问后端 API 需要使用 localhost（因为端口已映射到主机）
+      - API_BASE_URL=http://localhost:3000
+      - WS_BASE_URL=ws://localhost:3000
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]

@@ -3,9 +3,11 @@
  */
 
 // API 基础 URL（可以根据环境配置）
-// 在 Node.js 环境中使用环境变量，在浏览器中使用默认值
-let API_BASE = 'http://localhost:3001';
-if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
+// 优先使用 window 对象中的配置（由服务器注入）
+let API_BASE = 'http://localhost:3000'; // 默认使用后端 API 端口
+if (typeof window !== 'undefined' && window.API_BASE_URL) {
+    API_BASE = window.API_BASE_URL;
+} else if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
     API_BASE = process.env.API_BASE;
 }
 
@@ -14,26 +16,45 @@ if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
  */
 async function createRoom(roomName, hostNickname) {
     try {
-        const response = await fetch(`${API_BASE}/api/rooms`, {
+        // 构建请求体，只包含非空字段
+        const requestBody = {};
+        if (roomName && roomName.trim()) {
+            requestBody.name = roomName.trim();
+        }
+        if (hostNickname && hostNickname.trim()) {
+            requestBody.hostNickname = hostNickname.trim();
+        }
+        
+        const response = await fetch(`${API_BASE}/api/v1/rooms`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                name: roomName || undefined,
-                hostNickname: hostNickname || undefined,
-            }),
+            body: JSON.stringify(requestBody),
         });
+
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            // 如果不是 JSON 响应（可能是 HTML 错误页面），抛出更友好的错误
+            const text = await response.text();
+            console.error('API 返回非 JSON 响应:', text.substring(0, 200));
+            throw new Error(`服务器错误 (${response.status}): 请检查 API 地址是否正确 (${API_BASE})`);
+        }
 
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-            throw new Error(data.error?.message || '创建房间失败');
+            throw new Error(data.error?.message || `创建房间失败 (${response.status})`);
         }
 
         return data.data;
     } catch (error) {
         console.error('创建房间错误:', error);
+        // 如果是网络错误，提供更友好的提示
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            throw new Error('无法连接到服务器，请检查网络连接和 API 地址');
+        }
         throw error;
     }
 }
