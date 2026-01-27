@@ -67,6 +67,11 @@ function updateMembersDisplay() {
         emptyItem.textContent = '暂无成员';
         membersListEl.appendChild(emptyItem);
     } else {
+        // 获取当前操作来源用户ID（如果 operation-source.js 已加载）
+        const currentOperationSourceUserId = typeof getCurrentOperationSourceUserId === 'function' 
+            ? getCurrentOperationSourceUserId() 
+            : null;
+
         // 显示成员列表
         membersList.forEach(member => {
             const memberItem = document.createElement('li');
@@ -77,15 +82,118 @@ function updateMembersDisplay() {
             avatar.className = 'member-avatar';
             avatar.textContent = getMemberInitial(member.name);
 
+            const nameContainer = document.createElement('div');
+            nameContainer.style.display = 'flex';
+            nameContainer.style.alignItems = 'center';
+            nameContainer.style.gap = '8px';
+            nameContainer.style.flex = '1';
+
             const name = document.createElement('div');
             name.className = 'member-name';
             name.textContent = member.name;
 
+            // 显示操作来源标记
+            if (currentOperationSourceUserId === member.id) {
+                const badge = document.createElement('span');
+                badge.textContent = '操作来源';
+                badge.style.fontSize = '0.75em';
+                badge.style.color = '#4a9eff';
+                badge.style.padding = '2px 6px';
+                badge.style.background = 'rgba(74, 158, 255, 0.2)';
+                badge.style.borderRadius = '4px';
+                nameContainer.appendChild(name);
+                nameContainer.appendChild(badge);
+            } else {
+                nameContainer.appendChild(name);
+            }
+
             memberItem.appendChild(avatar);
-            memberItem.appendChild(name);
+            memberItem.appendChild(nameContainer);
             membersListEl.appendChild(memberItem);
+
+            // 如果是房主，添加右键菜单
+            if (window.isHost && member.id !== window.currentUserId) {
+                memberItem.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    showMemberContextMenu(e, member.id, currentOperationSourceUserId === member.id);
+                });
+            }
         });
     }
+}
+
+/**
+ * 显示成员右键菜单
+ */
+function showMemberContextMenu(event, memberId, isOperationSource) {
+    // 移除旧的菜单（如果存在）
+    const oldMenu = document.getElementById('memberContextMenu');
+    if (oldMenu) {
+        oldMenu.remove();
+    }
+
+    // 创建菜单
+    const menu = document.createElement('div');
+    menu.id = 'memberContextMenu';
+    menu.style.position = 'fixed';
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+    menu.style.background = '#2d2d2d';
+    menu.style.border = '1px solid #404040';
+    menu.style.borderRadius = '6px';
+    menu.style.padding = '8px 0';
+    menu.style.zIndex = '10000';
+    menu.style.minWidth = '150px';
+    menu.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+
+    // 创建菜单项
+    const menuItem = document.createElement('div');
+    menuItem.style.padding = '8px 16px';
+    menuItem.style.cursor = 'pointer';
+    menuItem.style.color = '#fff';
+    menuItem.style.fontSize = '0.9em';
+    menuItem.style.transition = 'background 0.2s';
+    
+    if (isOperationSource) {
+        menuItem.textContent = '取消操作来源';
+        menuItem.addEventListener('click', async () => {
+            const result = await clearOperationSource(window.currentRoomId, window.currentUserId);
+            if (!result.success) {
+                alert('取消操作来源失败：' + (result.error || '请稍后重试'));
+            }
+            menu.remove();
+        });
+    } else {
+        menuItem.textContent = '设为操作来源';
+        menuItem.addEventListener('click', async () => {
+            const result = await setOperationSource(window.currentRoomId, window.currentUserId, memberId);
+            if (!result.success) {
+                alert('设置操作来源失败：' + (result.error || '请稍后重试'));
+            }
+            menu.remove();
+        });
+    }
+
+    menuItem.addEventListener('mouseenter', () => {
+        menuItem.style.background = '#3a3a3a';
+    });
+    menuItem.addEventListener('mouseleave', () => {
+        menuItem.style.background = 'transparent';
+    });
+
+    menu.appendChild(menuItem);
+    document.body.appendChild(menu);
+
+    // 点击其他地方关闭菜单
+    const closeMenu = (e) => {
+        if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        }
+    };
+    setTimeout(() => {
+        document.addEventListener('click', closeMenu);
+    }, 100);
 }
 
 /**

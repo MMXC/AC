@@ -154,6 +154,14 @@ export const updateRoomUrlSchema = z.object({
   userId: userIdSchema,
 });
 
+/**
+ * POST /api/v1/rooms/:roomId/operation-source - 设置/取消操作来源成员
+ */
+export const setOperationSourceSchema = z.object({
+  userId: userIdSchema, // 调用者的 userId（用于验证是否为房主）
+  operationSourceUserId: userIdSchema.nullable().optional(), // 要设置为操作来源的成员 userId，null 表示取消
+});
+
 // ==================== 查询参数 Schemas ====================
 
 /**

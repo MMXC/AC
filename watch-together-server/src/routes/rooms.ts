@@ -15,6 +15,7 @@ import {
   updateRoomUrlSchema,
   getMessagesQuerySchema,
   roomIdParamSchema,
+  setOperationSourceSchema,
 } from '../validation/schemas';
 import { getRoomCacheService, RoomCacheData } from '../services/roomCache';
 import { broadcastToRoom } from '../websocket';
@@ -1067,6 +1068,119 @@ router.put(
           currentUrl: updatedRoom.currentUrl,
           inviteLink: updatedRoom.inviteLink,
           createdAt: updatedRoom.createdAt.toISOString(),
+          updatedAt: updatedRoom.updatedAt.toISOString(),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/v1/rooms/:roomId/operation-source
+ * 设置/取消操作来源成员（仅房主可调用）
+ *
+ * 路径参数：
+ * - roomId: string - 房间 ID
+ *
+ * 请求体：
+ * {
+ *   userId: string,                    // 调用者的 userId（用于验证是否为房主）
+ *   operationSourceUserId: string | null  // 要设置为操作来源的成员 userId，null 表示取消
+ * }
+ *
+ * 响应（成功）：
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,
+ *     operationSourceUserId: string | null,
+ *     updatedAt: string
+ *   }
+ * }
+ *
+ * 响应（失败 - 非房主）：
+ * {
+ *   success: false,
+ *   error: "Forbidden",
+ *   message: "Only host can set operation source"
+ * }
+ */
+router.post(
+  '/:roomId/operation-source',
+  validateParams(roomIdParamSchema),
+  validateBody(setOperationSourceSchema),
+  async (req: Request, res: Response, next): Promise<void> => {
+    try {
+      const validatedParams = (req as Request & { validatedParams: { roomId: string } }).validatedParams;
+      const roomId = validatedParams.roomId;
+      const { userId, operationSourceUserId } = req.body;
+
+      const prisma = getPrismaClient();
+
+      // 检查房间是否存在且未删除
+      const room = await prisma.room.findFirst({
+        where: {
+          id: roomId,
+          deletedAt: null,
+        },
+      });
+
+      if (!room) {
+        throw createHttpError(404, ErrorCode.NOT_FOUND, 'Room not found');
+      }
+
+      // 仅允许房主设置操作来源
+      if (userId !== room.hostId) {
+        throw createHttpError(403, ErrorCode.FORBIDDEN, 'Only host can set operation source');
+      }
+
+      // 如果要设置操作来源，验证该成员是否在房间中且未离开
+      if (operationSourceUserId !== null && operationSourceUserId !== undefined) {
+        const targetMember = await prisma.roomMember.findFirst({
+          where: {
+            roomId: roomId,
+            userId: operationSourceUserId,
+            leftAt: null, // 只查找未离开的成员
+          },
+        });
+
+        if (!targetMember) {
+          throw createHttpError(404, ErrorCode.NOT_FOUND, 'Target user not found in room or has left');
+        }
+      }
+
+      // 更新房间的操作来源
+      const updatedRoom = await prisma.room.update({
+        where: {
+          id: roomId,
+        },
+        data: {
+          operationSourceUserId: operationSourceUserId || null,
+        },
+      });
+
+      // 失效房间缓存
+      const roomCacheService = getRoomCacheService();
+      await roomCacheService.invalidateRoom(roomId);
+
+      // 通过 WebSocket 广播操作来源变更消息给房间内的所有成员
+      const broadcastMessage = {
+        type: 'OPERATION_SOURCE_CHANGED',
+        data: {
+          operationSourceUserId: updatedRoom.operationSourceUserId,
+          timestamp: Date.now(),
+        },
+      };
+      broadcastToRoom(roomId, broadcastMessage);
+
+      // 返回成功响应
+      res.status(200).json({
+        success: true,
+        data: {
+          id: updatedRoom.id,
+          operationSourceUserId: updatedRoom.operationSourceUserId,
           updatedAt: updatedRoom.updatedAt.toISOString(),
         },
       });

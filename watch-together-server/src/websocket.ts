@@ -360,6 +360,7 @@ function stopHeartbeat(connection: WebSocketConnection): void {
  */
 interface RoomState {
   currentUrl: string | null;
+  operationSourceUserId: string | null;
   members: Array<{
     userId: string;
     nickname: string;
@@ -385,11 +386,12 @@ async function getRoomState(roomId: string): Promise<RoomState> {
   try {
     const prisma = getPrismaClient();
 
-    // 获取房间信息（包含当前 URL）
+    // 获取房间信息（包含当前 URL 和操作来源）
     const room = await prisma.room.findUnique({
       where: { id: roomId },
       select: {
         currentUrl: true,
+        operationSourceUserId: true,
       },
     });
 
@@ -435,6 +437,7 @@ async function getRoomState(roomId: string): Promise<RoomState> {
     // 格式化状态数据
     const state: RoomState = {
       currentUrl: room.currentUrl,
+      operationSourceUserId: room.operationSourceUserId,
       members: members.map(member => ({
         userId: member.userId,
         nickname: member.nickname,
@@ -458,6 +461,7 @@ async function getRoomState(roomId: string): Promise<RoomState> {
     // 返回空状态而不是抛出错误
     return {
       currentUrl: null,
+      operationSourceUserId: null,
       members: [],
       recentMessages: [],
     };
@@ -587,6 +591,24 @@ interface UrlChangeRequest {
 }
 
 /**
+ * OP_SOURCE_OPERATION 消息请求接口
+ */
+interface OpSourceOperationRequest {
+  type: 'OP_SOURCE_OPERATION';
+  userId: string;
+  operation: {
+    type: 'click' | 'drag' | 'scroll' | 'keydown' | 'keyup';
+    x?: number;
+    y?: number;
+    deltaX?: number;
+    deltaY?: number;
+    key?: string;
+    button?: number;
+    timestamp: number;
+  };
+}
+
+/**
  * 验证聊天消息格式
  *
  * @param message 消息对象
@@ -666,6 +688,156 @@ function validateUrlChangeMessage(message: any): string | null {
   }
 
   return null;
+}
+
+/**
+ * 验证 OP_SOURCE_OPERATION 消息格式
+ *
+ * @param message 消息对象
+ * @returns 验证错误信息，如果通过则返回 null
+ */
+function validateOpSourceOperationMessage(message: any): string | null {
+  // 验证必需字段
+  if (!message.userId || typeof message.userId !== 'string') {
+    return 'userId is required and must be a string';
+  }
+
+  if (!message.operation || typeof message.operation !== 'object') {
+    return 'operation is required and must be an object';
+  }
+
+  const op = message.operation;
+
+  // 验证操作类型
+  const validOperationTypes = ['click', 'drag', 'scroll', 'keydown', 'keyup'];
+  if (!op.type || !validOperationTypes.includes(op.type)) {
+    return `operation.type must be one of: ${validOperationTypes.join(', ')}`;
+  }
+
+  // 验证时间戳
+  if (!op.timestamp || typeof op.timestamp !== 'number') {
+    return 'operation.timestamp is required and must be a number';
+  }
+
+  // 根据操作类型验证特定字段
+  if (op.type === 'click' || op.type === 'drag') {
+    if (typeof op.x !== 'number' || typeof op.y !== 'number') {
+      return `operation.x and operation.y are required for ${op.type} operation`;
+    }
+  }
+
+  if (op.type === 'scroll') {
+    if (typeof op.deltaX !== 'number' || typeof op.deltaY !== 'number') {
+      return 'operation.deltaX and operation.deltaY are required for scroll operation';
+    }
+  }
+
+  if (op.type === 'keydown' || op.type === 'keyup') {
+    if (!op.key || typeof op.key !== 'string') {
+      return `operation.key is required for ${op.type} operation`;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 处理 OP_SOURCE_OPERATION 消息
+ * 将操作来源成员的操作转发给房主
+ *
+ * @param ws WebSocket 连接
+ * @param message 消息对象
+ * @param roomId 房间 ID
+ * @param userId 用户 ID（发送者）
+ */
+async function handleOpSourceOperation(
+  ws: WebSocket,
+  message: OpSourceOperationRequest,
+  roomId: string,
+  userId: string
+): Promise<void> {
+  try {
+    // 验证消息格式
+    const validationError = validateOpSourceOperationMessage(message);
+    if (validationError) {
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: validationError,
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 获取房间信息
+    const prisma = getPrismaClient();
+    const room = await prisma.room.findFirst({
+      where: {
+        id: roomId,
+        deletedAt: null,
+      },
+    });
+
+    if (!room) {
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: 'Room not found',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 验证发送者是否为当前的操作来源成员
+    if (room.operationSourceUserId !== userId) {
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: 'You are not the operation source member',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 获取房主连接
+    const roomConnections = connections.get(roomId);
+    if (!roomConnections) {
+      wsLogger.warn({ roomId }, 'No connections found for room');
+      return;
+    }
+
+    const hostConnection = roomConnections.get(room.hostId);
+    if (!hostConnection || hostConnection.ws.readyState !== WebSocket.OPEN) {
+      wsLogger.warn({ roomId, hostId: room.hostId }, 'Host connection not found or not open');
+      return;
+    }
+
+    // 转发操作消息给房主
+    hostConnection.ws.send(
+      JSON.stringify({
+        type: 'OP_SOURCE_OPERATION',
+        data: {
+          userId: userId,
+          operation: message.operation,
+          timestamp: Date.now(),
+        },
+      })
+    );
+
+    wsLogger.debug({ roomId, userId, operationType: message.operation.type }, 'Forwarded OP_SOURCE_OPERATION to host');
+  } catch (error) {
+    wsLogger.error({ err: error as Error, roomId, userId }, 'Error handling OP_SOURCE_OPERATION');
+    ws.send(
+      JSON.stringify({
+        type: 'ERROR',
+        error: 'Internal server error',
+        timestamp: new Date().toISOString(),
+      })
+    );
+  }
 }
 
 /**
@@ -1126,6 +1298,12 @@ async function handleConnection(ws: WebSocket, req: { url?: string; headers?: { 
         // 处理 URL_CHANGE 消息
         if (message.type === 'URL_CHANGE') {
           await handleUrlChange(ws, message as UrlChangeRequest, roomId, userId);
+          return;
+        }
+
+        // 处理 OP_SOURCE_OPERATION 消息
+        if (message.type === 'OP_SOURCE_OPERATION') {
+          await handleOpSourceOperation(ws, message as OpSourceOperationRequest, roomId, userId);
           return;
         }
 

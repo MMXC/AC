@@ -155,6 +155,12 @@ function handleWebSocketMessage(message) {
             } else {
                 console.log('SYNC_STATE 消息中没有 recentMessages');
             }
+            // 初始化操作来源状态
+            if (message.data && typeof handleOperationSourceChanged === 'function') {
+                handleOperationSourceChanged({
+                    operationSourceUserId: message.data.operationSourceUserId || null,
+                });
+            }
             break;
 
         case 'CHAT_MESSAGE':
@@ -178,6 +184,22 @@ function handleWebSocketMessage(message) {
         case 'MEMBER_LEFT':
             // 成员变化，可以显示系统消息（可选）
             console.log('成员变化:', message.type, message.data);
+            break;
+
+        case 'OPERATION_SOURCE_CHANGED':
+            // 操作来源变更
+            console.log('操作来源变更:', message.data);
+            if (typeof handleOperationSourceChanged === 'function') {
+                handleOperationSourceChanged(message.data);
+            }
+            break;
+
+        case 'OP_SOURCE_OPERATION':
+            // 操作来源操作消息（仅房主接收）
+            console.log('收到操作来源操作:', message.data);
+            if (window.isHost && typeof simulateOperationInIframe === 'function') {
+                simulateOperationInIframe(message.data.operation);
+            }
             break;
             
         default:
