@@ -2349,3 +2349,22 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-28 01:12:05
 **Session 1 started** (model: auto)
+
+### 2026-01-28 [current time]
+**Session 1 completed** - 修复成员列表显示问题
+- 修复了 chat.js 中 SYNC_STATE 消息处理，添加了成员列表同步逻辑
+- 修复了 chat.js 中 MEMBER_JOINED 消息处理，调用 addMember 函数更新成员列表
+- 修复了 chat.js 中 MEMBER_LEFT 消息处理，调用 removeMember 函数更新成员列表
+- 在 room.js 中将 addMember、removeMember、getMembersList、updateMembersDisplay 函数暴露到全局作用域（window 对象），供其他脚本使用
+- 优化了 SYNC_STATE 消息处理逻辑，确保成员列表完整同步（包括同 IP 多个标签页的情况）
+- 所有测试通过（31个测试全部通过）
+- 实现了所有成功标准：
+  ✓ WebSocket MEMBER_JOINED 事件正确触发
+  ✓ 成员列表正确更新，显示所有已加入的成员
+  ✓ 同 IP 多个标签页的成员都能正确显示
+  ✓ 成员离开时正确从列表移除
+  ✓ 成员列表 UI 正确渲染
+- 提交了更改到 git
+
+### 2026-01-28 01:16:34
+**Session 1 ended** - ✅ TASK COMPLETE

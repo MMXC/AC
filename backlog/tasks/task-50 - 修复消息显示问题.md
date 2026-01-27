@@ -1,9 +1,10 @@
 ---
 id: TASK-50
 title: 修复消息显示问题
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 15:49'
+updated_date: '2026-01-27 17:41'
 labels: []
 dependencies: []
 ---
