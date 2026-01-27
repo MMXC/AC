@@ -1,9 +1,10 @@
 ---
 id: TASK-35
 title: 共享区域操作同步
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 07:53'
+updated_date: '2026-01-27 08:06'
 labels: []
 dependencies: []
 ---

@@ -1,21 +1,21 @@
 ---
-backlog_id: backlog-34
-task: 实时聊天功能
-test_command: "npm test -- --testNamePattern='实时聊天'"
+backlog_id: backlog-35
+task: 共享区域操作同步
+test_command: "npm test -- --testNamePattern='操作同步'"
 ---
 
-# Task: 实时聊天功能
+# Task: 共享区域操作同步
 
 ## Description
 
-实现房间内的实时聊天功能，成员可以发送消息
+实现共享浏览区域的操作同步，成员的操作（滚动、点击等）同步给其他成员
 
-**Test Command**: `npm test -- --testNamePattern='实时聊天'`
+**Test Command**: `npm test -- --testNamePattern='操作同步'`
 
 ## Success Criteria
 
-- [x] 聊天界面可以正常显示
-- [x] 可以发送消息
-- [x] 消息实时同步给所有成员
-- [x] 消息显示发送者信息
-- [x] 消息历史记录正确保存
+- [ ] 可以捕获 iframe 内的操作事件
+- [ ] 操作事件可以发送到服务器
+- [ ] 操作可以同步给其他成员
+- [ ] 滚动位置可以同步
+- [ ] URL 变化可以同步

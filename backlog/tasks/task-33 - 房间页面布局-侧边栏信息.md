@@ -1,12 +1,13 @@
 ---
 id: TASK-33
 title: 房间页面布局 - 侧边栏信息
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-27 07:52'
-updated_date: '2026-01-27 07:53'
+updated_date: '2026-01-27 08:03'
 labels: []
 dependencies: []
+ordinal: 33000
 ---
 
 ## Description
