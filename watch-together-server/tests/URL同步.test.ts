@@ -685,10 +685,10 @@ describe('URL同步', () => {
       ws.close();
     });
 
-    it('不同用户更改 URL 时，changedBy 字段应该正确', async () => {
+    it('非房主尝试更改 URL 时，不会产生 URL_CHANGED，且收到 ERROR', async () => {
       const port = (httpServer.address() as { port: number }).port;
 
-      // 连接两个用户
+      // 连接两个用户（房主和普通成员）
       const hostWs = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testHostId}`);
       const user1Ws = new WebSocket(`ws://localhost:${port}/ws?roomId=${testRoomId}&userId=${testUserId1}`);
 
@@ -701,7 +701,7 @@ describe('URL同步', () => {
         }),
       ]);
 
-      // 跳过初始消息
+      // 跳过初始 CONNECTED + SYNC_STATE 消息
       await Promise.all([
         new Promise<void>(resolve => {
           let messageCount = 0;
@@ -726,40 +726,61 @@ describe('URL同步', () => {
       // 等待成员加入完成
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 从 user1 发送 URL_CHANGE
-      const testUrl = `https://user1-changed-${Date.now()}.com`;
-      const urlChangeMessage = {
-        type: 'URL_CHANGE',
-        userId: testUserId1,
-        url: testUrl,
-      };
-
-      user1Ws.send(JSON.stringify(urlChangeMessage));
-
-      // 收集消息
       const hostMessages: any[] = [];
       hostWs.on('message', data => {
         try {
           const message = JSON.parse(data.toString());
           hostMessages.push(message);
-        } catch (error) {
-          // 忽略解析错误
+        } catch {
+          // ignore
         }
       });
 
-      // 等待消息广播
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const errorPromise = new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Expected ERROR message from non-host URL_CHANGE'));
+        }, 10000);
 
-      // 验证 host 收到的消息中 changedBy 是 user1
+        user1Ws.on('message', data => {
+          try {
+            const message = JSON.parse(data.toString());
+            if (message.type === 'ERROR') {
+              clearTimeout(timeout);
+              resolve(message);
+            }
+          } catch {
+            // ignore
+          }
+        });
+
+        user1Ws.on('error', err => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+      });
+
+      // 从普通成员发送 URL_CHANGE
+      const testUrl = `https://user1-should-not-change-${Date.now()}.com`;
+      user1Ws.send(
+        JSON.stringify({
+          type: 'URL_CHANGE',
+          userId: testUserId1,
+          url: testUrl,
+        })
+      );
+
+      const errorMessage = await errorPromise;
+
+      expect(errorMessage.type).toBe('ERROR');
+      expect(String(errorMessage.error)).toContain('Only host');
+
+      // 等待一段时间，确认房主侧未收到 URL_CHANGED
+      await new Promise(resolve => setTimeout(resolve, 2000));
       const urlChangedMessage = hostMessages.find(
         (msg: any) => msg.type === 'URL_CHANGED' && msg.data.url === testUrl
       );
+      expect(urlChangedMessage).toBeUndefined();
 
-      expect(urlChangedMessage).toBeDefined();
-      expect(urlChangedMessage.data.changedBy.userId).toBe(testUserId1);
-      expect(urlChangedMessage.data.changedBy.nickname).toBe('Test User 1');
-
-      // 关闭连接
       hostWs.close();
       user1Ws.close();
     });

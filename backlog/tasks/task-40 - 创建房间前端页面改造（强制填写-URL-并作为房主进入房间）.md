@@ -1,9 +1,10 @@
 ---
 id: TASK-40
 title: 创建房间前端页面改造（强制填写 URL 并作为房主进入房间）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 09:43'
+updated_date: '2026-01-27 13:27'
 labels: []
 dependencies: []
 ---

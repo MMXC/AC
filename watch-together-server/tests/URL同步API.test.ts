@@ -202,7 +202,7 @@ describe('URL同步', () => {
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('NOT_FOUND');
-      expect(response.body.message).toContain('Room not found');
+      expect(response.body.error.message).toContain('Room not found');
     });
 
     it('如果用户不在房间中返回 404', async () => {
@@ -217,7 +217,7 @@ describe('URL同步', () => {
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('NOT_FOUND');
-      expect(response.body.message).toContain('User not found in room');
+      expect(response.body.error.message).toContain('User not found in room');
     });
 
     it('应该记录 URL 变更事件到 RoomEvent 表', async () => {
@@ -259,7 +259,11 @@ describe('URL同步', () => {
       }
     });
 
-    it('普通成员也可以更新 URL', async () => {
+    it('普通成员不可以更新 URL，应该返回 403，且 URL 不被修改', async () => {
+      const originalRoom = await prisma.room.findUnique({
+        where: { id: testRoomId },
+      });
+
       const newUrl = `https://member-update-${Date.now()}.com`;
       const response = await request(app)
         .put(`/api/v1/rooms/${testRoomId}/url`)
@@ -268,9 +272,19 @@ describe('URL同步', () => {
           userId: testUserId,
         });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.currentUrl).toBe(newUrl);
+      expect(response.status).toBe(403);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('FORBIDDEN');
+      expect(response.body.error.message).toContain('Only host');
+
+      const roomAfter = await prisma.room.findUnique({
+        where: { id: testRoomId },
+      });
+
+      expect(roomAfter).toBeDefined();
+      if (originalRoom) {
+        expect(roomAfter?.currentUrl).toBe(originalRoom.currentUrl);
+      }
     });
 
     it('缺少 url 字段应该返回 400', async () => {

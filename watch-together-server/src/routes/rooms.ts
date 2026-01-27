@@ -511,33 +511,18 @@ router.post(
         throw createHttpError(404, ErrorCode.NOT_FOUND, 'Room not found');
       }
 
-      // 生成新的用户 ID
+      // 为每次加入生成新的用户 ID
       const userId = generateUserId();
 
-      // 检查房间是否已经有活跃成员
-      const existingMembers = await prisma.roomMember.findMany({
-        where: {
-          roomId: roomId,
-          leftAt: null, // 只查找未离开的成员
-        },
-      });
-
-      // 检查房间的 hostId 是否已经有对应的活跃成员
-      const existingHostMember = existingMembers.find(m => m.userId === room.hostId);
-
-      // 判断用户是否是房主：
-      // 1. 如果房间没有活跃成员，说明这是第一个通过 /join API 加入的用户，应该是房主
-      // 2. 如果房间的 hostId 没有对应的活跃成员（房主离开了），第一个重新加入的用户应该是房主
-      // 这符合需求："只有第一个加入的成员需要输入后跟随iframe url地址"
-      const isHost = existingMembers.length === 0 || !existingHostMember;
-
-      // 创建成员记录
+      // 根据最新角色模型，/join 接口只负责创建普通成员记录：
+      // - 房主永远由 Room.hostId 指定
+      // - 通过 /join 创建的成员 isHost 始终为 false
       const member = await prisma.roomMember.create({
         data: {
           roomId: roomId,
           userId: userId,
           nickname: nickname,
-          isHost: isHost,
+          isHost: false,
         },
       });
 
@@ -548,7 +533,8 @@ router.post(
           userId: member.userId,
           roomId: member.roomId,
           nickname: member.nickname,
-          isHost: isHost,
+          // 当前成员在 /join 语义下永远为非房主
+          isHost: false,
           room: {
             id: room.id,
             name: room.name,
@@ -1015,7 +1001,7 @@ router.put(
         throw createHttpError(404, ErrorCode.NOT_FOUND, 'Room not found');
       }
 
-      // 检查用户是否存在且未离开（可选：验证用户权限）
+      // 检查用户是否存在且未离开
       const member = await prisma.roomMember.findFirst({
         where: {
           roomId: roomId,
@@ -1026,6 +1012,11 @@ router.put(
 
       if (!member) {
         throw createHttpError(404, ErrorCode.NOT_FOUND, 'User not found in room or has left');
+      }
+
+      // 仅允许房主更新房间 URL
+      if (userId !== room.hostId) {
+        throw createHttpError(403, ErrorCode.FORBIDDEN, 'Only host can update room URL');
       }
 
       // 更新房间 URL

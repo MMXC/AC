@@ -739,6 +739,18 @@ async function handleUrlChange(
       return;
     }
 
+    // 仅允许房主通过 WebSocket 修改 URL
+    if (userId !== room.hostId) {
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: 'Only host can change URL',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
     // 获取用户信息（用于 changedBy 字段）
     const member = await prisma.roomMember.findFirst({
       where: {
