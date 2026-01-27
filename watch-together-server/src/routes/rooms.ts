@@ -98,15 +98,20 @@ router.post(
   validateBody(createRoomSchema),
   async (req: Request, res: Response, next): Promise<void> => {
     try {
-      const { name, hostNickname } = req.body;
+      const { name, hostNickname, url } = req.body as {
+        name?: string;
+        hostNickname?: string;
+        url: string;
+      };
 
       const prisma = getPrismaClient();
 
       // 生成房间 ID 和房主 ID
       const roomId = generateRoomId();
-      const hostId = generateUserId();
+      const hostUserId = generateUserId();
       const roomName = name || '未命名房间';
       const hostNicknameValue = hostNickname || '房主'; // 确保有默认值
+      const initialUrl = url;
       const inviteLink = `/room/${roomId}`;
 
       // 创建房间和房主成员记录（使用事务确保数据一致性）
@@ -116,16 +121,22 @@ router.post(
           data: {
             id: roomId,
             name: roomName,
-            hostId: hostId,
+            hostId: hostUserId,
+            currentUrl: initialUrl,
             inviteLink: inviteLink,
           },
         });
+
+        // 在测试环境下，使用特殊房间名称触发事务失败以验证回滚行为
+        if (process.env.NODE_ENV === 'test' && room.name === '__TRANSACTION_TEST__') {
+          throw new Error('Simulated transaction failure for testing');
+        }
 
         // 创建房主成员记录
         await tx.roomMember.create({
           data: {
             roomId: roomId,
-            userId: hostId,
+            userId: hostUserId,
             nickname: hostNicknameValue,
             isHost: true,
           },
@@ -138,11 +149,16 @@ router.post(
       res.status(201).json({
         success: true,
         data: {
+          // 向后兼容的旧字段
           id: result.id,
           name: result.name,
           hostId: result.hostId,
           hostNickname: hostNicknameValue,
           createdAt: result.createdAt.toISOString(),
+          // 新增字段，方便前端直接使用
+          roomId: result.id,
+          hostUserId: hostUserId,
+          currentUrl: result.currentUrl,
           inviteLink: result.inviteLink,
         },
       });

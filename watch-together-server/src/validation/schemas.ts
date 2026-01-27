@@ -104,13 +104,17 @@ export const offsetSchema = z
  * POST /api/v1/rooms - 创建房间
  */
 export const createRoomSchema = z.object({
+  // 房间名称（可选）
   name: roomNameSchema,
+  // 房主昵称（可选，如果为空或未提供，使用默认值“房主”）
   hostNickname: z
     .string()
     .trim()
     .max(100, 'nickname must be a string with maximum 100 characters')
     .optional()
-    .transform(val => val && val.length > 0 ? val : '房主'), // 如果为空或未提供，使用默认值
+    .transform(val => (val && val.length > 0 ? val : '房主')),
+  // 初始共享 URL（必填，必须是有效的 HTTP/HTTPS URL）
+  url: urlSchema,
 });
 
 /**

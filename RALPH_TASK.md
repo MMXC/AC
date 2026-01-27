@@ -17,7 +17,7 @@ cd watch-together-server && npm test -- rooms-create"
 
 ## Success Criteria
 
-- [ ] 不提供 URL 或 URL 非 http/https 时，接口返回 400 且错误信息清晰。
-- [ ] 提供合法 URL 时，Room 记录中 currentUrl 与 hostId 正确写入。
-- [ ] 同一事务内成功创建房间与房主成员记录，失败时不留下部分脏数据。
-- [ ] 接口响应体包含 roomId、hostUserId、currentUrl、inviteLink 字段，并通过已有集成测试校验。
+- [x] 不提供 URL 或 URL 非 http/https 时，接口返回 400 且错误信息清晰。
+- [x] 提供合法 URL 时，Room 记录中 currentUrl 与 hostId 正确写入。
+- [x] 同一事务内成功创建房间与房主成员记录，失败时不留下部分脏数据。
+- [x] 接口响应体包含 roomId、hostUserId、currentUrl、inviteLink 字段，并通过已有集成测试校验。
