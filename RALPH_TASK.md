@@ -17,7 +17,7 @@ cd watch-together-server && npm test -- security && cd ../watch-together && npm 
 
 ## Success Criteria
 
-- [ ] 用 curl 或自制脚本伪造非房主请求关键接口均被拒绝（403 或 ERROR）。
-- [ ] WebSocket 在 1008 情况下不会无限重连，前端有清晰提示。
-- [ ] 多 tab / 多设备同时访问同一房间时，系统行为可预期且不会压垮后端。
-- [ ] TASK_VERIFICATION.md 中有对应验证步骤说明，便于回归测试。
+- [x] 用 curl 或自制脚本伪造非房主请求关键接口均被拒绝（403 或 ERROR）。
+- [x] WebSocket 在 1008 情况下不会无限重连，前端有清晰提示。
+- [x] 多 tab / 多设备同时访问同一房间时，系统行为可预期且不会压垮后端。
+- [x] TASK_VERIFICATION.md 中有对应验证步骤说明，便于回归测试。

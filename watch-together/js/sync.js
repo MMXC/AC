@@ -106,9 +106,24 @@ function connectSyncWebSocket() {
 
     syncWs.onclose = (event) => {
         console.log('操作同步 WebSocket 连接已关闭', event.code, event.reason);
-        // 如果是因为连接数限制而关闭（1008），不要重连
+        // 如果是因为连接数限制而关闭（1008），不要重连并显示错误提示
         if (event.code === 1008) {
             console.error('操作同步 WebSocket 连接因连接数限制而关闭，停止重连');
+            // 显示用户友好的错误提示
+            const errorMessage = event.reason || '连接过多，请关闭多余页面后刷新';
+            if (typeof showError === 'function') {
+                showError(`操作同步连接失败：${errorMessage}`);
+            } else {
+                // 如果没有 showError 函数，直接显示错误区域
+                const errorDiv = document.getElementById('error');
+                const errorMessageEl = document.getElementById('errorMessage');
+                if (errorDiv && errorMessageEl) {
+                    errorDiv.style.display = 'block';
+                    errorMessageEl.textContent = `操作同步连接失败：${errorMessage}`;
+                } else {
+                    alert(`操作同步连接失败：${errorMessage}`);
+                }
+            }
             return;
         }
         // 只有在用户已加入房间且不是主动关闭的情况下才重连
