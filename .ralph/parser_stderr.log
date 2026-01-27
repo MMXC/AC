@@ -67,3 +67,7 @@ C: Connection stalled
 [21:16:55] cursor-agent exited with code: 1
 C: WritableIterable is closed
 [04:15:29] cursor-agent exited with code: 1
+C: [unavailable] Error
+[18:05:02] cursor-agent exited with code: 1
+C: [unavailable] Error
+[18:06:02] cursor-agent exited with code: 1

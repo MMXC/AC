@@ -97,6 +97,7 @@ describe('数据库迁移测试', () => {
       expect(columnNames).toContain('name');
       expect(columnNames).toContain('hostId');
       expect(columnNames).toContain('currentUrl');
+      expect(columnNames).toContain('operationSourceUserId');
       expect(columnNames).toContain('inviteLink');
       expect(columnNames).toContain('createdAt');
       expect(columnNames).toContain('updatedAt');
