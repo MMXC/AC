@@ -1,23 +1,23 @@
 ---
-backlog_id: backlog-38
-task: 创建房间接口改造（POST /api/v1/rooms，创建即指定 URL 且确定房主）
-test_command: "cd watch-together-server && npm test -- rooms-create
-cd watch-together-server && npm test -- rooms-create"
+backlog_id: backlog-39
+task: 加入房间接口与 URL 权限控制（仅房主可改 URL）
+test_command: "cd watch-together-server && npm test -- rooms-join-url
+cd watch-together-server && npm test -- rooms-join-url"
 ---
 
-# Task: 创建房间接口改造（POST /api/v1/rooms，创建即指定 URL 且确定房主）
+# Task: 加入房间接口与 URL 权限控制（仅房主可改 URL）
 
 ## Description
 
-改造 `POST /api/v1/rooms` 接口，使其在创建房间时必须提供目标网页 URL（或 initialUrl），并在后端进行 http/https 校验。创建 Room 时设置 currentUrl = url，hostId = 新生成的 hostUserId，同时在事务内创建房主 RoomMember 记录（userId = hostUserId, isHost = true）。接口响应中返回 roomId、hostUserId、currentUrl、inviteLink 等信息，供前端直接跳转到房主房间页面使用。
+调整 `POST /api/v1/rooms/:roomId/join` 逻辑：每次 join 都生成新的 RoomMember(userId = generateUserId, isHost = false)，不再在 join 里重新判定房主。响应体中保留 room.hostId、room.currentUrl 与当前成员 isHost（永远为 false）。同时完善 `PUT /api/v1/rooms/:roomId/url` 接口：仅当 userId === room.hostId 时允许更新 currentUrl，其它请求返回 403。成功更新后通过 WebSocket 广播 URL_CHANGED 消息。确保后端对 WebSocket 的 URL_CHANGE 消息也做同样的房主权限校验。
 
-**Test Command**: `cd watch-together-server && npm test -- rooms-create`
+**Test Command**: `cd watch-together-server && npm test -- rooms-join-url`
 
-**Test Command**: `cd watch-together-server && npm test -- rooms-create`
+**Test Command**: `cd watch-together-server && npm test -- rooms-join-url`
 
 ## Success Criteria
 
-- [x] 不提供 URL 或 URL 非 http/https 时，接口返回 400 且错误信息清晰。
-- [x] 提供合法 URL 时，Room 记录中 currentUrl 与 hostId 正确写入。
-- [x] 同一事务内成功创建房间与房主成员记录，失败时不留下部分脏数据。
-- [x] 接口响应体包含 roomId、hostUserId、currentUrl、inviteLink 字段，并通过已有集成测试校验。
+- [ ] 同一房间多次 join 会创建多个非房主成员记录，且 hostId 始终指向唯一房主。
+- [ ] 非房主调用 URL 更新接口得到 403，房主调用成功并更新 Room.currentUrl。
+- [ ] 成功更新 URL 后，WebSocket 有 URL_CHANGED 广播，payload 中包含新的 URL。
+- [ ] 对恶意构造的 WebSocket URL_CHANGE 消息，非房主连接被拒绝或返回 ERROR。
