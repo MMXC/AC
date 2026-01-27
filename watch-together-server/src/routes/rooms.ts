@@ -496,7 +496,7 @@ router.post(
     try {
       const validatedParams = (req as Request & { validatedParams: { roomId: string } }).validatedParams;
       const roomId = validatedParams.roomId;
-      const { nickname } = req.body;
+      const { nickname, userId: requestUserId } = req.body;
 
       const prisma = getPrismaClient();
 
@@ -512,20 +512,65 @@ router.post(
         throw createHttpError(404, ErrorCode.NOT_FOUND, 'Room not found');
       }
 
-      // 为每次加入生成新的用户 ID
-      const userId = generateUserId();
+      // 如果传入 userId 且等于 Room.hostId，则识别为房主
+      const isHost = requestUserId !== undefined && requestUserId === room.hostId;
+      let member;
+      let userId: string;
 
-      // 根据最新角色模型，/join 接口只负责创建普通成员记录：
-      // - 房主永远由 Room.hostId 指定
-      // - 通过 /join 创建的成员 isHost 始终为 false
-      const member = await prisma.roomMember.create({
-        data: {
-          roomId: roomId,
-          userId: userId,
-          nickname: nickname,
-          isHost: false,
-        },
-      });
+      if (isHost) {
+        // 房主加入：复用现有的 RoomMember 记录
+        userId = requestUserId;
+
+        // 查找现有的房主成员记录
+        const existingMember = await prisma.roomMember.findUnique({
+          where: {
+            roomId_userId: {
+              roomId: roomId,
+              userId: userId,
+            },
+          },
+        });
+
+        if (existingMember) {
+          // 更新现有记录：设置 leftAt 为 null，更新 lastActiveAt
+          member = await prisma.roomMember.update({
+            where: {
+              roomId_userId: {
+                roomId: roomId,
+                userId: userId,
+              },
+            },
+            data: {
+              leftAt: null,
+              lastActiveAt: new Date(),
+              // 可选：更新昵称（如果传入的昵称不同）
+              nickname: nickname,
+            },
+          });
+        } else {
+          // 如果记录不存在，创建新的房主成员记录
+          member = await prisma.roomMember.create({
+            data: {
+              roomId: roomId,
+              userId: userId,
+              nickname: nickname,
+              isHost: true,
+            },
+          });
+        }
+      } else {
+        // 普通成员加入：创建新成员记录
+        userId = requestUserId || generateUserId();
+
+        member = await prisma.roomMember.create({
+          data: {
+            roomId: roomId,
+            userId: userId,
+            nickname: nickname,
+            isHost: false,
+          },
+        });
+      }
 
       // 返回成功响应
       res.status(200).json({
@@ -534,8 +579,7 @@ router.post(
           userId: member.userId,
           roomId: member.roomId,
           nickname: member.nickname,
-          // 当前成员在 /join 语义下永远为非房主
-          isHost: false,
+          isHost: isHost,
           room: {
             id: room.id,
             name: room.name,

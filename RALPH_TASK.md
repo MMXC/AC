@@ -31,10 +31,10 @@ cd watch-together-server && npm test -- rooms-join"
 
 ## Success Criteria
 
-- [ ] `/join` 接口支持可选的 `userId` 请求参数
-- [ ] 当传入的 `userId` 等于 `Room.hostId` 时，识别为房主
-- [ ] 房主加入时复用现有 RoomMember 记录，更新 `leftAt` 为 null
-- [ ] 房主加入时返回 `isHost: true`
-- [ ] 普通成员加入时仍生成新的 `userId`，返回 `isHost: false`
-- [ ] 传入无效的 `userId`（不等于 hostId）时，仍创建新成员
-- [ ] 接口向后兼容，不传 `userId` 时行为不变
+- [x] `/join` 接口支持可选的 `userId` 请求参数
+- [x] 当传入的 `userId` 等于 `Room.hostId` 时，识别为房主
+- [x] 房主加入时复用现有 RoomMember 记录，更新 `leftAt` 为 null
+- [x] 房主加入时返回 `isHost: true`
+- [x] 普通成员加入时仍生成新的 `userId`，返回 `isHost: false`
+- [x] 传入无效的 `userId`（不等于 hostId）时，仍创建新成员
+- [x] 接口向后兼容，不传 `userId` 时行为不变

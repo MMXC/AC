@@ -19,7 +19,7 @@ describe('加入房间', () => {
       data: {
         id: 'room-testjoin',
         name: 'Test Join Room',
-        hostId: 'user-host123',
+        hostId: 'user-host12', // 8位格式：user-host12
         inviteLink: '/room/room-testjoin',
       },
     });
@@ -28,7 +28,7 @@ describe('加入房间', () => {
     await prisma.roomMember.create({
       data: {
         roomId: room.id,
-        userId: 'user-host123',
+        userId: 'user-host12', // 8位格式：user-host12
         nickname: 'Test Host',
         isHost: true,
       },
@@ -133,7 +133,7 @@ describe('加入房间', () => {
       expect(response.body.data.room).toBeDefined();
       expect(response.body.data.room.id).toBe(testRoomId);
       expect(response.body.data.room.name).toBe('Test Join Room');
-      expect(response.body.data.room.hostId).toBe('user-host123');
+      expect(response.body.data.room.hostId).toBe('user-host12');
     });
 
     it('如果房间不存在应该返回 404', async () => {
@@ -145,7 +145,7 @@ describe('加入房间', () => {
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('success', false);
-      expect(response.body).toHaveProperty('error', 'Not Found');
+      expect(response.body).toHaveProperty('code', 'NOT_FOUND');
       expect(response.body).toHaveProperty('message', 'Room not found');
     });
 
@@ -156,7 +156,7 @@ describe('加入房间', () => {
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('success', false);
-      expect(response.body).toHaveProperty('error', 'Bad Request');
+      expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
     });
 
     it('应该拒绝空的 nickname', async () => {
@@ -177,8 +177,10 @@ describe('加入房间', () => {
           nickname: '   ',
         });
 
+      // trim 后的空字符串会触发 min(1) 验证失败
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('success', false);
+      expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
     });
 
     it('应该拒绝超过 100 字符的 nickname', async () => {
@@ -275,7 +277,7 @@ describe('加入房间', () => {
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('success', false);
-      expect(response.body).toHaveProperty('error', 'Not Found');
+      expect(response.body).toHaveProperty('code', 'NOT_FOUND');
 
       // 清理
       await prisma.room.delete({
@@ -299,6 +301,142 @@ describe('加入房间', () => {
       expect(response1.status).toBe(200);
       expect(response2.status).toBe(200);
       expect(response1.body.data.userId).not.toBe(response2.body.data.userId);
+    });
+
+    it('房主使用 hostUserId 加入房间应识别为房主', async () => {
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Test Host Rejoin',
+          userId: 'user-host12', // 使用房主的 userId（8位格式）
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.isHost).toBe(true);
+      expect(response.body.data.userId).toBe('user-host12');
+
+      // 验证数据库中的记录
+      const member = await prisma.roomMember.findUnique({
+        where: {
+          roomId_userId: {
+            roomId: testRoomId,
+            userId: 'user-host12',
+          },
+        },
+      });
+
+      expect(member).toBeDefined();
+      expect(member?.isHost).toBe(true);
+      expect(member?.leftAt).toBeNull();
+      expect(member?.lastActiveAt).toBeDefined();
+    });
+
+    it('普通成员加入房间应创建新成员', async () => {
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Regular Member',
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.isHost).toBe(false);
+      expect(response.body.data.userId).toMatch(/^user-[a-z0-9]{8}$/);
+
+      // 验证数据库中的记录
+      const member = await prisma.roomMember.findUnique({
+        where: {
+          roomId_userId: {
+            roomId: testRoomId,
+            userId: response.body.data.userId,
+          },
+        },
+      });
+
+      expect(member).toBeDefined();
+      expect(member?.isHost).toBe(false);
+    });
+
+    it('传入无效 userId（不等于 hostId）时，仍创建新成员', async () => {
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Invalid User',
+          userId: 'user-invali', // 不等于 hostId（8位格式）
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.isHost).toBe(false);
+      // 应该使用传入的 userId 创建新成员
+      expect(response.body.data.userId).toBe('user-invali');
+
+      // 验证数据库中的记录
+      const member = await prisma.roomMember.findUnique({
+        where: {
+          roomId_userId: {
+            roomId: testRoomId,
+            userId: 'user-invali',
+          },
+        },
+      });
+
+      expect(member).toBeDefined();
+      expect(member?.isHost).toBe(false);
+    });
+
+    it('不传 userId 时行为不变（向后兼容）', async () => {
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Backward Compatible User',
+          // 不传 userId
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.isHost).toBe(false);
+      expect(response.body.data.userId).toMatch(/^user-[a-z0-9]{8}$/);
+    });
+
+    it('房主加入时复用现有 RoomMember 记录，更新 leftAt 为 null', async () => {
+      // 先让房主离开（设置 leftAt）
+      await prisma.roomMember.update({
+        where: {
+          roomId_userId: {
+            roomId: testRoomId,
+            userId: 'user-host12',
+          },
+        },
+        data: {
+          leftAt: new Date(),
+        },
+      });
+
+      // 房主重新加入
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Test Host Rejoin',
+          userId: 'user-host12',
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.isHost).toBe(true);
+
+      // 验证 leftAt 已被设置为 null
+      const member = await prisma.roomMember.findUnique({
+        where: {
+          roomId_userId: {
+            roomId: testRoomId,
+            userId: 'user-host12',
+          },
+        },
+      });
+
+      expect(member?.leftAt).toBeNull();
+      expect(member?.lastActiveAt).toBeDefined();
     });
   });
 });

@@ -129,6 +129,7 @@ export const updateRoomSchema = z.object({
  */
 export const joinRoomSchema = z.object({
   nickname: nicknameSchema,
+  userId: userIdSchema.optional(), // 可选的 userId，如果传入且等于 Room.hostId，则识别为房主
 });
 
 /**
