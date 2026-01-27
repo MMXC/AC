@@ -170,6 +170,36 @@ function handleWebSocketMessage(message) {
             } else {
                 console.log('SYNC_STATE 消息中没有 recentMessages');
             }
+            // 同步成员列表
+            if (message.data && message.data.members && Array.isArray(message.data.members)) {
+                console.log('同步成员列表:', message.data.members.length, '个成员');
+                const currentUserId = window.currentUserId;
+                
+                // 使用 addMember 和 removeMember 函数更新成员列表（如果可用）
+                if (typeof addMember === 'function' && typeof removeMember === 'function') {
+                    // 获取当前成员列表
+                    const currentMembers = typeof getMembersList === 'function' ? getMembersList() : [];
+                    
+                    // 创建新成员列表的 userId 集合（用于快速查找）
+                    const newMemberIds = new Set(message.data.members.map(m => m.userId));
+                    
+                    // 移除所有不在新列表中的成员（包括当前用户，因为当前用户也会在新列表中）
+                    currentMembers.forEach(member => {
+                        if (!newMemberIds.has(member.id)) {
+                            removeMember(member.id);
+                        }
+                    });
+                    
+                    // 添加或更新所有成员到列表
+                    message.data.members.forEach(member => {
+                        addMember(member.userId, member.nickname);
+                    });
+                    
+                    console.log('成员列表已同步，当前成员数:', message.data.members.length);
+                } else {
+                    console.warn('addMember 或 removeMember 函数不可用，无法同步成员列表');
+                }
+            }
             // 初始化操作来源状态
             if (message.data && typeof handleOperationSourceChanged === 'function') {
                 handleOperationSourceChanged({
@@ -196,9 +226,30 @@ function handleWebSocketMessage(message) {
             break;
 
         case 'MEMBER_JOINED':
+            // 成员加入，更新成员列表
+            console.log('成员加入:', message.data);
+            if (message.data && message.data.userId && message.data.nickname) {
+                // 调用 addMember 函数更新成员列表（如果可用）
+                if (typeof addMember === 'function') {
+                    addMember(message.data.userId, message.data.nickname);
+                    console.log('已添加成员到列表:', message.data.userId, message.data.nickname);
+                } else {
+                    console.warn('addMember 函数不可用，无法更新成员列表');
+                }
+            }
+            break;
         case 'MEMBER_LEFT':
-            // 成员变化，可以显示系统消息（可选）
-            console.log('成员变化:', message.type, message.data);
+            // 成员离开，更新成员列表
+            console.log('成员离开:', message.data);
+            if (message.data && message.data.userId) {
+                // 调用 removeMember 函数更新成员列表（如果可用）
+                if (typeof removeMember === 'function') {
+                    removeMember(message.data.userId);
+                    console.log('已从列表中移除成员:', message.data.userId);
+                } else {
+                    console.warn('removeMember 函数不可用，无法更新成员列表');
+                }
+            }
             break;
 
         case 'OPERATION_SOURCE_CHANGED':

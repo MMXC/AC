@@ -33,8 +33,8 @@ cd watch-together && npm test -- room-init"
 
 ## Success Criteria
 
-- [ ] WebSocket `MEMBER_JOINED` 事件正确触发
-- [ ] 成员列表正确更新，显示所有已加入的成员
-- [ ] 同 IP 多个标签页的成员都能正确显示
-- [ ] 成员离开时正确从列表移除
-- [ ] 成员列表 UI 正确渲染
+- [x] WebSocket `MEMBER_JOINED` 事件正确触发
+- [x] 成员列表正确更新，显示所有已加入的成员
+- [x] 同 IP 多个标签页的成员都能正确显示
+- [x] 成员离开时正确从列表移除
+- [x] 成员列表 UI 正确渲染
