@@ -2377,3 +2377,19 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-28 01:47:15
 **Session 2 started** (model: auto)
+
+### 2026-01-28 [current time]
+**Session 2 completed** - 修复消息显示问题
+- 修复了 `addMessageToHistory` 函数，添加了消息去重检查（避免重复添加）
+- 修复了 `renderMessages` 函数，渲染完成后自动滚动到底部
+- 修复了 `renderMessage` 函数，添加了检查避免重复渲染（通过 data-message-id 属性）
+- 所有测试通过（27个测试全部通过）
+- 实现了所有成功标准：
+  ✓ CHAT_MESSAGE 消息正确处理并添加到历史记录（带去重检查）
+  ✓ SYNC_STATE 消息历史正确加载（渲染后自动滚动到底部）
+  ✓ renderMessage 正确渲染单条消息（避免重复渲染）
+  ✓ renderMessages 正确渲染所有消息历史（渲染后滚动到底部）
+  ✓ 自己发送的消息正确显示
+  ✓ 其他成员发送的消息正确显示
+  ✓ 消息发送后立即显示在聊天区域
+- 提交了更改到 git
