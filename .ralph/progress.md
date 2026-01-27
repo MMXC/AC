@@ -2282,3 +2282,18 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-28 00:13:05
 **Session 1 started** (model: auto)
+
+### 2026-01-28 [current time]
+**Session 1 completed** - 修复 WebSocket 消息 JSON 解析错误
+- 修复了 screen-streaming.js 中的 handleWebSocketMessage 函数，添加了 event.data 类型检查
+- 如果 event.data 是字符串，使用 JSON.parse 解析
+- 如果 event.data 已经是对象，直接使用
+- 解决了 chat.js 已经解析消息后，screen-streaming.js 再次解析导致的错误
+- 所有测试通过（44个测试全部通过）
+- 实现了所有成功标准：
+  ✓ handleWebSocketMessage 函数检查 event.data 类型
+  ✓ 字符串格式消息正确解析
+  ✓ 对象格式消息直接使用
+  ✓ 浏览器控制台无 JSON 解析错误
+  ✓ 画面流功能正常工作
+- 提交了更改到 git
