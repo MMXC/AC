@@ -1,21 +1,21 @@
 ---
-backlog_id: backlog-33
-task: 房间页面布局 - 侧边栏信息
-test_command: "npm test -- --testNamePattern='侧边栏信息'"
+backlog_id: backlog-34
+task: 实时聊天功能
+test_command: "npm test -- --testNamePattern='实时聊天'"
 ---
 
-# Task: 房间页面布局 - 侧边栏信息
+# Task: 实时聊天功能
 
 ## Description
 
-实现房间页面侧边栏，显示房间号和成员列表
+实现房间内的实时聊天功能，成员可以发送消息
 
-**Test Command**: `npm test -- --testNamePattern='侧边栏信息'`
+**Test Command**: `npm test -- --testNamePattern='实时聊天'`
 
 ## Success Criteria
 
-- [x] 侧边栏正确显示房间号
-- [x] 侧边栏显示当前成员列表
-- [x] 新成员加入时列表自动更新
-- [x] 成员离开时列表自动更新
-- [x] UI 布局合理美观
+- [ ] 聊天界面可以正常显示
+- [ ] 可以发送消息
+- [ ] 消息实时同步给所有成员
+- [ ] 消息显示发送者信息
+- [ ] 消息历史记录正确保存
