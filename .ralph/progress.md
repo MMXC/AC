@@ -2165,3 +2165,25 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-27 22:29:51
 **Session 1 started** (model: auto)
+
+### 2026-01-27 [current time]
+**Session 1 completed** - 实现画面流/屏幕投影通路设计与最小实现（房主 → 普通成员）
+- 创建了 screen-streaming.js 文件，实现了完整的画面流功能：
+  ✓ 房主端使用 getDisplayMedia 捕获屏幕画面
+  ✓ 通过 Canvas 截图并转换为 base64 图片数据
+  ✓ 通过 WebSocket 发送画面帧数据（低帧率版本，5fps）
+  ✓ 普通成员端接收画面数据并在 canvas 中显示
+  ✓ 画面流开始/停止消息处理
+  ✓ 错误处理和 UI 提示（权限拒绝、浏览器不支持等）
+- 在 join.html 中集成了画面流功能：
+  ✓ 添加了开始共享按钮样式
+  ✓ 引入了 screen-streaming.js 脚本
+- 更新了 chat.js，添加了 WebSocket 连接事件触发（websocketConnected、websocketDisconnected）
+- 创建了完整的测试文件（screen-streaming-basic.test.js），包含 44 个测试用例
+- 所有测试通过（44个测试全部通过）
+- 实现了所有成功标准：
+  ✓ 房主端点击"开始共享画面"后，普通成员能看到实时画面（低帧率版本）
+  ✓ 普通成员全程未直接访问被嵌入网页的 DOM，仅操作画面容器
+  ✓ 房主停止共享时，普通成员端收到停止提示并回退为占位画面
+  ✓ 画面链路的错误情况（权限拒绝、浏览器不支持等）有日志或 UI 提示
+- 提交了更改到 git
