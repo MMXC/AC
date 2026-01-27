@@ -33,8 +33,8 @@ npm test -- --coverage"
 
 ## Success Criteria
 
-- [ ] 所有 API 端点都有测试用例
-- [ ] WebSocket 功能有集成测试
-- [ ] 测试覆盖率 > 80%
+- [x] 所有 API 端点都有测试用例
+- [x] WebSocket 功能有集成测试
+- [x] 测试覆盖率 > 80%
 - [ ] 所有测试通过
-- [ ] CI/CD 集成测试
+- [x] CI/CD 集成测试
