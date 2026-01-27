@@ -1,9 +1,10 @@
 ---
 id: TASK-42
 title: 画面流/屏幕投影通路设计与最小实现（房主 → 普通成员）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 09:44'
+updated_date: '2026-01-27 14:28'
 labels: []
 dependencies: []
 ---

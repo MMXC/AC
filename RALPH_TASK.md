@@ -1,23 +1,23 @@
 ---
-backlog_id: backlog-41
-task: 房间页前端初始化与房主/成员 UI 区分（成员只看画面）
-test_command: "cd watch-together && npm test -- room-init
-cd watch-together && npm test -- room-init"
+backlog_id: backlog-42
+task: 画面流/屏幕投影通路设计与最小实现（房主 → 普通成员）
+test_command: "cd watch-together && npm test -- screen-streaming-basic
+cd watch-together && npm test -- screen-streaming-basic"
 ---
 
-# Task: 房间页前端初始化与房主/成员 UI 区分（成员只看画面）
+# Task: 画面流/屏幕投影通路设计与最小实现（房主 → 普通成员）
 
 ## Description
 
-改造 `watch-together/js/room.js`：去掉对 `?url=` 查询参数的依赖。在调用 `/join` 成功后，从 `joinData.data.room.currentUrl` 中获取 URL 并（仅在房主端）通过 iframe 加载真实网页。普通成员端不再直接创建 iframe 指向真实网页，而是预留一个“画面容器”（如 video/canvas），用于后续接收房主画面流。UI 上，房主看到 URL 修改入口（调用 PUT /rooms/:roomId/url），普通成员不显示 URL 或相关输入框。
+设计并实现一条“房主浏览器画面 → 普通成员前端”的画面同步通路的最小可行版本，例如：房主端使用 getDisplayMedia 或 Canvas 截图+编码，将画面推送到服务器或直接通过 WebRTC/WebSocket 推送给普通成员；普通成员前端只负责在 video/canvas 容器中播放该画面。此任务重点是确定技术路线与基本 API 形态，代码可以先实现简单低帧率版本确认整体链路可行。
 
-**Test Command**: `cd watch-together && npm test -- room-init`
+**Test Command**: `cd watch-together && npm test -- screen-streaming-basic`
 
-**Test Command**: `cd watch-together && npm test -- room-init`
+**Test Command**: `cd watch-together && npm test -- screen-streaming-basic`
 
 ## Success Criteria
 
-- [x] 房主首次进入房间时，真实 iframe 自动加载 currentUrl，且有“修改 URL”按钮。
-- [x] 普通成员进入时，看不到任何 URL/输入框，只显示一个“画面区域”占位（后续用于接入画面流）。
-- [x] 房主修改 URL 后，本地 iframe 立即更新，其它成员不会再单独加载 iframe，而只是等待画面流更新（可先用占位图/文案验证逻辑）。
-- [x] 所有变更在主流浏览器中无前端报错。
+- [ ] 在开发环境中，房主端点击“开始共享画面”后，至少一名普通成员页面能看到房主浏览器的大致实时画面（允许有延迟与低帧率）。
+- [ ] 普通成员全程未直接访问被嵌入网页的 DOM，仅操作画面容器。
+- [ ] 房主停止共享或离开房间时，普通成员端能收到合理的停止提示或回退为占位画面。
+- [ ] 画面链路的错误情况（权限拒绝、浏览器不支持等）有日志或 UI 提示。
