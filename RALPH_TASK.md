@@ -1,23 +1,23 @@
 ---
-backlog_id: backlog-40
-task: 创建房间前端页面改造（强制填写 URL 并作为房主进入房间）
-test_command: "cd watch-together && npm test -- create-room-ui
-cd watch-together && npm test -- create-room-ui"
+backlog_id: backlog-41
+task: 房间页前端初始化与房主/成员 UI 区分（成员只看画面）
+test_command: "cd watch-together && npm test -- room-init
+cd watch-together && npm test -- room-init"
 ---
 
-# Task: 创建房间前端页面改造（强制填写 URL 并作为房主进入房间）
+# Task: 房间页前端初始化与房主/成员 UI 区分（成员只看画面）
 
 ## Description
 
-更新 `watch-together/js/create-room.js` 与对应 HTML：在创建房间表单中增加“目标网址 URL”必填输入框（前端校验 http/https），请求体发送 { name?, hostNickname?, url } 给后端的创建房间接口。成功后，根据响应中的 roomId 和 hostUserId 直接跳转到房间页面（/room/:roomId），并在 URL 或本地存储中保存必要的标识以便房主端初始化使用。
+改造 `watch-together/js/room.js`：去掉对 `?url=` 查询参数的依赖。在调用 `/join` 成功后，从 `joinData.data.room.currentUrl` 中获取 URL 并（仅在房主端）通过 iframe 加载真实网页。普通成员端不再直接创建 iframe 指向真实网页，而是预留一个“画面容器”（如 video/canvas），用于后续接收房主画面流。UI 上，房主看到 URL 修改入口（调用 PUT /rooms/:roomId/url），普通成员不显示 URL 或相关输入框。
 
-**Test Command**: `cd watch-together && npm test -- create-room-ui`
+**Test Command**: `cd watch-together && npm test -- room-init`
 
-**Test Command**: `cd watch-together && npm test -- create-room-ui`
+**Test Command**: `cd watch-together && npm test -- room-init`
 
 ## Success Criteria
 
-- [x] 前端在 URL 为空或非法时阻止提交，并给出友好错误提示。
-- [x] 正确填写时会调用新的创建房间接口并成功获取 roomId、currentUrl。
-- [x] 创建完成后浏览器自动打开房主房间页面，且无需再额外手动拼接 ?url。
-- [x] 浏览器控制台无新增报错，E2E 测试通过。
+- [ ] 房主首次进入房间时，真实 iframe 自动加载 currentUrl，且有“修改 URL”按钮。
+- [ ] 普通成员进入时，看不到任何 URL/输入框，只显示一个“画面区域”占位（后续用于接入画面流）。
+- [ ] 房主修改 URL 后，本地 iframe 立即更新，其它成员不会再单独加载 iframe，而只是等待画面流更新（可先用占位图/文案验证逻辑）。
+- [ ] 所有变更在主流浏览器中无前端报错。

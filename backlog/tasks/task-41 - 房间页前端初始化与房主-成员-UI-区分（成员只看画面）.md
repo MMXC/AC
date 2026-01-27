@@ -1,9 +1,10 @@
 ---
 id: TASK-41
 title: 房间页前端初始化与房主/成员 UI 区分（成员只看画面）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 09:43'
+updated_date: '2026-01-27 14:05'
 labels: []
 dependencies: []
 ---
