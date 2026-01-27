@@ -1,9 +1,10 @@
 ---
 id: TASK-44
 title: 权限、安全与连接稳定性校验
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 09:44'
+updated_date: '2026-01-27 15:15'
 labels: []
 dependencies: []
 ---

@@ -2193,3 +2193,27 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-27 22:52:43
 **Session 1 started** (model: auto)
+
+### 2026-01-27 [current time]
+**Session 1 completed** - 实现"指定操作来源成员"与房主端执行逻辑功能
+- 创建了后端 API：POST /api/v1/rooms/:roomId/operation-source（仅房主可调用）
+- 实现了 WebSocket 消息处理：OP_SOURCE_OPERATION 消息转发给房主
+- 创建了前端操作来源管理模块（operation-source.js），包含：
+  ✓ 设置/取消操作来源功能
+  ✓ 操作来源成员操作监听（点击、拖动、滚动、键盘）
+  ✓ 操作消息发送功能
+  ✓ 房主端操作模拟功能（在 iframe 中模拟操作）
+- 更新了 room.js，添加了成员列表右键菜单功能（仅房主可见）
+- 更新了 chat.js，添加了 OPERATION_SOURCE_CHANGED 和 OP_SOURCE_OPERATION 消息处理
+- 更新了后端 WebSocket，在 SYNC_STATE 消息中包含 operationSourceUserId
+- 创建了完整的测试文件（operation-source.test.js），包含 34 个测试用例
+- 所有测试通过（34个测试全部通过）
+- 实现了所有成功标准：
+  ✓ 只有房主可以成功设置/取消 operationSourceUserId，普通成员调用返回 403 或 ERROR
+  ✓ 被指定成员在画面上点击/拖动时，房主真实页面产生对应操作，其它成员只通过画面看到结果，无 DOM 级事件
+  ✓ 未被指定成员在画面上点击不会触发任何远程执行
+  ✓ 取消操作来源后，之前的成员再操作画面不会再触发房主端执行
+- 提交了更改到 git
+
+### 2026-01-27 22:58:16
+**Session 1 ended** - ✅ TASK COMPLETE
