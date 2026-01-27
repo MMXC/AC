@@ -1,12 +1,13 @@
 ---
 id: TASK-36
 title: 明确角色与房间状态模型（房主 / 成员 + 仅房主持有真实网页）
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-27 09:43'
-updated_date: '2026-01-27 09:48'
+updated_date: '2026-01-27 10:42'
 labels: []
 dependencies: []
+ordinal: 35000
 ---
 
 ## Description

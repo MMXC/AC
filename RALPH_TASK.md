@@ -1,23 +1,23 @@
 ---
-backlog_id: backlog-37
-task: 后端数据模型调整（Room / RoomMember / 可选 operationSourceUserId）
-test_command: "cd watch-together-server && npm test -- schema
-cd watch-together-server && npm test -- schema"
+backlog_id: backlog-38
+task: 创建房间接口改造（POST /api/v1/rooms，创建即指定 URL 且确定房主）
+test_command: "cd watch-together-server && npm test -- rooms-create
+cd watch-together-server && npm test -- rooms-create"
 ---
 
-# Task: 后端数据模型调整（Room / RoomMember / 可选 operationSourceUserId）
+# Task: 创建房间接口改造（POST /api/v1/rooms，创建即指定 URL 且确定房主）
 
 ## Description
 
-基于任务 1 的模型设计，更新 Prisma schema 与数据库迁移：确保 Room 表中存在 hostId、currentUrl 字段；RoomMember 表中有 isHost 字段且仅在创建时设置，不允许后续随意修改。如需要支持“指定操作来源成员”，为 Room 增加 operationSourceUserId 字段（或单独状态表）。确保迁移脚本在现有数据上安全运行，同时更新 TypeScript 类型定义与相关服务（如 roomCacheService）。
+改造 `POST /api/v1/rooms` 接口，使其在创建房间时必须提供目标网页 URL（或 initialUrl），并在后端进行 http/https 校验。创建 Room 时设置 currentUrl = url，hostId = 新生成的 hostUserId，同时在事务内创建房主 RoomMember 记录（userId = hostUserId, isHost = true）。接口响应中返回 roomId、hostUserId、currentUrl、inviteLink 等信息，供前端直接跳转到房主房间页面使用。
 
-**Test Command**: `cd watch-together-server && npm test -- schema`
+**Test Command**: `cd watch-together-server && npm test -- rooms-create`
 
-**Test Command**: `cd watch-together-server && npm test -- schema`
+**Test Command**: `cd watch-together-server && npm test -- rooms-create`
 
 ## Success Criteria
 
-- [x] Prisma schema 中 Room 与 RoomMember 结构与任务 1 的模型设计一致。
-- [x] 运行数据库迁移脚本不会破坏已有数据，且新字段非空策略合理（必要时有默认值或可为空）。
-- [x] TypeScript 代码中引用 Room / RoomMember 的地方都能正常编译通过（无类型错误）。
-- [x] 获取房间详情接口返回的数据结构包括 hostId 与 currentUrl。
+- [ ] 不提供 URL 或 URL 非 http/https 时，接口返回 400 且错误信息清晰。
+- [ ] 提供合法 URL 时，Room 记录中 currentUrl 与 hostId 正确写入。
+- [ ] 同一事务内成功创建房间与房主成员记录，失败时不留下部分脏数据。
+- [ ] 接口响应体包含 roomId、hostUserId、currentUrl、inviteLink 字段，并通过已有集成测试校验。
