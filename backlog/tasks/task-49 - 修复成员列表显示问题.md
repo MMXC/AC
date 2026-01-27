@@ -1,9 +1,10 @@
 ---
 id: TASK-49
 title: 修复成员列表显示问题
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 15:49'
+updated_date: '2026-01-27 17:10'
 labels: []
 dependencies: []
 ---
