@@ -1,9 +1,10 @@
 ---
 id: TASK-46
 title: 修复 WebSocket 消息 JSON 解析错误
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 15:49'
+updated_date: '2026-01-27 16:11'
 labels: []
 dependencies: []
 ---
