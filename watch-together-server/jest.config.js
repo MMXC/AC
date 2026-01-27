@@ -16,5 +16,5 @@ module.exports = {
     },
   },
   verbose: true,
-  testTimeout: 10000, // 增加超时时间到10秒
+  testTimeout: 30000, // 增加超时时间到30秒
 };

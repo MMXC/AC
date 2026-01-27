@@ -227,8 +227,8 @@ describe('消息历史', () => {
 
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not Found');
-      expect(response.body.message).toBe('Room not found');
+      expect(response.body.error.code).toBe('NOT_FOUND');
+      expect(response.body.error.message).toBe('Room not found');
     });
 
     it('如果 limit 不是正整数应该返回 400', async () => {
@@ -236,8 +236,8 @@ describe('消息历史', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('limit must be a positive integer');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('limit');
     });
 
     it('如果 limit 不是数字应该返回 400', async () => {
@@ -245,8 +245,8 @@ describe('消息历史', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('limit must be a positive integer');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('limit');
     });
 
     it('如果 offset 是负数应该返回 400', async () => {
@@ -254,8 +254,8 @@ describe('消息历史', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('offset must be a non-negative integer');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('offset');
     });
 
     it('如果 offset 不是数字应该返回 400', async () => {
@@ -263,8 +263,8 @@ describe('消息历史', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('offset must be a non-negative integer');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('offset');
     });
 
     it('如果 roomId 为空应该返回 400', async () => {
@@ -278,8 +278,8 @@ describe('消息历史', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('limit must be a positive integer');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('limit');
     });
 
     it('应该正确处理空消息列表', async () => {

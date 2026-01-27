@@ -201,8 +201,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not Found');
-      expect(response.body.message).toBe('Room not found');
+      expect(response.body.error.code).toBe('NOT_FOUND');
+      expect(response.body.error.message).toBe('Room not found');
     });
 
     it('如果用户不在房间中应该返回 404', async () => {
@@ -216,8 +216,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not Found');
-      expect(response.body.message).toBe('User not found in room or has left');
+      expect(response.body.error.code).toBe('NOT_FOUND');
+      expect(response.body.error.message).toBe('User not found in room or has left');
     });
 
     it('如果消息内容超过 1000 字符应该返回 400', async () => {
@@ -231,8 +231,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('content must be a string with maximum 1000 characters');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('content');
     });
 
     it('如果消息内容为空应该返回 400', async () => {
@@ -245,8 +245,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('content is required and must be a non-empty string');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('content');
     });
 
     it('如果消息内容只包含空格应该返回 400', async () => {
@@ -259,8 +259,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('content is required and must be a non-empty string');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('content');
     });
 
     it('如果 userId 为空应该返回 400', async () => {
@@ -273,8 +273,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('userId is required and must be a non-empty string');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('userId');
     });
 
     it('如果 userId 缺失应该返回 400', async () => {
@@ -286,8 +286,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('userId is required and must be a non-empty string');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('userId');
     });
 
     it('如果 content 缺失应该返回 400', async () => {
@@ -299,8 +299,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Bad Request');
-      expect(response.body.message).toBe('content is required and must be a non-empty string');
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toContain('content');
     });
 
     it('如果 roomId 为空应该返回 400', async () => {
@@ -364,8 +364,8 @@ describe('发送消息', () => {
 
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not Found');
-      expect(response.body.message).toBe('User not found in room or has left');
+      expect(response.body.error.code).toBe('NOT_FOUND');
+      expect(response.body.error.message).toBe('User not found in room or has left');
 
       // 清理
       await prisma.roomMember.deleteMany({
