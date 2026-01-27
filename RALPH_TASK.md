@@ -32,8 +32,8 @@ cd watch-together && npm test -- screen-streaming"
 
 ## Success Criteria
 
-- [ ] `screen-streaming.js` 的 `handleWebSocketMessage` 函数检查 `event.data` 类型
-- [ ] 如果 `event.data` 是字符串，使用 `JSON.parse` 解析
-- [ ] 如果 `event.data` 已经是对象，直接使用
-- [ ] 浏览器控制台无 `"[object Object]" is not valid JSON` 错误
-- [ ] 画面流功能正常工作
+- [x] `screen-streaming.js` 的 `handleWebSocketMessage` 函数检查 `event.data` 类型
+- [x] 如果 `event.data` 是字符串，使用 `JSON.parse` 解析
+- [x] 如果 `event.data` 已经是对象，直接使用
+- [x] 浏览器控制台无 `"[object Object]" is not valid JSON` 错误
+- [x] 画面流功能正常工作

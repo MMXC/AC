@@ -111,7 +111,16 @@ function handleWebSocketDisconnected() {
  */
 function handleWebSocketMessage(event) {
     try {
-        const message = JSON.parse(event.data);
+        // 检查 event.data 类型：如果已经是对象则直接使用，如果是字符串则解析
+        let message;
+        if (typeof event.data === 'string') {
+            message = JSON.parse(event.data);
+        } else if (typeof event.data === 'object' && event.data !== null) {
+            message = event.data;
+        } else {
+            console.error('无效的 WebSocket 消息格式:', typeof event.data);
+            return;
+        }
         
         if (message.type === 'SCREEN_STREAM_FRAME') {
             // 接收画面帧数据
