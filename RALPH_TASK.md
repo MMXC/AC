@@ -35,10 +35,10 @@ cd watch-together && npm test -- 实时聊天"
 
 ## Success Criteria
 
-- [ ] `CHAT_MESSAGE` 消息正确处理并添加到历史记录
-- [ ] `SYNC_STATE` 消息历史正确加载
-- [ ] `renderMessage` 正确渲染单条消息
-- [ ] `renderMessages` 正确渲染所有消息历史
-- [ ] 自己发送的消息正确显示
-- [ ] 其他成员发送的消息正确显示
-- [ ] 消息发送后立即显示在聊天区域
+- [x] `CHAT_MESSAGE` 消息正确处理并添加到历史记录
+- [x] `SYNC_STATE` 消息历史正确加载
+- [x] `renderMessage` 正确渲染单条消息
+- [x] `renderMessages` 正确渲染所有消息历史
+- [x] 自己发送的消息正确显示
+- [x] 其他成员发送的消息正确显示
+- [x] 消息发送后立即显示在聊天区域

@@ -327,6 +327,12 @@ function handleSendMessage() {
  * 添加消息到历史记录
  */
 function addMessageToHistory(message) {
+    // 检查消息是否已存在（避免重复添加）
+    if (message.id && messageHistory.some(m => m.id === message.id)) {
+        console.log('消息已存在，跳过添加:', message.id);
+        return;
+    }
+    
     messageHistory.push(message);
     // 只保留最近100条消息
     if (messageHistory.length > 100) {
@@ -340,6 +346,15 @@ function addMessageToHistory(message) {
 function renderMessage(message) {
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
+
+    // 检查消息是否已渲染（避免重复渲染）
+    if (message.id) {
+        const existingMessage = chatMessages.querySelector(`[data-message-id="${message.id}"]`);
+        if (existingMessage) {
+            console.log('消息已渲染，跳过:', message.id);
+            return;
+        }
+    }
 
     // 移除空状态提示
     const emptyState = chatMessages.querySelector('.chat-empty');
@@ -403,6 +418,9 @@ function renderMessages() {
     messageHistory.forEach(message => {
         renderMessage(message);
     });
+    
+    // 渲染完成后滚动到底部
+    scrollChatToBottom();
 }
 
 /**
