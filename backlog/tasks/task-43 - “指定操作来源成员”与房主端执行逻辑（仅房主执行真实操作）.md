@@ -1,9 +1,10 @@
 ---
 id: TASK-43
 title: “指定操作来源成员”与房主端执行逻辑（仅房主执行真实操作）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 09:44'
+updated_date: '2026-01-27 14:51'
 labels: []
 dependencies: []
 ---
