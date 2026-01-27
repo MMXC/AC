@@ -141,7 +141,7 @@ describe('操作同步', () => {
 
         test('处理消息时会忽略自己发送的消息', () => {
             const js = fs.readFileSync(syncJsPath, 'utf-8');
-            expect(js).toContain('message.userId === currentUserId');
+            expect(js).toContain('message.userId === syncCurrentUserId');
         });
     });
 
