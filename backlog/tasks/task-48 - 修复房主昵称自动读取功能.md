@@ -1,9 +1,10 @@
 ---
 id: TASK-48
 title: 修复房主昵称自动读取功能
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 15:49'
+updated_date: '2026-01-27 17:01'
 labels: []
 dependencies: []
 ---

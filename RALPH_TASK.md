@@ -1,40 +1,41 @@
 ---
-backlog_id: backlog-47
-task: 修复房主跳转和分享房间链接功能
-test_command: "cd watch-together && npm test -- create-room-ui
-cd watch-together && npm test -- create-room-ui"
+backlog_id: backlog-48
+task: 修复房主昵称自动读取功能
+test_command: "cd watch-together && npm test -- room-init
+cd watch-together && npm test -- room-init"
 ---
 
-# Task: 修复房主跳转和分享房间链接功能
+# Task: 修复房主昵称自动读取功能
 
 ## Description
 
-修复创建房间后房主未自动跳转的问题，确保创建成功后正确跳转到 `/room/:roomId` 页面。在房间页面添加分享房间链接按钮，房主可见。
+房主创建房间时填写的昵称应在跳转后自动读取，无需重新输入。在 `create-room.js` 中将 `hostNickname` 保存到 localStorage，在 `room.js` 的 `init()` 函数中检查是否为房主，如果是则从 localStorage 读取昵称并自动加入房间。
 
-**Test Command**: `cd watch-together && npm test -- create-room-ui`
+**Test Command**: `cd watch-together && npm test -- room-init`
 
 **测试用例**:
 
 **测试数据**:
-1. 输入: `创建房间表单提交`
-   预期输出: `自动跳转到房间页面，显示分享按钮`
+1. 输入: `创建房间时填写昵称 "房主A"`
+   预期输出: `跳转后自动使用 "房主A" 作为昵称加入房间`
 
 **测试场景**:
-1. 创建房间后应自动跳转到房间页面
-2. 房主进入房间后应看到分享链接按钮
-3. 普通成员进入房间后不应看到分享按钮
-4. 点击分享按钮应复制房间链接到剪贴板
+1. 房主创建房间后跳转，应自动使用创建时的昵称
+2. 房主不应看到昵称输入界面
+3. 普通成员进入房间应看到昵称输入界面
+4. localStorage 中正确保存房主信息
 
 **断言示例**:
-1. `expect(window.location.pathname).toBe(`/room/${roomId}`)`
-2. `expect(document.getElementById('shareRoomButton')).not.toBeNull()`
+1. `expect(localStorage.getItem('watch-together.hostNickname')).toBe('房主A')`
+2. `expect(localStorage.getItem('watch-together.isHost')).toBe('true')`
+3. `expect(document.getElementById('nicknameInputContainer').style.display).toBe('none')`
 
-**Test Command**: `cd watch-together && npm test -- create-room-ui`
+**Test Command**: `cd watch-together && npm test -- room-init`
 
 ## Success Criteria
 
-- [x] 创建房间成功后，房主自动跳转到 `/room/:roomId` 页面
-- [x] 跳转逻辑正确执行，无错误阻止跳转
-- [x] 房间页面显示分享房间链接按钮（仅房主可见）
-- [x] 点击分享按钮可以复制房间链接
-- [x] 普通成员不显示分享按钮
+- [ ] `create-room.js` 创建房间成功后保存 `hostNickname` 到 localStorage
+- [ ] `room.js` 的 `init()` 函数检查 localStorage 中的 `isHost` 标识
+- [ ] 如果是房主，从 localStorage 读取昵称
+- [ ] 房主跳过昵称输入界面，直接调用 `joinRoomWithNickname`
+- [ ] 普通成员仍显示昵称输入框，功能正常
