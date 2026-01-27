@@ -278,8 +278,20 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         // 使用服务器返回的 userId
         const serverUserId = joinData.data.userId || userId;
         const serverNickname = joinData.data.nickname || nickname;
+        const roomData = joinData.data.room || {};
+        const roomCurrentUrl = roomData.currentUrl;
+        const roomHostId = roomData.hostId;
+        // 优先使用服务器返回的 isHost 字段，如果没有则通过比较 userId 和 hostId 判断
+        const isHost = joinData.data.isHost !== undefined ? joinData.data.isHost : (serverUserId === roomHostId);
         
         console.log('加入房间成功，服务器返回的 userId:', serverUserId);
+        console.log('房间信息:', { 
+            currentUrl: roomCurrentUrl, 
+            hostId: roomHostId, 
+            isHost, 
+            serverIsHost: joinData.data.isHost,
+            joinDataFull: joinData
+        });
         
         // 添加当前用户到成员列表
         addMember(serverUserId, serverNickname);
@@ -290,6 +302,8 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
             window.currentUserNickname = serverNickname;
             window.tempUserId = null; // 清除临时ID
             window.currentRoomId = roomId; // 确保房间ID已设置
+            window.isHost = isHost; // 保存是否是房主
+            window.roomCurrentUrl = roomCurrentUrl; // 保存房间当前URL
         }
         
         // 更新显示的 userId（使用服务器返回的真实 userId）
@@ -302,6 +316,22 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         if (nicknameInputContainer) nicknameInputContainer.style.display = 'none';
         if (nicknameDisplay) nicknameDisplay.style.display = 'block';
         if (currentNickname) currentNickname.textContent = serverNickname;
+        
+        // 处理 URL 加载逻辑
+        if (roomCurrentUrl) {
+            // 房间已有 URL，自动加载
+            console.log('房间已有 URL，自动加载:', roomCurrentUrl);
+            loadUrlIntoIframe(roomCurrentUrl);
+            hideUrlInputContainer();
+        } else if (isHost) {
+            // 房间没有 URL 且用户是房主，显示 URL 输入框
+            console.log('用户是房主，显示 URL 输入框');
+            showUrlInputContainer();
+        } else {
+            // 房间没有 URL 且用户不是房主，显示等待提示
+            console.log('等待房主设置 URL');
+            showWaitingForUrl();
+        }
         
         // 触发自定义事件，通知其他脚本用户已加入房间
         if (typeof window !== 'undefined') {
@@ -337,6 +367,99 @@ function showError(message) {
         if (errorMessage) {
             errorMessage.textContent = message;
         }
+    }
+}
+
+/**
+ * 显示 URL 输入框（房主使用）
+ */
+function showUrlInputContainer() {
+    const urlInputContainer = document.getElementById('urlInputContainer');
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const iframe = document.getElementById('browserFrame');
+    
+    if (loading) loading.style.display = 'none';
+    if (error) error.style.display = 'none';
+    if (iframe) iframe.style.display = 'none';
+    if (urlInputContainer) {
+        urlInputContainer.style.display = 'block';
+        const urlInput = document.getElementById('urlInput');
+        if (urlInput) {
+            urlInput.focus();
+        }
+    }
+}
+
+/**
+ * 隐藏 URL 输入框
+ */
+function hideUrlInputContainer() {
+    const urlInputContainer = document.getElementById('urlInputContainer');
+    if (urlInputContainer) {
+        urlInputContainer.style.display = 'none';
+    }
+}
+
+/**
+ * 显示等待房主设置 URL 的提示
+ */
+function showWaitingForUrl() {
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const errorMessage = document.getElementById('errorMessage');
+    const iframe = document.getElementById('browserFrame');
+    const urlInputContainer = document.getElementById('urlInputContainer');
+    
+    if (loading) loading.style.display = 'block';
+    if (error) {
+        error.style.display = 'none';
+    }
+    if (iframe) iframe.style.display = 'none';
+    if (urlInputContainer) urlInputContainer.style.display = 'none';
+    
+    if (loading) {
+        loading.textContent = '等待房主设置网页地址...';
+    }
+}
+
+/**
+ * 更新房间 URL
+ */
+async function updateRoomUrl(roomId, userId, url) {
+    try {
+        const response = await fetch(`${API_BASE}/api/v1/rooms/${roomId}/url`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                url: url,
+                userId: userId,
+            }),
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+            throw new Error(data.error?.message || '更新房间 URL 失败');
+        }
+
+        // 更新全局变量
+        if (typeof window !== 'undefined') {
+            window.roomCurrentUrl = url;
+        }
+        
+        // 加载 URL 到 iframe
+        loadUrlIntoIframe(url);
+        
+        // 隐藏 URL 输入框
+        hideUrlInputContainer();
+        
+        return { success: true };
+    } catch (error) {
+        console.error('更新房间 URL 错误:', error);
+        return { success: false, error: error.message || '请稍后重试' };
     }
 }
 
@@ -462,27 +585,61 @@ async function init() {
         });
     }
 
-    // 从 URL 参数获取要加载的网页地址
-    const url = getUrlParameter('url');
-
-    if (url) {
-        // 解码 URL（如果被编码了）
-        const decodedUrl = decodeURIComponent(url);
-        loadUrlIntoIframe(decodedUrl);
-    } else {
-        // 如果没有提供 URL，显示提示
-        const loading = document.getElementById('loading');
-        const error = document.getElementById('error');
-        const errorMessage = document.getElementById('errorMessage');
-        
-        if (loading) loading.style.display = 'none';
-        if (error) {
-            error.style.display = 'block';
-            if (errorMessage) {
-                errorMessage.textContent = '请在 URL 中添加 ?url=网页地址 参数来加载网页。例如: ?url=https://www.example.com';
-            }
+    // URL 输入框相关事件
+    const urlInput = document.getElementById('urlInput');
+    const loadUrlButton = document.getElementById('loadUrlButton');
+    
+    const handleLoadUrl = async () => {
+        if (!window.currentUserId || !window.currentRoomId) {
+            alert('请先加入房间');
+            return;
         }
+        
+        const url = urlInput?.value.trim();
+        if (!url) {
+            alert('请输入网页地址');
+            return;
+        }
+        
+        if (!isValidUrl(url)) {
+            alert('无效的 URL。请提供有效的 http:// 或 https:// 网址。');
+            return;
+        }
+        
+        if (loadUrlButton) {
+            loadUrlButton.disabled = true;
+            loadUrlButton.textContent = '加载中...';
+        }
+        
+        const result = await updateRoomUrl(window.currentRoomId, window.currentUserId, url);
+        
+        if (loadUrlButton) {
+            loadUrlButton.disabled = false;
+            loadUrlButton.textContent = '加载网页';
+        }
+        
+        if (!result.success) {
+            alert('加载失败：' + (result.error || '请稍后重试'));
+        }
+    };
+    
+    if (loadUrlButton) {
+        loadUrlButton.addEventListener('click', handleLoadUrl);
     }
+    
+    if (urlInput) {
+        urlInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                await handleLoadUrl();
+            }
+        });
+    }
+
+    // 不再从 URL 参数加载网页，改为在加入房间后根据房间状态加载
+    // 如果房间已有 currentUrl，会在加入房间后自动加载
+    // 如果房间没有 currentUrl 且用户是房主，会显示 URL 输入框
+    // 如果房间没有 currentUrl 且用户不是房主，会显示等待提示
 }
 
 // 页面加载完成后初始化

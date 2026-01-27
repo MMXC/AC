@@ -17,6 +17,7 @@ import {
   roomIdParamSchema,
 } from '../validation/schemas';
 import { getRoomCacheService, RoomCacheData } from '../services/roomCache';
+import { broadcastToRoom } from '../websocket';
 
 const router = Router();
 
@@ -497,13 +498,30 @@ router.post(
       // 生成新的用户 ID
       const userId = generateUserId();
 
+      // 检查房间是否已经有活跃成员
+      const existingMembers = await prisma.roomMember.findMany({
+        where: {
+          roomId: roomId,
+          leftAt: null, // 只查找未离开的成员
+        },
+      });
+
+      // 检查房间的 hostId 是否已经有对应的活跃成员
+      const existingHostMember = existingMembers.find(m => m.userId === room.hostId);
+
+      // 判断用户是否是房主：
+      // 1. 如果房间没有活跃成员，说明这是第一个通过 /join API 加入的用户，应该是房主
+      // 2. 如果房间的 hostId 没有对应的活跃成员（房主离开了），第一个重新加入的用户应该是房主
+      // 这符合需求："只有第一个加入的成员需要输入后跟随iframe url地址"
+      const isHost = existingMembers.length === 0 || !existingHostMember;
+
       // 创建成员记录
       const member = await prisma.roomMember.create({
         data: {
           roomId: roomId,
           userId: userId,
           nickname: nickname,
-          isHost: false,
+          isHost: isHost,
         },
       });
 
@@ -514,6 +532,7 @@ router.post(
           userId: member.userId,
           roomId: member.roomId,
           nickname: member.nickname,
+          isHost: isHost,
           room: {
             id: room.id,
             name: room.name,
@@ -1019,6 +1038,17 @@ router.put(
       // 失效房间缓存
       const roomCacheService = getRoomCacheService();
       await roomCacheService.invalidateRoom(roomId);
+
+      // 通过 WebSocket 广播 URL 变更消息给房间内的所有成员
+      const broadcastMessage = {
+        type: 'URL_CHANGED',
+        data: {
+          url: url,
+          userId: userId,
+          timestamp: Date.now(),
+        },
+      };
+      broadcastToRoom(roomId, broadcastMessage);
 
       // 返回成功响应
       res.status(200).json({

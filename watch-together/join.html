@@ -358,6 +358,24 @@
                     <h3>加载失败</h3>
                     <p id="errorMessage"></p>
                 </div>
+                <div id="urlInputContainer" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 600px; padding: 30px; background: #2d2d2d; border-radius: 8px; border: 1px solid #404040;">
+                    <h3 style="margin-bottom: 15px; color: #fff; font-size: 1.2em;">设置要观看的网页</h3>
+                    <p style="color: #aaa; font-size: 0.9em; margin-bottom: 20px;">作为房主，请输入要分享的网页地址</p>
+                    <input 
+                        type="text" 
+                        id="urlInput" 
+                        placeholder="https://www.example.com" 
+                        style="width: 100%; padding: 12px; background: #3a3a3a; border: 1px solid #404040; border-radius: 6px; color: #fff; font-size: 1em; margin-bottom: 15px; font-family: inherit;"
+                    />
+                    <div style="display: flex; gap: 10px;">
+                        <button 
+                            id="loadUrlButton" 
+                            style="flex: 1; padding: 12px; background: #4a9eff; border: none; border-radius: 6px; color: #fff; font-size: 1em; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+                        >
+                            加载网页
+                        </button>
+                    </div>
+                </div>
                 <iframe id="browserFrame" style="display: none;"></iframe>
             </div>
         </div>

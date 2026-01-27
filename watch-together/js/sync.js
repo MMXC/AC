@@ -106,6 +106,11 @@ function connectSyncWebSocket() {
 
     syncWs.onclose = (event) => {
         console.log('操作同步 WebSocket 连接已关闭', event.code, event.reason);
+        // 如果是因为连接数限制而关闭（1008），不要重连
+        if (event.code === 1008) {
+            console.error('操作同步 WebSocket 连接因连接数限制而关闭，停止重连');
+            return;
+        }
         // 只有在用户已加入房间且不是主动关闭的情况下才重连
         // 确保 syncCurrentUserId 是字符串类型
         if (syncCurrentRoomId && syncCurrentUserId && typeof syncCurrentUserId === 'string' && event.code !== 1000) {
