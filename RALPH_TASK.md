@@ -34,8 +34,8 @@ cd watch-together && npm test -- room-init"
 
 ## Success Criteria
 
-- [ ] `create-room.js` 创建房间成功后保存 `hostNickname` 到 localStorage
-- [ ] `room.js` 的 `init()` 函数检查 localStorage 中的 `isHost` 标识
-- [ ] 如果是房主，从 localStorage 读取昵称
-- [ ] 房主跳过昵称输入界面，直接调用 `joinRoomWithNickname`
-- [ ] 普通成员仍显示昵称输入框，功能正常
+- [x] `create-room.js` 创建房间成功后保存 `hostNickname` 到 localStorage
+- [x] `room.js` 的 `init()` 函数检查 localStorage 中的 `isHost` 标识
+- [x] 如果是房主，从 localStorage 读取昵称
+- [x] 房主跳过昵称输入界面，直接调用 `joinRoomWithNickname`
+- [x] 普通成员仍显示昵称输入框，功能正常

@@ -805,15 +805,64 @@ async function init() {
         window.currentRoomId = roomId; // 保存房间ID
     }
     
-    // 显示昵称输入界面
+    // 检查 localStorage 中的 isHost 标识，判断是否为房主
+    let isHostFromStorage = false;
+    let hostNicknameFromStorage = null;
+    let storedRoomId = null;
+    let storedUserId = null;
+    
+    try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            storedRoomId = window.localStorage.getItem('watch-together.roomId');
+            storedUserId = window.localStorage.getItem('watch-together.userId');
+            const isHostValue = window.localStorage.getItem('watch-together.isHost');
+            hostNicknameFromStorage = window.localStorage.getItem('watch-together.hostNickname');
+            
+            // 检查是否为房主：房间ID匹配且 isHost 为 'true'
+            if (storedRoomId === roomId && isHostValue === 'true') {
+                isHostFromStorage = true;
+            }
+        }
+    } catch (storageError) {
+        console.warn('读取本地存储失败:', storageError);
+    }
+    
+    // 获取 DOM 元素
     const nicknameInputContainer = document.getElementById('nicknameInputContainer');
     const nicknameDisplay = document.getElementById('nicknameDisplay');
     const joinRoomButton = document.getElementById('joinRoomButton');
     const changeNicknameButton = document.getElementById('changeNicknameButton');
     const nicknameInput = document.getElementById('nicknameInput');
     
-    if (nicknameInputContainer) {
-        nicknameInputContainer.style.display = 'block';
+    // 如果是房主，从 localStorage 读取昵称并自动加入房间
+    if (isHostFromStorage && hostNicknameFromStorage) {
+        // 房主跳过昵称输入界面，直接调用 joinRoomWithNickname
+        console.log('检测到房主身份，自动使用昵称加入房间:', hostNicknameFromStorage);
+        
+        // 隐藏昵称输入界面
+        if (nicknameInputContainer) {
+            nicknameInputContainer.style.display = 'none';
+        }
+        
+        // 使用存储的 userId（如果存在）或临时 userId
+        const userIdToUse = storedUserId || tempUserId;
+        
+        // 自动加入房间
+        joinRoomWithNickname(roomId, userIdToUse, hostNicknameFromStorage).catch(error => {
+            console.error('房主自动加入房间失败:', error);
+            // 如果自动加入失败，显示昵称输入界面作为回退
+            if (nicknameInputContainer) {
+                nicknameInputContainer.style.display = 'block';
+            }
+            if (nicknameInput) {
+                nicknameInput.value = hostNicknameFromStorage;
+            }
+        });
+    } else {
+        // 普通成员或非房主，显示昵称输入界面
+        if (nicknameInputContainer) {
+            nicknameInputContainer.style.display = 'block';
+        }
     }
     
     // 加入房间按钮点击事件

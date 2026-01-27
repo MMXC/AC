@@ -174,6 +174,10 @@ if (typeof document !== 'undefined') {
                         if (currentUrl) {
                             window.localStorage.setItem('watch-together.currentUrl', currentUrl);
                         }
+                        // 保存房主昵称，供跳转后自动读取
+                        if (hostNickname && hostNickname.trim()) {
+                            window.localStorage.setItem('watch-together.hostNickname', hostNickname.trim());
+                        }
                     }
                 } catch (storageError) {
                     console.warn('保存房间信息到本地存储失败:', storageError);

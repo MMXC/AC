@@ -184,4 +184,56 @@ describe('房间页前端初始化与房主/成员 UI 区分', () => {
             expect(js).toContain('hideUrlControlButton');
         });
     });
+
+    describe('房主昵称自动读取功能', () => {
+        const createRoomJsPath = path.join(__dirname, '../js/create-room.js');
+
+        test('create-room.js 文件存在', () => {
+            expect(fs.existsSync(createRoomJsPath)).toBe(true);
+        });
+
+        test('create-room.js 创建房间成功后保存 hostNickname 到 localStorage', () => {
+            const js = fs.readFileSync(createRoomJsPath, 'utf-8');
+            // 应该保存 hostNickname 到 localStorage
+            expect(js).toContain('watch-together.hostNickname');
+            expect(js).toContain('localStorage.setItem');
+            // 应该检查 hostNickname 是否存在且不为空
+            expect(js).toContain('hostNickname && hostNickname.trim()');
+            expect(js).toContain('localStorage.setItem(\'watch-together.hostNickname\'');
+        });
+
+        test('room.js 的 init() 函数检查 localStorage 中的 isHost 标识', () => {
+            const js = fs.readFileSync(roomJsPath, 'utf-8');
+            // 应该检查 localStorage 中的 isHost
+            expect(js).toContain('watch-together.isHost');
+            expect(js).toContain('localStorage.getItem');
+            // 应该检查房间ID是否匹配
+            expect(js).toContain('storedRoomId === roomId');
+        });
+
+        test('如果是房主，从 localStorage 读取昵称', () => {
+            const js = fs.readFileSync(roomJsPath, 'utf-8');
+            // 应该从 localStorage 读取 hostNickname
+            expect(js).toContain('watch-together.hostNickname');
+            expect(js).toContain('hostNicknameFromStorage');
+        });
+
+        test('房主跳过昵称输入界面，直接调用 joinRoomWithNickname', () => {
+            const js = fs.readFileSync(roomJsPath, 'utf-8');
+            // 应该检查 isHostFromStorage
+            expect(js).toContain('isHostFromStorage');
+            // 应该隐藏昵称输入界面
+            expect(js).toContain('nicknameInputContainer.style.display = \'none\'');
+            // 应该直接调用 joinRoomWithNickname
+            expect(js).toContain('joinRoomWithNickname(roomId');
+            expect(js).toContain('hostNicknameFromStorage');
+        });
+
+        test('普通成员仍显示昵称输入框，功能正常', () => {
+            const js = fs.readFileSync(roomJsPath, 'utf-8');
+            // 如果不是房主，应该显示昵称输入界面
+            expect(js).toContain('else {');
+            expect(js).toContain('nicknameInputContainer.style.display = \'block\'');
+        });
+    });
 });
