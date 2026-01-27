@@ -1,9 +1,10 @@
 ---
 id: TASK-37
 title: 后端数据模型调整（Room / RoomMember / 可选 operationSourceUserId）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 09:43'
+updated_date: '2026-01-27 10:41'
 labels: []
 dependencies: []
 ---

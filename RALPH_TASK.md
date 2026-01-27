@@ -1,28 +1,23 @@
 ---
-backlog_id: backlog-36
-task: 明确角色与房间状态模型（房主 / 成员 + 仅房主持有真实网页）
-test_command: "cat watch-together-server/TASK_VERIFICATION.md | grep "角色与房间状态模型"
-cat watch-together-server/TASK_VERIFICATION.md | grep "角色与房间状态模型""
+backlog_id: backlog-37
+task: 后端数据模型调整（Room / RoomMember / 可选 operationSourceUserId）
+test_command: "cd watch-together-server && npm test -- schema
+cd watch-together-server && npm test -- schema"
 ---
 
-# Task: 明确角色与房间状态模型（房主 / 成员 + 仅房主持有真实网页）
+# Task: 后端数据模型调整（Room / RoomMember / 可选 operationSourceUserId）
 
 ## Description
 
-设计并文档化新的角色与房间状态模型：房主是创建房间的人且唯一不可变更；普通成员只能通过分享链接加入，永远不是房主。房主浏览器内通过 iframe 打开真实网页，普通成员端不再直接嵌入 iframe，而是仅看到房主浏览器画面的实时画面（视频流或画布投影）。在数据模型层面明确 Room.currentUrl（真实网页 URL）、Room.hostId（房主 userId）、可选 Room.operationSourceUserId（被指定为“输入来源”的成员 userId），并给出状态流转说明（创建房间、房主刷新/重连、成员加入/离开）。
+基于任务 1 的模型设计，更新 Prisma schema 与数据库迁移：确保 Room 表中存在 hostId、currentUrl 字段；RoomMember 表中有 isHost 字段且仅在创建时设置，不允许后续随意修改。如需要支持“指定操作来源成员”，为 Room 增加 operationSourceUserId 字段（或单独状态表）。确保迁移脚本在现有数据上安全运行，同时更新 TypeScript 类型定义与相关服务（如 roomCacheService）。
 
-**Test Command**: `cat watch-together-server/TASK_VERIFICATION.md | grep "角色与房间状态模型"`
+**Test Command**: `cd watch-together-server && npm test -- schema`
 
-**测试用例**:
-
-**测试场景**:
-1. 打开文档即可理解当前房间中谁是房主、谁是成员，以及他们分别能做什么。
-
-**Test Command**: `cat watch-together-server/TASK_VERIFICATION.md | grep "角色与房间状态模型"`
+**Test Command**: `cd watch-together-server && npm test -- schema`
 
 ## Success Criteria
 
-- [x] 有一份文档或者注释，清晰描述房主 / 普通成员的职责边界以及房主不可变更规则。
-- [x] 数据模型中明确存在 hostId 与 currentUrl 字段，并说明它们的单一真源语义。
-- [x] 文档中明确写出“普通成员只看到画面，不直接访问被嵌入网页 DOM”这一约束。
-- [x] 描述清楚房主刷新或重进房间时如何保持房主身份的一致性。
+- [ ] Prisma schema 中 Room 与 RoomMember 结构与任务 1 的模型设计一致。
+- [ ] 运行数据库迁移脚本不会破坏已有数据，且新字段非空策略合理（必要时有默认值或可为空）。
+- [ ] TypeScript 代码中引用 Room / RoomMember 的地方都能正常编译通过（无类型错误）。
+- [ ] 获取房间详情接口返回的数据结构包括 hostId 与 currentUrl。
