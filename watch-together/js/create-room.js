@@ -12,9 +12,21 @@ if (typeof window !== 'undefined' && window.API_BASE_URL) {
 }
 
 /**
+ * 校验 URL 是否为 http/https
+ */
+function isValidHttpUrl(urlString) {
+    try {
+        const url = new URL(urlString);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
  * 创建房间
  */
-async function createRoom(roomName, hostNickname) {
+async function createRoom(roomName, hostNickname, url) {
     try {
         // 构建请求体，只包含非空字段
         const requestBody = {};
@@ -24,6 +36,11 @@ async function createRoom(roomName, hostNickname) {
         if (hostNickname && hostNickname.trim()) {
             requestBody.hostNickname = hostNickname.trim();
         }
+        // URL 为必填字段，必须是合法的 http/https 地址
+        if (!url || !url.trim() || !isValidHttpUrl(url.trim())) {
+            throw new Error('请输入有效的 http:// 或 https:// 链接');
+        }
+        requestBody.url = url.trim();
         
         const response = await fetch(`${API_BASE}/api/v1/rooms`, {
             method: 'POST',
@@ -101,67 +118,115 @@ async function copyToClipboard(text) {
 // 页面加载完成后初始化（仅在浏览器环境中执行）
 if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('createRoomForm');
-    const createBtn = document.getElementById('createBtn');
-    const loading = document.getElementById('loading');
-    const error = document.getElementById('error');
-    const result = document.getElementById('result');
-    const roomIdEl = document.getElementById('roomId');
-    const roomNameDisplayEl = document.getElementById('roomNameDisplay');
-    const roomLinkEl = document.getElementById('roomLink');
-    const copyBtn = document.getElementById('copyBtn');
+        const form = document.getElementById('createRoomForm');
+        const createBtn = document.getElementById('createBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const result = document.getElementById('result');
+        const roomIdEl = document.getElementById('roomId');
+        const roomNameDisplayEl = document.getElementById('roomNameDisplay');
+        const roomLinkEl = document.getElementById('roomLink');
+        const copyBtn = document.getElementById('copyBtn');
+        const targetUrlInput = document.getElementById('targetUrl');
 
-    // 表单提交处理
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+        // 表单提交处理
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        // 重置状态
-        error.classList.remove('show');
-        result.classList.remove('show');
-        loading.classList.add('show');
-        createBtn.disabled = true;
+            // 重置状态
+            error.classList.remove('show');
+            result.classList.remove('show');
 
-        const roomName = document.getElementById('roomName').value.trim();
-        const hostNickname = document.getElementById('hostNickname').value.trim();
+            const roomName = document.getElementById('roomName').value.trim();
+            const hostNickname = document.getElementById('hostNickname').value.trim();
+            const targetUrl = targetUrlInput.value.trim();
 
-        try {
-            // 创建房间
-            const room = await createRoom(roomName, hostNickname);
-
-            // 生成房间链接
-            const roomLink = generateRoomLink(room.id);
-
-            // 显示结果
-            roomIdEl.textContent = room.id;
-            roomNameDisplayEl.textContent = room.name || '未命名房间';
-            roomLinkEl.value = roomLink;
-
-            result.classList.add('show');
-            loading.classList.remove('show');
-        } catch (err) {
-            error.textContent = err.message || '创建房间失败，请稍后重试';
-            error.classList.add('show');
-            loading.classList.remove('show');
-        } finally {
-            createBtn.disabled = false;
-        }
-    });
-
-    // 复制链接按钮
-    copyBtn.addEventListener('click', async () => {
-        const link = roomLinkEl.value;
-        if (link) {
-            const success = await copyToClipboard(link);
-            if (success) {
-                copyBtn.textContent = '已复制！';
-                setTimeout(() => {
-                    copyBtn.textContent = '复制链接';
-                }, 2000);
-            } else {
-                alert('复制失败，请手动复制链接');
+            // 前端校验 URL 必填且为合法 http/https
+            if (!targetUrl || !isValidHttpUrl(targetUrl)) {
+                error.textContent = '请输入有效的 http:// 或 https:// 链接';
+                error.classList.add('show');
+                return;
             }
-        }
-    });
+
+            loading.classList.add('show');
+            createBtn.disabled = true;
+
+            try {
+                // 创建房间
+                const room = await createRoom(roomName, hostNickname, targetUrl);
+
+                // 从响应中获取必要信息（兼容旧字段）
+                const roomId = room.roomId || room.id;
+                const hostUserId = room.hostUserId || room.hostId;
+                const currentUrl = room.currentUrl || targetUrl;
+
+                // 生成房间链接（用于展示和回退）
+                const roomLink = generateRoomLink(roomId);
+
+                // 在本地存储房间和房主信息，供房主端初始化使用
+                try {
+                    if (typeof window !== 'undefined' && window.localStorage) {
+                        window.localStorage.setItem('watch-together.roomId', roomId);
+                        if (hostUserId) {
+                            window.localStorage.setItem('watch-together.userId', hostUserId);
+                            window.localStorage.setItem('watch-together.isHost', 'true');
+                        }
+                        if (currentUrl) {
+                            window.localStorage.setItem('watch-together.currentUrl', currentUrl);
+                        }
+                    }
+                } catch (storageError) {
+                    console.warn('保存房间信息到本地存储失败:', storageError);
+                }
+
+                // 更新结果展示（在跳转前短暂可见，也便于无跳转环境下调试）
+                roomIdEl.textContent = roomId;
+                roomNameDisplayEl.textContent = room.name || '未命名房间';
+                roomLinkEl.value = roomLink;
+                result.classList.add('show');
+                loading.classList.remove('show');
+
+                // 自动跳转到房主房间页面 /room/:roomId
+                if (typeof window !== 'undefined') {
+                    const targetPath = `/room/${roomId}`;
+                    const targetHref = (window.location && window.location.origin)
+                        ? `${window.location.origin}${targetPath}`
+                        : targetPath;
+                    try {
+                        if (window.location && typeof window.location.assign === 'function') {
+                            window.location.assign(targetHref);
+                        } else {
+                            window.location.href = targetHref;
+                        }
+                    } catch (navError) {
+                        // 兜底方案
+                        window.location.href = targetPath;
+                    }
+                }
+            } catch (err) {
+                error.textContent = err.message || '创建房间失败，请稍后重试';
+                error.classList.add('show');
+                loading.classList.remove('show');
+            } finally {
+                createBtn.disabled = false;
+            }
+        });
+
+        // 复制链接按钮
+        copyBtn.addEventListener('click', async () => {
+            const link = roomLinkEl.value;
+            if (link) {
+                const success = await copyToClipboard(link);
+                if (success) {
+                    copyBtn.textContent = '已复制！';
+                    setTimeout(() => {
+                        copyBtn.textContent = '复制链接';
+                    }, 2000);
+                } else {
+                    alert('复制失败，请手动复制链接');
+                }
+            }
+        });
     });
 }
 

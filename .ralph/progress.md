@@ -2124,3 +2124,14 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-27 20:24:13
 **Session 1 ended** - ✅ TASK COMPLETE
+
+### 2026-01-27 21:29:15
+**Session 1 started** (model: auto)
+
+### 2026-01-27 [current time]
+**Session 1 completed** - 创建房间前端页面改造（URL 必填并自动进入房间）
+- 在首页 index.html 中为创建房间表单新增“目标网址 URL（必填）”输入框
+- 在 create-room.js 中新增 URL 校验逻辑（仅允许 http/https），创建房间时发送 { name?, hostNickname?, url } 到 /api/v1/rooms
+- 创建成功后将 roomId、hostUserId、currentUrl 保存到 localStorage，并自动生成 /room/:roomId 链接跳转（无需再拼接 ?url）
+- 新增 Jest 测试 __tests__/create-room-ui.test.js，覆盖 URL 为空/非法拦截和成功创建跳转逻辑
+- 运行 `cd watch-together && npm test -- create-room-ui`，全部 3 个测试用例通过
