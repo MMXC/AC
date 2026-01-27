@@ -162,7 +162,7 @@ describe('实时聊天', () => {
 
         test('可以加载消息历史记录', () => {
             const js = fs.readFileSync(chatJsPath, 'utf-8');
-            expect(js).toContain('messageHistory = message.data.messages');
+            expect(js).toContain('messageHistory = message.data.recentMessages');
         });
 
         test('renderMessages函数可以渲染所有历史消息', () => {
@@ -182,7 +182,7 @@ describe('实时聊天', () => {
             expect(js).toContain('SYNC_STATE');
             // 检查是否在SYNC_STATE处理中加载消息
             const syncStateIndex = js.indexOf('case \'SYNC_STATE\'');
-            const messagesIndex = js.indexOf('message.data.messages', syncStateIndex);
+            const messagesIndex = js.indexOf('message.data.recentMessages', syncStateIndex);
             expect(messagesIndex).toBeGreaterThan(syncStateIndex);
         });
     });
