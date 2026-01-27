@@ -342,6 +342,31 @@
             color: #aaa;
             font-size: 0.9em;
         }
+
+        .start-sharing-button {
+            padding: 10px 20px;
+            background: #4a9eff;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-left: 15px;
+        }
+
+        .start-sharing-button:hover {
+            background: #3a8eef;
+        }
+
+        .start-sharing-button.streaming {
+            background: #e74c3c;
+        }
+
+        .start-sharing-button.streaming:hover {
+            background: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -459,5 +484,6 @@
     <script src="/js/room.js"></script>
     <script src="/js/chat.js"></script>
     <script src="/js/sync.js"></script>
+    <script src="/js/screen-streaming.js"></script>
 </body>
 </html>

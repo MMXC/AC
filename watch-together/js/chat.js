@@ -91,6 +91,13 @@ function connectWebSocket() {
 
     ws.onopen = () => {
         console.log('WebSocket 连接已建立');
+        
+        // 触发 WebSocket 连接事件，供其他模块使用（如 screen-streaming.js）
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('websocketConnected', {
+                detail: { ws: ws }
+            }));
+        }
     };
 
     ws.onmessage = (event) => {
@@ -108,6 +115,12 @@ function connectWebSocket() {
 
     ws.onclose = (event) => {
         console.log('WebSocket 连接已关闭', event.code, event.reason);
+        
+        // 触发 WebSocket 断开事件
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('websocketDisconnected'));
+        }
+        
         // 如果是因为连接数限制而关闭（1008），不要重连
         if (event.code === 1008) {
             console.error('WebSocket 连接因连接数限制而关闭，停止重连');
