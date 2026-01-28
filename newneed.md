@@ -1,144 +1,204 @@
-# 修复房主跳转后以普通成员身份加入房间的问题 - 任务分解
+# 新需求：升级 watch-together 为 WebRTC 实时“房主共享画面”
 
-基于控制台日志分析的问题分解结果。
-
-## 问题分析
-
-### 问题现象
-从控制台日志可以看到：
-1. `room.js:840 检测到房主身份，自动使用昵称加入房间: alex` - 前端正确检测到房主身份
-2. `room.js:417 加入房间成功，服务器返回的 userId: user-8z8eh2gf` - 服务器返回了新的 userId（不是创建房间时的 hostUserId）
-3. `room.js:469 普通成员进入房间，显示画面容器占位` - 最终被识别为普通成员
-
-### 根本原因
-1. **后端接口设计问题**：`POST /api/v1/rooms/:roomId/join` 接口设计为只创建普通成员，始终生成新的 `userId`，`isHost` 始终为 `false`（见 `watch-together-server/src/routes/rooms.ts:518-520`）
-2. **房主加入逻辑缺失**：房主创建房间时已有 `hostUserId`，但跳转后使用 `/join` 接口时，服务器会忽略传入的 `userId`，生成新的 `userId`，导致房主身份丢失
-3. **前端判断逻辑问题**：前端在 `room.js:415` 通过 `serverUserId === roomHostId` 判断是否为房主，但由于服务器返回的是新生成的 `userId`，判断结果始终为 `false`
-
-### 解决方案
-根据 `room-roles-and-state-model.md` 文档，房主应该使用 `hostId` 重新连接，而不是创建新成员。需要：
-1. 修改 `/join` 接口支持可选的 `userId` 参数，如果传入的 `userId` 等于 `Room.hostId`，则识别为房主并复用现有 RoomMember 记录
-2. 或者创建新的接口 `/api/v1/rooms/:roomId/host-join` 专门处理房主加入
-3. 前端在检测到房主身份时，使用正确的接口和参数
-
-## 分解原则
-
-- **正交性**：任务之间相互独立，可并行执行
-- **原子性**：每个任务不可再分，有明确的完成标准
-- **可测试性**：每个任务都有明确的测试命令和验收条件
+目标：把“房主 iframe 内容 → 其他成员看到”的能力升级为基于 WebRTC 的实时视频流，由房主共享屏幕/标签页，房间内其他成员实时观看。
 
 ---
 
-### 任务 1: 修改加入房间接口支持房主身份识别
-- **ID**: backend-fix-001
-- **描述**: 修改 `POST /api/v1/rooms/:roomId/join` 接口，支持可选的 `userId` 参数。如果请求中传入 `userId` 且该 `userId` 等于 `Room.hostId`，则识别为房主，复用现有的 RoomMember 记录（更新 `leftAt` 为 null，`lastActiveAt` 为当前时间），返回 `isHost: true`。如果 `userId` 不等于 `hostId` 或未传入，则按现有逻辑创建新成员。
-- **测试命令**: `cd watch-together-server && npm test -- rooms-join`
+### 任务 1: 房主端实现屏幕/标签页采集预览（getDisplayMedia）
+
+- **ID**: webrtc-a1
+- **描述**: 在房主房间页面实现“开始共享 / 停止共享”按钮，通过 navigator.mediaDevices.getDisplayMedia 采集屏幕或浏览器标签页，并在本地 <video> 元素中预览采集到的 MediaStream。确保点击停止后正确关闭 MediaStream 轨道并清理预览。
+- **测试命令**: `手动：在浏览器中打开房主页面，点击开始/停止共享按钮，观察本地预览行为`
 - **成功标准**:
-  1. [ ] `/join` 接口支持可选的 `userId` 请求参数
-  2. [ ] 当传入的 `userId` 等于 `Room.hostId` 时，识别为房主
-  3. [ ] 房主加入时复用现有 RoomMember 记录，更新 `leftAt` 为 null
-  4. [ ] 房主加入时返回 `isHost: true`
-  5. [ ] 普通成员加入时仍生成新的 `userId`，返回 `isHost: false`
-  6. [ ] 传入无效的 `userId`（不等于 hostId）时，仍创建新成员
-  7. [ ] 接口向后兼容，不传 `userId` 时行为不变
+  1. [ ] 点击“开始共享”后浏览器弹出屏幕/标签页选择对话框，用户可成功选择要共享的内容
+  2. [ ] 选择内容后，本地预览 <video> 可以实时显示采集到的画面（含鼠标移动/页面滚动等）
+  3. [ ] 点击“停止共享”后，预览 <video> 停止播放且 MediaStream 轨道已关闭（不会继续占用系统共享状态）
+  4. [ ] 多次开始/停止共享不会造成异常（例如多重预览、权限状态卡死等）
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 首次授权、已授权、拒绝授权三种浏览器权限状态下分别测试开始/停止共享流程
+    2. 共享浏览器标签页、共享整个屏幕、共享应用窗口三种模式下验证预览行为
+  - **断言示例**: 无
 - **依赖**: 无
-- **测试用例**:
-  - **测试数据**: 
-    - 输入1: `{ nickname: "房主", userId: "user-abc123" }` (userId = Room.hostId)
-    - 预期输出1: `{ userId: "user-abc123", isHost: true }`，复用现有 RoomMember
-    - 输入2: `{ nickname: "成员" }` (不传 userId)
-    - 预期输出2: `{ userId: "user-new123", isHost: false }`，创建新成员
-  - **测试场景**:
-    1. 房主使用 hostUserId 加入房间应识别为房主
-    2. 普通成员加入房间应创建新成员
-    3. 传入无效 userId 应创建新成员
-    4. 不传 userId 应保持向后兼容
-  - **断言示例**:
-    ```typescript
-    expect(response.body.data.isHost).toBe(true)
-    expect(response.body.data.userId).toBe(hostUserId)
-    const member = await prisma.roomMember.findUnique({ where: { userId: hostUserId } })
-    expect(member.leftAt).toBeNull()
-    ```
 
-### 任务 2: 更新前端房主加入逻辑
-- **ID**: frontend-fix-007
-- **描述**: 修改 `watch-together/js/room.js` 中的 `joinRoomWithNickname` 函数，当检测到房主身份时（通过 localStorage 中的 `isHost` 标识），在调用 `/join` 接口时传入 `userId` 参数（从 localStorage 读取的 `watch-together.userId`）。确保房主使用正确的 `hostUserId` 加入房间。
-- **测试命令**: `cd watch-together && npm test -- room-init`
-- **成功标准**:
-  1. [ ] `joinRoomWithNickname` 函数检查是否为房主（通过 localStorage 或参数）
-  2. [ ] 如果是房主，在 API 请求中传入 `userId` 参数
-  3. [ ] 传入的 `userId` 来自 localStorage 中的 `watch-together.userId`
-  4. [ ] 普通成员加入时不传 `userId` 参数
-  5. [ ] 房主加入后正确识别为房主（`isHost: true`）
-  6. [ ] 房主加入后显示房主界面（iframe、修改 URL 按钮等）
-- **依赖**: 任务 1
-- **测试用例**:
-  - **测试数据**: 
-    - 输入: localStorage 中有 `watch-together.isHost: 'true'` 和 `watch-together.userId: 'user-abc123'`
-    - 预期输出: API 请求包含 `{ nickname: "alex", userId: "user-abc123" }`，返回 `isHost: true`
-  - **测试场景**:
-    1. 房主自动加入时应传入 hostUserId
-    2. 普通成员加入时不应传入 userId
-    3. 房主加入后应显示房主界面
-    4. 普通成员加入后应显示成员界面
-  - **断言示例**:
-    ```javascript
-    expect(requestBody.userId).toBe(hostUserId)
-    expect(joinData.data.isHost).toBe(true)
-    expect(window.isHost).toBe(true)
-    ```
+---
 
-### 任务 3: 更新加入房间接口的请求验证 Schema
-- **ID**: backend-fix-002
-- **描述**: 更新 `watch-together-server/src/validation/schemas.ts` 中的 `joinRoomSchema`，添加可选的 `userId` 字段验证。确保 `userId` 格式正确（如果提供），并更新接口文档注释。
-- **测试命令**: `cd watch-together-server && npm test -- validation`
+### 任务 2: 成员端实现可附加 MediaStream 的视频播放器组件
+
+- **ID**: webrtc-a2
+- **描述**: 在成员房间页面实现独立的 VideoPlayer 组件，对外暴露 attachStream(MediaStream) 和 detachStream() 接口，用于播放远端 MediaStream（目前先用假数据或本地 getUserMedia 模拟）。组件不关心 WebRTC 细节，只关心 MediaStream。
+- **测试命令**: `手动：在成员页面控制台通过测试函数传入 MediaStream，观察 <video> 播放行为`
 - **成功标准**:
-  1. [ ] `joinRoomSchema` 包含可选的 `userId` 字段
-  2. [ ] `userId` 字段验证格式（如果提供）
-  3. [ ] 接口文档注释更新，说明 `userId` 参数的用途
-  4. [ ] 验证逻辑正确，无效 `userId` 格式返回 400
-  5. [ ] 向后兼容，不传 `userId` 时验证通过
+  1. [ ] VideoPlayer 组件可以在不刷新页面的情况下多次 attachStream / detachStream 而不会出现内存泄漏或挂死
+  2. [ ] 附加合法 MediaStream 时，成员端 <video> 能正常播放画面和（可选）音频
+  3. [ ] detachStream 后，视频区域清空或显示“等待流”状态，不再占用旧的 MediaStream 轨道
+  4. [ ] 组件不依赖 WebRTC 细节，只关心拿到的 MediaStream 对象
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 使用 getUserMedia({ video: true }) 获取本地摄像头流传给 attachStream，确认画面正常
+    2. 快速多次调用 attachStream 传入不同流，确认不会残留旧视频画面
+    3. 调用 detachStream 后，组件 UI 正确更新为“暂无视频流”
+  - **断言示例**: 无
 - **依赖**: 无
-- **测试用例**:
-  - **测试数据**: 
-    - 输入1: `{ nickname: "test", userId: "user-abc123" }` (有效格式)
-    - 预期输出1: 验证通过
-    - 输入2: `{ nickname: "test", userId: "invalid" }` (无效格式)
-    - 预期输出2: 返回 400 错误
-  - **测试场景**:
-    1. 有效的 userId 格式应通过验证
-    2. 无效的 userId 格式应返回 400
-    3. 不传 userId 应通过验证
-  - **断言示例**:
-    ```typescript
-    expect(() => joinRoomSchema.parse({ nickname: "test", userId: "user-abc123" })).not.toThrow()
-    expect(() => joinRoomSchema.parse({ nickname: "test", userId: "invalid" })).toThrow()
-    ```
 
-### 任务 4: 添加房主加入房间的集成测试
-- **ID**: backend-fix-003
-- **描述**: 在 `watch-together-server/tests/` 中添加或更新测试文件，测试房主使用 `hostUserId` 加入房间的场景。验证房主身份识别、RoomMember 记录复用、返回数据正确性。
-- **测试命令**: `cd watch-together-server && npm test -- rooms-join-host`
+---
+
+### 任务 3: 设计 WebRTC 信令消息协议（基于现有 WebSocket）
+
+- **ID**: webrtc-b1
+- **描述**: 基于现有房间 WebSocket/sync 通道，定义用于 WebRTC 的信令消息格式，包括 WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE 等类型，以及字段：roomId、fromUserId、toUserId、sdp、candidate 等。用文档或 TypeScript 类型固化这些结构。
+- **测试命令**: `无自动命令，代码评审 + TS 类型检查 + 单元测试`
 - **成功标准**:
-  1. [ ] 测试文件创建或更新完成
-  2. [ ] 测试房主使用 hostUserId 加入房间的场景
-  3. [ ] 验证返回的 `isHost` 为 `true`
-  4. [ ] 验证 RoomMember 记录被正确复用（leftAt 为 null）
-  5. [ ] 验证普通成员加入场景不受影响
-  6. [ ] 所有测试用例通过
-- **依赖**: 任务 1, 任务 3
+  1. [ ] 有文档或 TS 类型清晰列出所有 WebRTC 信令消息的 JSON 结构
+  2. [ ] 每个字段（roomId/fromUserId/toUserId/sdp/candidate 等）都有明确含义说明
+  3. [ ] 前端信令发送/接收层统一使用这些类型，不再硬编码字符串
+  4. [ ] 为未来扩展（多 track、多房主）预留扩展点或版本化策略
 - **测试用例**:
-  - **测试数据**: 
-    - 输入: 创建房间后，使用 hostUserId 调用 `/join` 接口
-    - 预期输出: 返回 `isHost: true`，RoomMember 记录更新
+  - **测试数据**: 无
   - **测试场景**:
-    1. 房主首次加入房间（创建时已创建 RoomMember）
-    2. 房主重新加入房间（RoomMember 的 leftAt 不为 null）
-    3. 普通成员加入房间（不应受影响）
-  - **断言示例**:
-    ```typescript
-    expect(response.body.data.isHost).toBe(true)
-    expect(member.leftAt).toBeNull()
-    expect(member.lastActiveAt).toBeDefined()
-    ```
+    1. 为每种信令消息构造至少一个示例 JSON，并通过单元测试断言能被类型定义正确解析
+    2. 在前端模拟 send/receive 信令消息的单元测试中，确保不会因字段名错误导致解析失败
+  - **断言示例**: 无
+- **依赖**: 无
+
+---
+
+### 任务 4: 服务器端实现 WebRTC 信令转发（透明路由）
+
+- **ID**: webrtc-b2
+- **描述**: 在现有 WebSocket 服务中增加对 WebRTC 信令消息的简单路由逻辑：根据 roomId / toUserId 将 WEBRTC_OFFER / WEBRTC_ANSWER / WEBRTC_ICE_CANDIDATE 转发给目标连接，不解析 SDP/ICE 内容。
+- **测试命令**: `手动或集成测试：使用两个浏览器实例互相发送模拟 WEBRTC_* 消息，观察服务器转发行为`
+- **成功标准**:
+  1. [ ] 服务器能识别并转发来自客户端的 WebRTC 信令到正确的目标连接
+  2. [ ] 不对 SDP/ICE 内容做任何修改，仅做透明转发
+  3. [ ] 目标用户不在线时，有合理警告日志而不会崩溃
+  4. [ ] WebRTC 信令不会干扰现有聊天/操作同步消息流
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 使用两个浏览器 A/B 连接到同一房间，通过控制台发送模拟 WEBRTC_OFFER/ANSWER/CANDIDATE 消息，确认对方能收到原始 JSON
+    2. 在目标用户断开连接后继续发送 WEBRTC_* 消息，确认服务器不会抛异常，并记录可读的错误日志
+  - **断言示例**: 无
+- **依赖**: 无
+
+---
+
+### 任务 5: 单页面内完成 WebRTC Loopback Demo（无服务器）
+
+- **ID**: webrtc-c1
+- **描述**: 在单个浏览器页面中创建两个 RTCPeerConnection（pc1/pc2），通过本地变量传递 offer/answer/ICE，将 getDisplayMedia 或 getUserMedia 得到的流从 pc1 发送到 pc2，并在页面上展示“本地预览”和“远端播放”两个 <video>，用于验证 WebRTC API 使用是否正确。
+- **测试命令**: `手动：打开本地 demo 页面，点击“开始 Loopback 测试”，观察两个 <video> 是否正常显示`
+- **成功标准**:
+  1. [ ] pc1 能成功获取 MediaStream 并通过 addTrack 添加到 PeerConnection
+  2. [ ] pc1 与 pc2 之间通过本地 JS 变量成功交换 offer/answer/ICE，建立 WebRTC 连接
+  3. [ ] pc2 的 <video> 能正常播放从 pc1 发送的远端流
+  4. [ ] 停止测试时能正确关闭 PeerConnection 和相关 MediaStream 轨道
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 使用 getUserMedia 测试 Loopback
+    2. 使用 getDisplayMedia 测试 Loopback
+  - **断言示例**: 无
+- **依赖**: webrtc-a1, webrtc-a2
+
+---
+
+### 任务 6: 通过 WebSocket 信令在房主与单个成员之间建立 WebRTC 连接
+
+- **ID**: webrtc-c2
+- **描述**: 基于任务 B1/B2 定义的信令格式和转发逻辑，在实际房间环境中实现“房主 ↔ 单一成员”的 WebRTC 媒体通路。房主作为 caller，成员作为 callee，通过 WebSocket 交换 offer/answer/ICE，将房主的 getDisplayMedia 流发送到成员端的 VideoPlayer。
+- **测试命令**: `手动：房主与一个成员加入同一房间，房主点击开始共享，确认成员端出现并播放房主画面`
+- **成功标准**:
+  1. [ ] 房主点击开始共享能向目标成员发送 WEBRTC_OFFER
+  2. [ ] 成员收到 WEBRTC_OFFER 后能创建 answer 并用 WEBRTC_ANSWER 回传
+  3. [ ] 双方能正确处理并转发 WEBRTC_ICE_CANDIDATE 直至连接建立
+  4. [ ] 成员端 VideoPlayer 成功接收到远端 MediaStream 并播放画面
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 局域网环境下房主与单成员成功建立 WebRTC 连接并传输视频流
+    2. 刷新任一端页面后可重新建立连接
+  - **断言示例**: 无
+- **依赖**: webrtc-a1, webrtc-a2, webrtc-b1, webrtc-b2, webrtc-c1
+
+---
+
+### 任务 7: 支持一个房主向所有成员建立 WebRTC 连接
+
+- **ID**: webrtc-d1
+- **描述**: 在房主端为房间内每个非房主用户维护一个独立的 RTCPeerConnection，并通过 WebSocket 信令为每个成员建立 WebRTC 媒体通路，让所有在线成员都能看到房主视频流。
+- **测试命令**: `手动：1 房主 + 2 成员加入同一房间，房主开始共享，确认两个成员都能看到房主画面`
+- **成功标准**:
+  1. [ ] 房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）
+  2. [ ] 信令层能为每个成员正确路由对应的 WebRTC 信令
+  3. [ ] 新成员加入房间时可以增量建立连接，不影响已有连接
+  4. [ ] 成员离开房间时，房主端能关闭对应 PeerConnection 并释放资源
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 在房主在线时陆续加入多个成员，所有人都能收到房主流
+    2. 某成员离开房间后，其余成员连接不受影响
+  - **断言示例**: 无
+- **依赖**: webrtc-c2
+
+---
+
+### 任务 8: 仅向房主暴露开始/停止共享按钮并与权限系统集成
+
+- **ID**: webrtc-e1
+- **描述**: 仅当当前用户为房主时显示共享控制按钮；普通成员不显示或禁用。同时在后端/信令层增加校验，拒绝普通成员伪造发起共享的 WebRTC 信令，确保只有房主可以作为媒体流发送方。
+- **测试命令**: `手动：分别以房主和普通成员身份进入房间，检查按钮与权限行为`
+- **成功标准**:
+  1. [ ] currentUser.isOwner === true 时页面显示共享按钮，否则不显示/禁用
+  2. [ ] 普通成员即使在控制台调用前端共享方法，后端也会拒绝该共享请求
+  3. [ ] 房主停止共享后，按钮/文案状态能及时恢复
+  4. [ ] 权限逻辑不影响普通成员正常观看已有 WebRTC 视频流
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 房主登录时按钮可见且可操作，普通成员登录时按钮不可见
+    2. 普通成员在控制台尝试伪造 WEBRTC_OFFER，后端日志中能记录并拒绝该行为
+  - **断言示例**: 无
+- **依赖**: webrtc-c2
+
+---
+
+### 任务 9: 成员端播放器 UI 集成与状态展示
+
+- **ID**: webrtc-e2
+- **描述**: 将 VideoPlayer 集成到真实房间页面，为成员端提供清晰的状态文案（等待房主开始共享 / 正在播放房主画面 / 房主已停止共享），并在 WebRTC 状态变化时正确更新。
+- **测试命令**: `手动：1 房主 + 1 成员反复打开/关闭共享，观察成员端状态文案和视频行为`
+- **成功标准**:
+  1. [ ] 房主未开始共享时，成员端显示“等待房主开始共享...”等状态
+  2. [ ] WebRTC 建立并收到远端流时，自动显示视频并显示“正在播放房主画面”
+  3. [ ] 房主停止共享或连接断开时，成员端停止播放并显示“房主已停止共享”或错误提示
+  4. [ ] 状态文案与实际连接状态一致，不出现假“播放中”
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 开始共享 → 成员端从“等待”切换为“播放”状态
+    2. 停止共享 → 成员端从“播放”切换为“已停止/等待”状态
+  - **断言示例**: 无
+- **依赖**: webrtc-a2, webrtc-c2
+
+---
+
+### 任务 10: WebRTC 错误处理与重试策略
+
+- **ID**: webrtc-f2
+- **描述**: 为 getDisplayMedia、ICE 协商失败、信令中断等关键路径增加错误处理和有限重试策略，为房主/成员提供清晰的错误提示，并在合理范围内自动重试或提示用户刷新/重进。
+- **测试命令**: `手动：刻意制造权限拒绝、断网、关闭服务器等错误场景，观察前后端提示与行为`
+- **成功标准**:
+  1. [ ] 房主拒绝 getDisplayMedia 权限时有明确错误提示而非静默失败
+  2. [ ] ICE 长时间协商失败时能超时退出并提示用户检查网络/稍后重试
+  3. [ ] WebSocket 信令中断时，前端能检测到并停止共享/播放，提示错误
+  4. [ ] 对可恢复错误在限制次数内尝试自动重连，失败后给出清晰说明
+- **测试用例**:
+  - **测试数据**: 无
+  - **测试场景**:
+    1. 权限拒绝、ICE 失败、信令中断三种场景分别触发错误分支
+    2. 测试自动重连次数与间隔是否符合预期（例如 3 次，每次间隔 5 秒）
+  - **断言示例**: 无
+- **依赖**: webrtc-c2, webrtc-d1
