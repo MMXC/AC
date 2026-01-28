@@ -1,35 +1,41 @@
 ---
-backlog_id: backlog-53
-task: 更新加入房间接口的请求验证 Schema
-test_command: "cd watch-together-server && npm test -- validation
-cd watch-together-server && npm test -- validation"
+backlog_id: backlog-54
+task: 添加房主加入房间的集成测试
+test_command: "cd watch-together-server && npm test -- rooms-join-host
+cd watch-together-server && npm test -- rooms-join-host"
 ---
 
-# Task: 更新加入房间接口的请求验证 Schema
+# Task: 添加房主加入房间的集成测试
 
 ## Description
 
-更新 `watch-together-server/src/validation/schemas.ts` 中的 `joinRoomSchema`，添加可选的 `userId` 字段验证。确保 `userId` 格式正确（如果提供），并更新接口文档注释。
+在 `watch-together-server/tests/` 中添加或更新测试文件，测试房主使用 `hostUserId` 加入房间的场景。验证房主身份识别、RoomMember 记录复用、返回数据正确性。
 
-**Test Command**: `cd watch-together-server && npm test -- validation`
+**Test Command**: `cd watch-together-server && npm test -- rooms-join-host`
 
 **测试用例**:
 
+**测试数据**:
+1. 输入: `创建房间后，使用 hostUserId 调用 `/join` 接口`
+   预期输出: `返回 `isHost: true`，RoomMember 记录更新`
+
 **测试场景**:
-1. 有效的 userId 格式应通过验证
-2. 无效的 userId 格式应返回 400
-3. 不传 userId 应通过验证
+1. 房主首次加入房间（创建时已创建 RoomMember）
+2. 房主重新加入房间（RoomMember 的 leftAt 不为 null）
+3. 普通成员加入房间（不应受影响）
 
 **断言示例**:
-1. `expect(() => joinRoomSchema.parse({ nickname: "test", userId: "user-abc123" })).not.toThrow()`
-2. `expect(() => joinRoomSchema.parse({ nickname: "test", userId: "invalid" })).toThrow()`
+1. `expect(response.body.data.isHost).toBe(true)`
+2. `expect(member.leftAt).toBeNull()`
+3. `expect(member.lastActiveAt).toBeDefined()`
 
-**Test Command**: `cd watch-together-server && npm test -- validation`
+**Test Command**: `cd watch-together-server && npm test -- rooms-join-host`
 
 ## Success Criteria
 
-- [x] `joinRoomSchema` 包含可选的 `userId` 字段
-- [x] `userId` 字段验证格式（如果提供）
-- [x] 接口文档注释更新，说明 `userId` 参数的用途
-- [x] 验证逻辑正确，无效 `userId` 格式返回 400
-- [x] 向后兼容，不传 `userId` 时验证通过
+- [ ] 测试文件创建或更新完成
+- [ ] 测试房主使用 hostUserId 加入房间的场景
+- [ ] 验证返回的 `isHost` 为 `true`
+- [ ] 验证 RoomMember 记录被正确复用（leftAt 为 null）
+- [ ] 验证普通成员加入场景不受影响
+- [ ] 所有测试用例通过

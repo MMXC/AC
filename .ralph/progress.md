@@ -2790,3 +2790,35 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-28 15:46:31
 **Session 1 started** (model: auto)
+
+### 2026-01-28 [current time]
+**Session 1 completed** - 更新加入房间接口的请求验证 Schema
+- 验证了 `joinRoomSchema` 已包含可选的 `userId` 字段（schemas.ts 第139行）
+- 验证了 `userId` 字段格式验证逻辑（使用 `userIdSchema.optional()`，如果提供则验证格式）
+- 验证了接口文档注释已更新（schemas.ts 第128-136行），说明了 `userId` 参数的用途
+- 创建了完整的验证测试文件（tests/validation.test.ts），包含 14 个测试用例：
+  ✓ 有效的 userId 格式应通过验证
+  ✓ 无效的 userId 格式应抛出错误
+  ✓ 不传 userId 应通过验证（向后兼容）
+  ✓ userId 格式正确但长度不足应抛出错误
+  ✓ userId 格式正确但包含无效字符应抛出错误
+  ✓ userId 格式正确但前缀错误应抛出错误
+  ✓ userId 为空字符串应抛出错误
+  ✓ userId 为 null 应抛出错误
+  ✓ userId 为数字应抛出错误
+  ✓ 有效的 userId 格式（8位小写字母）应通过验证
+  ✓ 有效的 userId 格式（8位数字）应通过验证
+  ✓ 有效的 userId 格式（8位字母数字混合）应通过验证
+  ✓ nickname 必填，缺少 nickname 应抛出错误
+  ✓ nickname 为空字符串应抛出错误
+- 所有测试通过（14个测试全部通过）
+- 实现了所有成功标准：
+  ✓ `joinRoomSchema` 包含可选的 `userId` 字段
+  ✓ `userId` 字段验证格式（如果提供）
+  ✓ 接口文档注释更新，说明 `userId` 参数的用途
+  ✓ 验证逻辑正确，无效 `userId` 格式返回 400
+  ✓ 向后兼容，不传 `userId` 时验证通过
+- 提交了更改到 git
+
+### 2026-01-28 15:51:47
+**Session 1 ended** - ✅ TASK COMPLETE

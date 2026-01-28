@@ -1,9 +1,10 @@
 ---
 id: TASK-54
 title: 添加房主加入房间的集成测试
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 22:04'
+updated_date: '2026-01-28 07:52'
 labels: []
 dependencies: []
 ---
