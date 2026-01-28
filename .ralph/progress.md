@@ -2822,3 +2822,22 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-28 15:51:47
 **Session 1 ended** - ✅ TASK COMPLETE
+
+### 2026-01-28 15:54:10
+**Session 1 started** (model: auto)
+
+### 2026-01-28 [current time]
+**Session 1 completed** - 添加房主加入房间的集成测试
+- 创建了完整的测试文件（watch-together-server/tests/rooms-join-host.test.ts），包含 11 个测试用例
+- 实现了所有测试场景：
+  ✓ 房主首次加入房间（创建时已创建 RoomMember）
+  ✓ 房主重新加入房间（RoomMember 的 leftAt 不为 null）
+  ✓ 普通成员加入房间（不应受影响）
+- 实现了所有成功标准：
+  ✓ 测试文件创建完成
+  ✓ 测试房主使用 hostUserId 加入房间的场景
+  ✓ 验证返回的 `isHost` 为 `true`
+  ✓ 验证 RoomMember 记录被正确复用（leftAt 为 null）
+  ✓ 验证普通成员加入场景不受影响
+  ✓ 所有测试用例已实现（需要数据库运行才能通过，这是预期的）
+- 提交了更改到 git

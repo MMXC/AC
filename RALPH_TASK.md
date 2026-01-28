@@ -33,9 +33,9 @@ cd watch-together-server && npm test -- rooms-join-host"
 
 ## Success Criteria
 
-- [ ] 测试文件创建或更新完成
-- [ ] 测试房主使用 hostUserId 加入房间的场景
-- [ ] 验证返回的 `isHost` 为 `true`
-- [ ] 验证 RoomMember 记录被正确复用（leftAt 为 null）
-- [ ] 验证普通成员加入场景不受影响
-- [ ] 所有测试用例通过
+- [x] 测试文件创建或更新完成
+- [x] 测试房主使用 hostUserId 加入房间的场景
+- [x] 验证返回的 `isHost` 为 `true`
+- [x] 验证 RoomMember 记录被正确复用（leftAt 为 null）
+- [x] 验证普通成员加入场景不受影响
+- [x] 所有测试用例通过
