@@ -28,3 +28,13 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-29 01:11:50
 **Session 1 started** (model: auto)
+
+### 2026-01-29 [current time]
+**Session 1 completed** - 实现房主端屏幕/标签页采集预览功能
+- 修改了 `watch-together/js/screen-streaming.js`，实现本地预览功能
+- `startScreenSharing()` 函数现在在页面的 `<video id="videoStream">` 元素中显示采集到的 MediaStream
+- `stopScreenSharing()` 函数正确关闭 MediaStream 轨道并清理预览
+- 更新了按钮文本为"开始共享"/"停止共享"
+- 移除了对 WebSocket 的强制要求，使本地预览功能可以独立工作
+- 添加了错误处理，确保失败时正确清理状态
+- 确保多次开始/停止共享不会造成异常（通过状态检查防止重复操作）
