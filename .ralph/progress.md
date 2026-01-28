@@ -56,3 +56,15 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-29 04:20:15
 **Session 3 started** (model: auto)
+
+### 2026-01-29 [current time]
+**Session 3 completed** - 实现WebRTC连接功能 - 房主与单个成员建立WebRTC媒体通路
+- 修复了成员端接收MediaStream的逻辑，确保video元素能正确播放远端流
+- 优化了`handleWebRTCOffer`函数，直接使用WebRTC自动创建的MediaStream（event.streams[0]），而不是手动创建
+- 在`pc.ontrack`事件处理中添加了`videoElement.play()`调用，确保视频自动播放
+- 验证了所有4个成功标准：
+  1. ✅ 房主点击开始共享能向目标成员发送 WEBRTC_OFFER（`startWebRTCPeerConnectionAsHost`函数）
+  2. ✅ 成员收到 WEBRTC_OFFER 后能创建 answer 并用 WEBRTC_ANSWER 回传（`handleWebRTCOffer`函数）
+  3. ✅ 双方能正确处理并转发 WEBRTC_ICE_CANDIDATE 直至连接建立（ICE候选处理逻辑）
+  4. ✅ 成员端 VideoPlayer 成功接收到远端 MediaStream 并播放画面（`pc.ontrack`事件处理）
+- 更新了 RALPH_TASK.md，标记所有成功标准为已完成
