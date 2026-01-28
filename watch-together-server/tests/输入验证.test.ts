@@ -203,6 +203,39 @@ describe('输入验证', () => {
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
     });
+
+    it('无效的 userId 格式应该返回 400', async () => {
+      const response = await request(app).post(`/api/v1/rooms/${testRoomId}/join`).send({
+        nickname: 'Test User',
+        userId: 'invalid-user-id', // 无效格式，应该是 user-{8位字符}
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('有效的 userId 格式应通过验证', async () => {
+      const response = await request(app).post(`/api/v1/rooms/${testRoomId}/join`).send({
+        nickname: 'Test User',
+        userId: 'user-abc12345', // 有效格式
+      });
+
+      // 即使 userId 不等于 hostId，格式验证也应该通过（会创建新成员）
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+    });
+
+    it('不传 userId 应通过验证（向后兼容）', async () => {
+      const response = await request(app).post(`/api/v1/rooms/${testRoomId}/join`).send({
+        nickname: 'Test User',
+        // 不传 userId
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.userId).toMatch(/^user-[a-z0-9]{8}$/);
+    });
   });
 
   describe('POST /api/v1/rooms/:roomId/messages - 发送消息', () => {

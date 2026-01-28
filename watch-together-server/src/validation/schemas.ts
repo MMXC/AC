@@ -126,6 +126,13 @@ export const updateRoomSchema = z.object({
 
 /**
  * POST /api/v1/rooms/:roomId/join - 加入房间
+ * 
+ * @param nickname - 用户昵称（必填，1-100 字符）
+ * @param userId - 用户 ID（可选，格式：user-{8位随机字符串}）
+ *                 - 如果提供且等于 Room.hostId，则识别为房主并复用现有 RoomMember 记录
+ *                 - 如果提供但不等于 Room.hostId，则使用该 userId 创建新成员
+ *                 - 如果不提供，则自动生成新的 userId
+ *                 - 如果提供的 userId 格式无效，将返回 400 错误
  */
 export const joinRoomSchema = z.object({
   nickname: nicknameSchema,
