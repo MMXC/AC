@@ -226,11 +226,8 @@ async function startScreenSharing() {
         return;
     }
     
-    // 检查 WebSocket 连接
-    if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) {
-        alert('WebSocket 未连接，请稍后重试');
-        return;
-    }
+    // 注意：WebSocket 连接是可选的，用于向其他成员发送画面数据
+    // 本地预览功能不需要 WebSocket
     
     try {
         // 请求屏幕共享权限
@@ -251,23 +248,65 @@ async function startScreenSharing() {
             stopScreenSharing();
         });
         
-        // 创建 video 元素用于捕获画面
-        const videoElement = document.createElement('video');
+        // 获取页面的 video 元素用于本地预览
+        const videoElement = document.getElementById('videoStream');
+        const videoContainer = document.getElementById('videoContainer');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const browserFrame = document.getElementById('browserFrame');
+        const urlInputContainer = document.getElementById('urlInputContainer');
+        
+        if (!videoElement) {
+            throw new Error('未找到 videoStream 元素');
+        }
+        
+        // 隐藏 iframe 和 URL 输入框（如果存在）
+        if (browserFrame) {
+            browserFrame.style.display = 'none';
+        }
+        if (urlInputContainer) {
+            urlInputContainer.style.display = 'none';
+        }
+        
+        // 设置 video 元素的 srcObject 为采集到的 MediaStream
         videoElement.srcObject = stream;
-        videoElement.play();
+        videoElement.autoplay = true;
+        videoElement.playsInline = true;
+        
+        // 显示 video 容器和 video 元素，隐藏占位符
+        if (videoContainer) {
+            videoContainer.style.display = 'flex';
+        }
+        if (videoElement) {
+            videoElement.style.display = 'block';
+        }
+        if (videoPlaceholder) {
+            videoPlaceholder.style.display = 'none';
+        }
         
         // 等待视频加载
-        await new Promise((resolve) => {
+        await new Promise((resolve, reject) => {
             videoElement.onloadedmetadata = () => {
                 resolve();
             };
+            videoElement.onerror = (error) => {
+                reject(error);
+            };
+            // 设置超时，避免无限等待
+            setTimeout(() => {
+                if (videoElement.readyState === 0) {
+                    reject(new Error('视频加载超时'));
+                } else {
+                    resolve();
+                }
+            }, 5000);
         });
         
-        // 发送开始共享消息
-        sendScreenStreamStart();
-        
-        // 开始捕获画面
-        startFrameCapture(videoElement);
+        // 发送开始共享消息（如果 WebSocket 已连接）
+        if (screenStreamState.ws && screenStreamState.ws.readyState === WebSocket.OPEN) {
+            sendScreenStreamStart();
+            // 开始捕获画面（用于发送给其他成员）
+            startFrameCapture(videoElement);
+        }
         
         // 更新 UI
         updateStartSharingButton(true);
@@ -275,6 +314,13 @@ async function startScreenSharing() {
         
     } catch (error) {
         console.error('开始屏幕共享错误:', error);
+        
+        // 清理状态
+        screenStreamState.isStreaming = false;
+        screenStreamState.mediaStream = null;
+        
+        // 更新 UI
+        updateStartSharingButton(false);
         
         // 处理错误
         if (error.name === 'NotAllowedError') {
@@ -287,11 +333,13 @@ async function startScreenSharing() {
             alert('开始屏幕共享失败：' + (error.message || '未知错误'));
         }
         
-        // 发送错误消息
-        sendScreenStreamError({
-            message: error.message || '开始屏幕共享失败',
-            code: error.name || 'UNKNOWN_ERROR',
-        });
+        // 发送错误消息（如果 WebSocket 已连接）
+        if (screenStreamState.ws && screenStreamState.ws.readyState === WebSocket.OPEN) {
+            sendScreenStreamError({
+                message: error.message || '开始屏幕共享失败',
+                code: error.name || 'UNKNOWN_ERROR',
+            });
+        }
     }
 }
 
@@ -309,16 +357,36 @@ function stopScreenSharing() {
         screenStreamState.captureInterval = null;
     }
     
-    // 停止媒体流
+    // 获取 video 元素并清理预览
+    const videoElement = document.getElementById('videoStream');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+    
+    // 停止媒体流轨道
     if (screenStreamState.mediaStream) {
-        screenStreamState.mediaStream.getTracks().forEach(track => track.stop());
+        screenStreamState.mediaStream.getTracks().forEach(track => {
+            track.stop();
+        });
         screenStreamState.mediaStream = null;
+    }
+    
+    // 清理 video 元素的 srcObject
+    if (videoElement) {
+        videoElement.srcObject = null;
+        videoElement.style.display = 'none';
+    }
+    
+    // 显示占位符
+    if (videoPlaceholder) {
+        videoPlaceholder.style.display = 'block';
+        updateVideoPlaceholder('画面流已停止', '房主已停止共享画面');
     }
     
     screenStreamState.isStreaming = false;
     
-    // 发送停止共享消息
-    sendScreenStreamStop();
+    // 发送停止共享消息（如果 WebSocket 已连接）
+    if (screenStreamState.ws && screenStreamState.ws.readyState === WebSocket.OPEN) {
+        sendScreenStreamStop();
+    }
     
     // 更新 UI
     updateStartSharingButton(false);
@@ -466,7 +534,7 @@ function showStartSharingButton() {
         button = document.createElement('button');
         button.id = 'startSharingButton';
         button.className = 'start-sharing-button';
-        button.textContent = '开始共享画面';
+        button.textContent = '开始共享';
         button.addEventListener('click', () => {
             if (screenStreamState.isStreaming) {
                 stopScreenSharing();
@@ -505,7 +573,7 @@ function updateStartSharingButton(isStreaming) {
             button.textContent = '停止共享';
             button.classList.add('streaming');
         } else {
-            button.textContent = '开始共享画面';
+            button.textContent = '开始共享';
             button.classList.remove('streaming');
         }
     }
