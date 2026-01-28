@@ -72,3 +72,10 @@
 [05:04:38] Parse error on line 4, full line: {"type":"thinking","subtype":"delta","text":"","session_id":"a55a40af-1811-4f48-9a2a-cfb2e1993e3b","timestamp_ms":1769634277996}
 [05:04:38] Line 5, type=parse_error, preview='{"type":"thinking","subtype":"delta","text":"","session_id":"a55a40af-1811-4f48-9a2a-cfb2e1993e3b","...'
 [05:04:38] Parse error on line 5, full line: {"type":"thinking","subtype":"delta","text":"","session_id":"a55a40af-1811-4f48-9a2a-cfb2e1993e3b","timestamp_ms":1769634277996}
+[05:12:06] Parser finished, processed 337 lines
+[05:12:06] Signal written: FINISHED (at parser exit, no result message received)
+[05:12:07] Final check found: FINISHED
+[05:12:08] After agent wait, checking signal file: /mnt/c/project/AC/.ralph/.parser_signal
+[05:12:08] Signal file exists: yes
+[05:12:08] Signal file size: 9
+[05:12:08] Returning signal: 'FINISHED'
