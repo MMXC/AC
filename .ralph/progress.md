@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 1
-- Current status: Task Complete - WebRTC信令消息协议设计已完成
+- Iterations completed: 2
+- Current status: Task Complete - 服务器端 WebRTC 信令转发功能已实现
 
 ## How This Works
 
@@ -44,3 +44,14 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-29 03:46:38
 **Session 1 started** (model: auto)
+
+### 2026-01-29 [current time]
+**Session 1 completed** - 服务器端实现 WebRTC 信令转发（透明路由）
+- 在 `watch-together-server/src/websocket.ts` 中添加了 WebRTC 信令消息处理功能
+- 实现了 `handleWebRTCSignaling` 函数，支持识别并转发所有 WebRTC 信令消息类型（WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR）
+- 根据 `toUserId` 字段将消息转发给目标用户，支持单播（指定用户）和广播（toUserId 为 null）两种模式
+- 实现了透明转发：不解析或修改 SDP/ICE 内容，直接转发原始 JSON 消息
+- 添加了完整的消息验证逻辑，确保 roomId、fromUserId、toUserId 等字段的有效性
+- 实现了目标用户不在线时的错误处理：记录警告日志但不崩溃，并向发送者返回错误消息
+- 在消息处理流程中添加了 WebRTC 消息类型判断，确保不会干扰现有的聊天/操作同步消息流
+- 所有成功标准已标记为完成，代码已提交到 git
