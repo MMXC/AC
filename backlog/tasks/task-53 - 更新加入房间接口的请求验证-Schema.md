@@ -1,9 +1,10 @@
 ---
 id: TASK-53
 title: 更新加入房间接口的请求验证 Schema
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 22:04'
+updated_date: '2026-01-28 04:06'
 labels: []
 dependencies: []
 ---
