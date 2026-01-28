@@ -267,7 +267,20 @@ function handleWebSocketMessage(message) {
                 simulateOperationInIframe(message.data.operation);
             }
             break;
-            
+
+        case 'WEBRTC_OFFER':
+        case 'WEBRTC_ANSWER':
+        case 'WEBRTC_ICE_CANDIDATE':
+        case 'WEBRTC_END':
+        case 'WEBRTC_ERROR':
+            // WebRTC 信令消息：转交给专门的处理函数（如 screen-streaming.js）
+            if (typeof window !== 'undefined' && typeof window.handleWebRTCSignalingMessage === 'function') {
+                window.handleWebRTCSignalingMessage(message);
+            } else {
+                console.warn('收到 WebRTC 信令消息，但未注册处理函数', message.type);
+            }
+            break;
+
         default:
             console.log('未知消息类型:', message.type);
     }
