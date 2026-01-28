@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 0
-- Current status: Initialized
+- Iterations completed: 1
+- Current status: Task Complete - WebRTC信令消息协议设计已完成
 
 ## How This Works
 
@@ -24,4 +24,20 @@ This is how Ralph maintains continuity across iterations.
 - 尝试运行首页相关测试（`npm test -- --testNamePattern='首页创建房间'`），因本地端口占用导致测试服务器无法在 5 秒内启动，属于环境问题而非页面代码错误
 
 ### 2026-01-28 16:16:44
+**Session 1 ended** - ✅ TASK COMPLETE
+
+### 2026-01-29 01:46:07
+**Session 1 started** (model: auto)
+
+### 2026-01-29 [current time]
+**Session 1 completed** - 设计 WebRTC 信令消息协议（基于现有 WebSocket）
+- 创建了 TypeScript 类型定义文件 `watch-together/js/webrtc-signaling-types.ts`，定义了所有 WebRTC 信令消息类型（WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR）
+- 创建了详细的协议文档 `watch-together/docs/webrtc-signaling-protocol.md`，说明所有消息类型的 JSON 结构和字段含义
+- 创建了 JavaScript 模块 `watch-together/js/webrtc-signaling.js`，提供类型常量、创建函数和验证函数，供前端统一使用，避免硬编码字符串
+- 创建了完整的单元测试 `watch-together/__tests__/webrtc-signaling.test.js`，包含29个测试用例，验证消息类型解析、序列化/反序列化和字段验证
+- 所有测试通过，确保消息格式正确且不会因字段名错误导致解析失败
+- 实现了版本化策略（version字段）和未来扩展支持（tracks字段用于多track，消息结构支持多房主场景）
+- 更新了 RALPH_TASK.md，标记所有成功标准为已完成
+
+### 2026-01-29 01:54:06
 **Session 1 ended** - ✅ TASK COMPLETE
