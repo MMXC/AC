@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>一起看 - 创建房间</title>
+    <!-- Display & body fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,99 +15,212 @@
             box-sizing: border-box;
         }
 
+        :root {
+            /* Typography */
+            --font-display: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+            /* Color system */
+            --color-bg: #020617;
+            --color-bg-alt: #020617;
+            --color-bg-elevated: rgba(15, 23, 42, 0.96);
+            --color-surface-border: rgba(148, 163, 184, 0.35);
+            --color-primary: #22c55e;
+            --color-primary-soft: rgba(34, 197, 94, 0.16);
+            --color-primary-strong: #16a34a;
+            --color-text-main: #e5e7eb;
+            --color-text-muted: #9ca3af;
+            --color-input-bg: rgba(15, 23, 42, 0.85);
+            --color-input-border: rgba(148, 163, 184, 0.45);
+            --color-input-border-focus: rgba(34, 197, 94, 0.9);
+            --color-error: #f97373;
+            --color-error-soft: rgba(248, 113, 113, 0.12);
+
+            /* Shadows & radii */
+            --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.75);
+            --shadow-focus: 0 0 0 1px rgba(15, 23, 42, 0.9), 0 0 0 3px rgba(34, 197, 94, 0.45);
+            --radius-xl: 22px;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+
+            /* Layout */
+            --container-max-width: 520px;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: var(--font-body);
+            background:
+                radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.16) 0, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.14) 0, transparent 55%),
+                linear-gradient(135deg, #020617 0%, #020c1b 45%, #020617 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            color: var(--color-text-main);
+        }
+
+        body::before {
+            /* subtle noise / texture overlay */
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.45;
+            mix-blend-mode: soft-light;
+            background-image:
+                radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.16) 0, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 0.9) 0, transparent 55%);
         }
 
         .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 500px;
+            position: relative;
+            background: radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.14), transparent 55%),
+                        radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.12), transparent 55%),
+                        var(--color-bg-elevated);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-soft);
+            padding: 40px 34px 32px;
+            max-width: var(--container-max-width);
             width: 100%;
             text-align: center;
+            border: 1px solid var(--color-surface-border);
+            overflow: hidden;
+        }
+
+        .container::before {
+            /* decorative light sweep */
+            content: "";
+            position: absolute;
+            inset: -40%;
+            background:
+                radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.16), transparent 60%),
+                radial-gradient(circle at 100% 0, rgba(59, 130, 246, 0.12), transparent 65%);
+            opacity: 0.4;
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        .container::after {
+            /* subtle top border highlight */
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 5%;
+            right: 5%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.7), transparent);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .container-inner {
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2em;
+            font-family: var(--font-display);
+            color: var(--color-text-main);
+            margin-bottom: 8px;
+            font-size: 2.1rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1em;
+            color: var(--color-text-muted);
+            margin-bottom: 28px;
+            font-size: 0.98rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             text-align: left;
         }
 
         label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
+            color: var(--color-text-muted);
             font-weight: 500;
+            font-size: 0.92rem;
         }
 
         input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            padding: 11px 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.98rem;
+            border: 1px solid var(--color-input-border);
+            background-color: var(--color-input-bg);
+            color: var(--color-text-main);
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background-color 0.2s ease,
+                transform 0.12s ease;
+        }
+
+        input::placeholder {
+            color: rgba(148, 163, 184, 0.7);
         }
 
         input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--color-input-border-focus);
+            box-shadow: var(--shadow-focus);
+            background-color: rgba(15, 23, 42, 0.98);
+            transform: translateY(-1px);
         }
 
         .create-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.22) 0, transparent 55%),
+                        linear-gradient(135deg, #16a34a 0%, #22c55e 40%, #22d3ee 100%);
+            color: #0b1120;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: var(--radius-lg);
+            font-size: 0.98rem;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
+            transition:
+                transform 0.16s ease,
+                box-shadow 0.16s ease,
+                filter 0.2s ease,
+                opacity 0.16s ease;
+            margin-top: 14px;
+            box-shadow: 0 14px 35px rgba(34, 197, 94, 0.55);
         }
 
         .create-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 18px 40px rgba(34, 197, 94, 0.7);
+            filter: brightness(1.03);
         }
 
         .create-btn:active {
             transform: translateY(0);
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
+            filter: brightness(0.98);
         }
 
         .create-btn:disabled {
-            opacity: 0.6;
+            opacity: 0.55;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .result {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f5f5f5;
-            border-radius: 8px;
+            margin-top: 28px;
+            padding: 18px 18px 16px;
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+            border-radius: var(--radius-lg);
             display: none;
+            border: 1px solid rgba(148, 163, 184, 0.4);
         }
 
         .result.show {
@@ -111,63 +228,87 @@
         }
 
         .result h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.2em;
+            color: var(--color-text-main);
+            margin-bottom: 14px;
+            font-size: 1.05rem;
+            font-weight: 600;
         }
 
         .room-info {
             text-align: left;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .room-info-item {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .room-info-label {
             font-weight: 600;
-            color: #666;
-            margin-right: 8px;
+            color: var(--color-text-muted);
+            margin-right: 6px;
+            font-size: 0.9rem;
         }
 
         .room-info-value {
-            color: #333;
+            color: var(--color-text-main);
             word-break: break-all;
+            font-size: 0.9rem;
         }
 
         .room-link {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 12px;
         }
 
         .room-link input {
             flex: 1;
-            background: white;
-            font-size: 14px;
+            background: #020617;
+            font-size: 0.86rem;
+            border-radius: var(--radius-md);
         }
 
         .copy-btn {
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
+            padding: 9px 14px;
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--color-text-main);
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            border-radius: 999px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
+            font-size: 0.86rem;
+            font-weight: 500;
+            transition:
+                background-color 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.12s ease,
+                box-shadow 0.16s ease;
+            white-space: nowrap;
         }
 
         .copy-btn:hover {
-            background: #5568d3;
+            background: rgba(15, 23, 42, 1);
+            border-color: rgba(226, 232, 240, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.8);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
         }
 
         .error {
-            color: #e74c3c;
+            color: var(--color-error);
+            background-color: var(--color-error-soft);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(248, 113, 113, 0.35);
+            padding: 8px 10px;
             margin-top: 10px;
             display: none;
+            font-size: 0.9rem;
+            text-align: left;
         }
 
         .error.show {
@@ -177,61 +318,86 @@
         .loading {
             display: none;
             margin-top: 10px;
-            color: #667eea;
+            color: var(--color-primary);
+            font-size: 0.9rem;
+            text-align: left;
         }
 
         .loading.show {
             display: block;
         }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 28px 18px 24px;
+            }
+
+            h1 {
+                font-size: 1.7rem;
+            }
+
+            .room-link {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .copy-btn {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>一起看</h1>
-        <p class="subtitle">创建房间，与朋友一起观看</p>
-        
-        <form id="createRoomForm">
-            <div class="form-group">
-                <label for="roomName">房间名称（可选）</label>
-                <input type="text" id="roomName" placeholder="例如：电影之夜">
-            </div>
-            
-            <div class="form-group">
-                <label for="targetUrl">目标网址 URL（必填）</label>
-                <input
-                    type="url"
-                    id="targetUrl"
-                    placeholder="例如：https://www.youtube.com/watch?v=..."
-                    required
-                >
-            </div>
-            
-            <div class="form-group">
-                <label for="hostNickname">您的昵称（可选）</label>
-                <input type="text" id="hostNickname" placeholder="例如：房主">
-            </div>
-            
-            <button type="submit" class="create-btn" id="createBtn">创建房间</button>
-            
-            <div class="loading" id="loading">正在创建房间...</div>
-            <div class="error" id="error"></div>
-        </form>
-        
-        <div class="result" id="result">
-            <h3>房间创建成功！</h3>
-            <div class="room-info">
-                <div class="room-info-item">
-                    <span class="room-info-label">房间号：</span>
-                    <span class="room-info-value" id="roomId"></span>
+        <div class="container-inner">
+            <h1>一起看</h1>
+            <p class="subtitle">创建房间，与朋友一起观看</p>
+
+            <form id="createRoomForm">
+                <div class="form-group">
+                    <label for="roomName">房间名称（可选）</label>
+                    <input type="text" id="roomName" placeholder="例如：电影之夜">
                 </div>
-                <div class="room-info-item">
-                    <span class="room-info-label">房间名称：</span>
-                    <span class="room-info-value" id="roomNameDisplay"></span>
+
+                <div class="form-group">
+                    <label for="targetUrl">目标网址 URL（必填）</label>
+                    <input
+                        type="url"
+                        id="targetUrl"
+                        placeholder="例如：https://www.youtube.com/watch?v=..."
+                        required
+                    >
                 </div>
-            </div>
-            <div class="room-link">
-                <input type="text" id="roomLink" readonly>
-                <button class="copy-btn" id="copyBtn">复制链接</button>
+
+                <div class="form-group">
+                    <label for="hostNickname">您的昵称（可选）</label>
+                    <input type="text" id="hostNickname" placeholder="例如：房主">
+                </div>
+
+                <button type="submit" class="create-btn" id="createBtn">创建房间</button>
+
+                <div class="loading" id="loading">正在创建房间...</div>
+                <div class="error" id="error"></div>
+            </form>
+
+            <div class="result" id="result">
+                <h3>房间创建成功！</h3>
+                <div class="room-info">
+                    <div class="room-info-item">
+                        <span class="room-info-label">房间号：</span>
+                        <span class="room-info-value" id="roomId"></span>
+                    </div>
+                    <div class="room-info-item">
+                        <span class="room-info-label">房间名称：</span>
+                        <span class="room-info-value" id="roomNameDisplay"></span>
+                    </div>
+                </div>
+                <div class="room-link">
+                    <input type="text" id="roomLink" readonly>
+                    <button class="copy-btn" id="copyBtn">复制链接</button>
+                </div>
             </div>
         </div>
     </div>
