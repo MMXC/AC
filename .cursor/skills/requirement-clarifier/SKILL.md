@@ -13,6 +13,7 @@ description: 通过对话澄清粗略需求，明确具体要求、识别优化�
 2. **优化识别**：识别可能的优化方向（性能、用户体验、可维护性等）
 3. **任务生成**：生成符合 requirement-workflow.sh 格式的 JSON 任务列表
 4. **用户确认**：询问用户是否添加优化项
+5. **工作流衔接**：在需求与任务确认后，引导或直接触发 `requirement-workflow.sh` 进行后续 backlog 创建与 Ralph 执行
 
 ## 使用场景
 
@@ -198,6 +199,109 @@ description: 通过对话澄清粗略需求，明确具体要求、识别优化�
 1. **澄清后的需求总结**
 2. **任务列表预览**（Markdown 格式，便于用户审查）
 3. **JSON 格式任务列表**（供 requirement-workflow.sh 使用）
+
+### 阶段 5: 触发 requirement-workflow 工作流
+
+当：
+- 需求已澄清完毕，且
+- 任务列表（含可选优化项）已经由用户确认无误
+
+时，**应显式询问用户**是否要继续进入自动化需求工作流：
+
+- 提示文案示例：
+  - 「是否现在就用 `requirement-workflow.sh` 创建 backlog 任务并（可选）交给 Ralph 执行？(Y/n)」
+
+如果用户选择 **是**，按照以下原则处理：
+
+1. **优先利用澄清后的最终需求描述**  
+   - 构造一段「最终版需求说明」文本（包含已确定的范围与约束）  
+   - 建议命令示例（供用户或 Agent 执行）：
+
+   ```bash
+   # 在项目根目录下
+   ./.cursor/ralph-scripts/requirement-workflow.sh "【这里替换为澄清后的最终需求描述】"
+   ```
+
+2. **也可以让用户使用交互模式**（更适合不想手写长命令时）：
+
+   ```bash
+   ./.cursor/ralph-scripts/requirement-workflow.sh --interactive
+   ```
+
+3. **如果 Agent 具备执行 Shell 的能力**：  
+   - 在用户明确同意后，可以直接代表用户执行上述命令  
+   - 执行前再次简短复述：将要传入 requirement-workflow.sh 的需求概要，确保用户心中有数  
+
+4. **如果用户只想先生成任务、不立刻创建 backlog**：  
+   - 只输出 JSON / Markdown 任务列表  
+   - 明确提示「稍后可以手动运行 `requirement-workflow.sh` 并粘贴/重述这份需求描述」  
+
+整体目标：**clarifier 负责把「需求 & 优化」想清楚，requirement-workflow 负责把这些需求落进 backlog 并衔接 Ralph**，两者衔接的时机和是否执行，始终由用户最后一拍板。
+
+### 推荐的脚本化调用模式
+
+在决定触发 `requirement-workflow.sh` 时，可以根据场景选择不同的参数组合，并在对话里给出「推荐命令」：
+
+- **安全、默认推荐（带人工确认）**  
+  适用于：第一次使用 / 需求比较大 / 想再看一遍任务列表。  
+  - 推荐命令：
+
+  ```bash
+  ./.cursor/ralph-scripts/requirement-workflow.sh "【澄清后的最终需求描述】"
+  ```
+
+  - 行为：  
+    - 内部会先分解需求  
+    - 展示分解结果  
+    - 再询问是否创建 backlog 任务  
+
+- **批量、高频使用时的快捷模式：`--no-confirm`**  
+  适用于：  
+  - 需求已经非常清晰，  
+  - 且刚刚用 clarifier 做过一轮对话确认，  
+  - 不希望再在命令行里多点一次确认。  
+
+  - 推荐命令：
+
+  ```bash
+  ./.cursor/ralph-scripts/requirement-workflow.sh --no-confirm "【澄清后的最终需求描述】"
+  ```
+
+  - 提醒 Agent：  
+    - 在建议/执行 `--no-confirm` 前，要再次**简短复述**将要创建的任务范围，确保用户知道这是「不再弹确认」的快速通道。  
+
+- **一条龙自动执行：`--no-confirm --auto-execute`**  
+  适用于：  
+  - 小型、单人项目，  
+  - 用户希望「想完就立刻开干」，  
+  - 对 Ralph 执行流程比较熟悉。  
+
+  - 推荐命令：
+
+  ```bash
+  ./.cursor/ralph-scripts/requirement-workflow.sh --no-confirm --auto-execute "【澄清后的最终需求描述】"
+  ```
+
+  - 行为：  
+    - 跳过 requirement-workflow 内部的确认  
+    - 直接创建 backlog 任务  
+    - 并立刻进入 Ralph 执行第一个任务的流程  
+
+  - 使用前提（Agent 要在对话里明确点出）：  
+    - 用户已经看过/接受当前这一批任务的拆分结果  
+    - 接受「直接创建并立即执行」这一行为  
+
+- **交互补充模式：`--interactive`**  
+  如果澄清过程中发现还有零星信息不方便在一句命令里写全，也可以建议用户使用交互模式，让脚本进一步提问：
+
+  ```bash
+  ./.cursor/ralph-scripts/requirement-workflow.sh --interactive
+  ```
+
+总结：  
+- **默认用「无参数版本」**，保持可见的二次确认；  
+- **熟练用户在明确同意后，可以引导使用 `--no-confirm` / `--auto-execute`** 提升流畅度；  
+- clarifier 在文案上要始终帮用户意识到：这些 flag 是「省事」，但前提是「需求和拆分已经足够可信」。
 
 ## 示例对话流程
 

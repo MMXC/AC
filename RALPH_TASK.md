@@ -1,41 +1,21 @@
 ---
-backlog_id: backlog-54
-task: 添加房主加入房间的集成测试
-test_command: "cd watch-together-server && npm test -- rooms-join-host
-cd watch-together-server && npm test -- rooms-join-host"
+backlog_id: backlog-55
+task: 优化创建房间页面设计（index.html）- 字体与视觉风格
+test_command: "cd watch-together && python -m http.server 8000"
 ---
 
-# Task: 添加房主加入房间的集成测试
+# Task: 优化创建房间页面设计（index.html）- 字体与视觉风格
 
 ## Description
 
-在 `watch-together-server/tests/` 中添加或更新测试文件，测试房主使用 `hostUserId` 加入房间的场景。验证房主身份识别、RoomMember 记录复用、返回数据正确性。
+基于 frontend-design 技能要求，优化 `watch-together/index.html` 页面的视觉设计。替换系统字体为更有特色的字体组合（如：显示字体 + 正文字体配对），优化颜色方案和视觉细节（纹理、阴影、背景效果），确保不影响现有功能。
 
-**Test Command**: `cd watch-together-server && npm test -- rooms-join-host`
-
-**测试用例**:
-
-**测试数据**:
-1. 输入: `创建房间后，使用 hostUserId 调用 `/join` 接口`
-   预期输出: `返回 `isHost: true`，RoomMember 记录更新`
-
-**测试场景**:
-1. 房主首次加入房间（创建时已创建 RoomMember）
-2. 房主重新加入房间（RoomMember 的 leftAt 不为 null）
-3. 普通成员加入房间（不应受影响）
-
-**断言示例**:
-1. `expect(response.body.data.isHost).toBe(true)`
-2. `expect(member.leftAt).toBeNull()`
-3. `expect(member.lastActiveAt).toBeDefined()`
-
-**Test Command**: `cd watch-together-server && npm test -- rooms-join-host`
+**Test Command**: `cd watch-together && python -m http.server 8000` 然后在浏览器中访问 http://localhost:8000/index.html 验证页面显示和功能正常
 
 ## Success Criteria
 
-- [x] 测试文件创建或更新完成
-- [x] 测试房主使用 hostUserId 加入房间的场景
-- [x] 验证返回的 `isHost` 为 `true`
-- [x] 验证 RoomMember 记录被正确复用（leftAt 为 null）
-- [x] 验证普通成员加入场景不受影响
-- [x] 所有测试用例通过
+- [ ] 替换系统字体为有特色的字体组合（如 Google Fonts），包含显示字体和正文字体配对
+- [ ] 优化颜色方案，使用 CSS 变量管理主题色，避免使用常见的紫色渐变
+- [ ] 添加视觉细节：纹理、阴影、背景效果（如渐变网格、噪点纹理、装饰性边框等）
+- [ ] 保持所有现有功能正常工作（表单提交、房间创建、链接复制等）
+- [ ] 页面在主流浏览器中显示正常，响应式设计保持良好
