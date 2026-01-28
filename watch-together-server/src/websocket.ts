@@ -742,6 +742,194 @@ function validateOpSourceOperationMessage(message: any): string | null {
 }
 
 /**
+ * WebRTC 信令消息类型常量
+ */
+const WebRTCSignalingType = {
+  WEBRTC_OFFER: 'WEBRTC_OFFER',
+  WEBRTC_ANSWER: 'WEBRTC_ANSWER',
+  WEBRTC_ICE_CANDIDATE: 'WEBRTC_ICE_CANDIDATE',
+  WEBRTC_END: 'WEBRTC_END',
+  WEBRTC_ERROR: 'WEBRTC_ERROR',
+};
+
+/**
+ * WebRTC 信令消息接口
+ */
+interface WebRTCSignalingMessage {
+  type: string;
+  roomId: string;
+  fromUserId: string;
+  toUserId: string | null;
+  timestamp: number;
+  [key: string]: unknown; // 允许其他字段（sdp, candidate 等）
+}
+
+/**
+ * 验证 WebRTC 信令消息的基本结构
+ *
+ * @param message 消息对象
+ * @returns 验证错误信息，如果通过则返回 null
+ */
+function validateWebRTCSignalingMessage(message: any): string | null {
+  // 检查消息类型是否为 WebRTC 信令类型
+  const validTypes = Object.values(WebRTCSignalingType);
+  if (!message.type || !validTypes.includes(message.type)) {
+    return 'Invalid WebRTC signaling message type';
+  }
+
+  // 验证必需字段
+  if (!message.roomId || typeof message.roomId !== 'string') {
+    return 'roomId is required and must be a string';
+  }
+
+  if (!message.fromUserId || typeof message.fromUserId !== 'string') {
+    return 'fromUserId is required and must be a string';
+  }
+
+  // toUserId 可以为 null（广播消息）或字符串
+  if (message.toUserId !== null && typeof message.toUserId !== 'string') {
+    return 'toUserId must be null or a string';
+  }
+
+  if (typeof message.timestamp !== 'number') {
+    return 'timestamp is required and must be a number';
+  }
+
+  return null;
+}
+
+/**
+ * 处理 WebRTC 信令消息
+ * 根据 toUserId 将消息转发给目标用户，不解析 SDP/ICE 内容（透明转发）
+ *
+ * @param ws WebSocket 连接
+ * @param message 消息对象
+ * @param roomId 房间 ID
+ * @param userId 用户 ID（发送者）
+ */
+async function handleWebRTCSignaling(
+  ws: WebSocket,
+  message: WebRTCSignalingMessage,
+  roomId: string,
+  userId: string
+): Promise<void> {
+  try {
+    // 验证消息格式
+    const validationError = validateWebRTCSignalingMessage(message);
+    if (validationError) {
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: validationError,
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 验证 roomId 是否匹配连接的房间 ID
+    if (message.roomId !== roomId) {
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: 'roomId does not match the connection roomId',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 验证 fromUserId 是否匹配连接的用户 ID
+    if (message.fromUserId !== userId) {
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: 'fromUserId does not match the connection userId',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 验证用户是否在房间中
+    const userInRoom = await validateUserInRoom(roomId, userId);
+    if (!userInRoom) {
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: 'User not in room',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 获取房间连接
+    const roomConnections = connections.get(roomId);
+    if (!roomConnections) {
+      wsLogger.warn({ roomId, userId, messageType: message.type }, 'No connections found for room (WebRTC signaling)');
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: 'Room has no active connections',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 如果 toUserId 为 null，表示广播给房间内所有其他成员
+    if (message.toUserId === null) {
+      const messageStr = JSON.stringify(message);
+      let sentCount = 0;
+      roomConnections.forEach((connection, connectionUserId) => {
+        // 不发送给发送者自己
+        if (connectionUserId !== userId && connection.ws.readyState === WebSocket.OPEN) {
+          connection.ws.send(messageStr);
+          sentCount++;
+        }
+      });
+      wsLogger.debug({ roomId, userId, messageType: message.type, sentCount }, 'Broadcasted WebRTC signaling message');
+      return;
+    }
+
+    // 转发给指定用户
+    const targetConnection = roomConnections.get(message.toUserId);
+    if (!targetConnection || targetConnection.ws.readyState !== WebSocket.OPEN) {
+      // 目标用户不在线，记录警告日志但不崩溃
+      wsLogger.warn(
+        { roomId, userId, targetUserId: message.toUserId, messageType: message.type },
+        'Target user not online for WebRTC signaling message'
+      );
+      ws.send(
+        JSON.stringify({
+          type: 'ERROR',
+          error: `Target user ${message.toUserId} is not online`,
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 透明转发消息（不修改任何内容）
+    targetConnection.ws.send(JSON.stringify(message));
+    wsLogger.debug(
+      { roomId, userId, targetUserId: message.toUserId, messageType: message.type },
+      'Forwarded WebRTC signaling message'
+    );
+  } catch (error) {
+    wsLogger.error({ err: error as Error, roomId, userId, messageType: message.type }, 'Error handling WebRTC signaling');
+    ws.send(
+      JSON.stringify({
+        type: 'ERROR',
+        error: 'Internal server error',
+        timestamp: new Date().toISOString(),
+      })
+    );
+  }
+}
+
+/**
  * 处理 OP_SOURCE_OPERATION 消息
  * 将操作来源成员的操作转发给房主
  *
@@ -1304,6 +1492,18 @@ async function handleConnection(ws: WebSocket, req: { url?: string; headers?: { 
         // 处理 OP_SOURCE_OPERATION 消息
         if (message.type === 'OP_SOURCE_OPERATION') {
           await handleOpSourceOperation(ws, message as OpSourceOperationRequest, roomId, userId);
+          return;
+        }
+
+        // 处理 WebRTC 信令消息（透明转发）
+        if (
+          message.type === WebRTCSignalingType.WEBRTC_OFFER ||
+          message.type === WebRTCSignalingType.WEBRTC_ANSWER ||
+          message.type === WebRTCSignalingType.WEBRTC_ICE_CANDIDATE ||
+          message.type === WebRTCSignalingType.WEBRTC_END ||
+          message.type === WebRTCSignalingType.WEBRTC_ERROR
+        ) {
+          await handleWebRTCSignaling(ws, message as WebRTCSignalingMessage, roomId, userId);
           return;
         }
 
