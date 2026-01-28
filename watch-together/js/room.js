@@ -388,15 +388,44 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
     }
     
     try {
+        // 检查是否为房主（通过 localStorage 中的 isHost 标识）
+        let isHostFromStorage = false;
+        let hostUserIdFromStorage = null;
+        
+        try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+                const storedRoomId = window.localStorage.getItem('watch-together.roomId');
+                const isHostValue = window.localStorage.getItem('watch-together.isHost');
+                
+                // 检查是否为房主：房间ID匹配且 isHost 为 'true'
+                if (storedRoomId === roomId && isHostValue === 'true') {
+                    isHostFromStorage = true;
+                    // 从 localStorage 读取 userId
+                    hostUserIdFromStorage = window.localStorage.getItem('watch-together.userId');
+                }
+            }
+        } catch (storageError) {
+            console.warn('读取本地存储失败:', storageError);
+        }
+        
+        // 构建请求体
+        const requestBody = {
+            nickname: nickname,
+        };
+        
+        // 如果是房主，在 API 请求中传入 userId 参数
+        if (isHostFromStorage && hostUserIdFromStorage) {
+            requestBody.userId = hostUserIdFromStorage;
+            console.log('检测到房主身份，使用 hostUserId 加入房间:', hostUserIdFromStorage);
+        }
+        
         // 调用加入房间 API
         const joinResponse = await fetch(`${API_BASE}/api/v1/rooms/${roomId}/join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                nickname: nickname,
-            }),
+            body: JSON.stringify(requestBody),
         });
 
         const joinData = await joinResponse.json();

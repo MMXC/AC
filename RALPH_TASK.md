@@ -34,9 +34,9 @@ cd watch-together && npm test -- room-init"
 
 ## Success Criteria
 
-- [ ] `joinRoomWithNickname` 函数检查是否为房主（通过 localStorage 或参数）
-- [ ] 如果是房主，在 API 请求中传入 `userId` 参数
-- [ ] 传入的 `userId` 来自 localStorage 中的 `watch-together.userId`
-- [ ] 普通成员加入时不传 `userId` 参数
-- [ ] 房主加入后正确识别为房主（`isHost: true`）
-- [ ] 房主加入后显示房主界面（iframe、修改 URL 按钮等）
+- [x] `joinRoomWithNickname` 函数检查是否为房主（通过 localStorage 或参数）
+- [x] 如果是房主，在 API 请求中传入 `userId` 参数
+- [x] 传入的 `userId` 来自 localStorage 中的 `watch-together.userId`
+- [x] 普通成员加入时不传 `userId` 参数
+- [x] 房主加入后正确识别为房主（`isHost: true`）
+- [x] 房主加入后显示房主界面（iframe、修改 URL 按钮等）
