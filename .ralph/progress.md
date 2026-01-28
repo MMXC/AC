@@ -2421,3 +2421,21 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-28 11:52:26
 **Session 1 started** (model: auto)
+
+### 2026-01-28 [current time]
+**Session 1 completed** - 实现前端房主加入逻辑
+- 修改了 `watch-together/js/room.js` 中的 `joinRoomWithNickname` 函数：
+  ✓ 添加了检查 localStorage 中 `isHost` 标识的逻辑
+  ✓ 如果是房主，从 localStorage 读取 `watch-together.userId`
+  ✓ 在 API 请求中传入 `userId` 参数（仅当是房主时）
+  ✓ 普通成员加入时不传 `userId` 参数
+- 创建了完整的测试文件（watch-together/__tests__/room-host-join.test.js），包含 9 个测试用例
+- 所有测试通过（9个测试全部通过）
+- 实现了所有成功标准：
+  ✓ `joinRoomWithNickname` 函数检查是否为房主（通过 localStorage）
+  ✓ 如果是房主，在 API 请求中传入 `userId` 参数
+  ✓ 传入的 `userId` 来自 localStorage 中的 `watch-together.userId`
+  ✓ 普通成员加入时不传 `userId` 参数
+  ✓ 房主加入后正确识别为房主（`isHost: true`）
+  ✓ 房主加入后显示房主界面（iframe、修改 URL 按钮等）
+- 提交了更改到 git
