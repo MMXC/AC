@@ -28,8 +28,8 @@ cd watch-together-server && npm test -- validation"
 
 ## Success Criteria
 
-- [ ] `joinRoomSchema` 包含可选的 `userId` 字段
-- [ ] `userId` 字段验证格式（如果提供）
-- [ ] 接口文档注释更新，说明 `userId` 参数的用途
-- [ ] 验证逻辑正确，无效 `userId` 格式返回 400
-- [ ] 向后兼容，不传 `userId` 时验证通过
+- [x] `joinRoomSchema` 包含可选的 `userId` 字段
+- [x] `userId` 字段验证格式（如果提供）
+- [x] 接口文档注释更新，说明 `userId` 参数的用途
+- [x] 验证逻辑正确，无效 `userId` 格式返回 400
+- [x] 向后兼容，不传 `userId` 时验证通过

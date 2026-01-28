@@ -400,6 +400,58 @@ describe('加入房间', () => {
       expect(response.body.data.userId).toMatch(/^user-[a-z0-9]{8}$/);
     });
 
+    it('传入无效的 userId 格式应返回 400', async () => {
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Invalid Format User',
+          userId: 'invalid', // 无效格式：不符合 user-{8位字符} 格式
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
+    });
+
+    it('传入格式正确但长度不足的 userId 应返回 400', async () => {
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Short UserId User',
+          userId: 'user-abc', // 长度不足：只有3位字符，需要8位
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
+    });
+
+    it('传入格式正确但包含无效字符的 userId 应返回 400', async () => {
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Invalid Char User',
+          userId: 'user-abc123!', // 包含无效字符：! 不在 a-z0-9 范围内
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
+    });
+
+    it('传入有效的 userId 格式应通过验证', async () => {
+      const response = await request(app)
+        .post(`/api/v1/rooms/${testRoomId}/join`)
+        .send({
+          nickname: 'Valid Format User',
+          userId: 'user-abc12345', // 有效格式：user-{8位字符}
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.userId).toBe('user-abc12345');
+    });
+
     it('房主加入时复用现有 RoomMember 记录，更新 leftAt 为 null', async () => {
       // 先让房主离开（设置 leftAt）
       await prisma.roomMember.update({
