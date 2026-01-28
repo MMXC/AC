@@ -1,40 +1,42 @@
 ---
-backlog_id: backlog-51
-task: 修改加入房间接口支持房主身份识别
-test_command: "cd watch-together-server && npm test -- rooms-join
-cd watch-together-server && npm test -- rooms-join"
+backlog_id: backlog-52
+task: 更新前端房主加入逻辑
+test_command: "cd watch-together && npm test -- room-init
+cd watch-together && npm test -- room-init"
 ---
 
-# Task: 修改加入房间接口支持房主身份识别
+# Task: 更新前端房主加入逻辑
 
 ## Description
 
-修改 `POST /api/v1/rooms/:roomId/join` 接口，支持可选的 `userId` 参数。如果请求中传入 `userId` 且该 `userId` 等于 `Room.hostId`，则识别为房主，复用现有的 RoomMember 记录（更新 `leftAt` 为 null，`lastActiveAt` 为当前时间），返回 `isHost: true`。如果 `userId` 不等于 `hostId` 或未传入，则按现有逻辑创建新成员。
+修改 `watch-together/js/room.js` 中的 `joinRoomWithNickname` 函数，当检测到房主身份时（通过 localStorage 中的 `isHost` 标识），在调用 `/join` 接口时传入 `userId` 参数（从 localStorage 读取的 `watch-together.userId`）。确保房主使用正确的 `hostUserId` 加入房间。
 
-**Test Command**: `cd watch-together-server && npm test -- rooms-join`
+**Test Command**: `cd watch-together && npm test -- room-init`
 
 **测试用例**:
 
+**测试数据**:
+1. 输入: `localStorage 中有 `watch-together.isHost: 'true'` 和 `watch-together.userId: 'user-abc123'``
+   预期输出: `API 请求包含 `{ nickname: "alex", userId: "user-abc123" }`，返回 `isHost: true``
+
 **测试场景**:
-1. 房主使用 hostUserId 加入房间应识别为房主
-2. 普通成员加入房间应创建新成员
-3. 传入无效 userId 应创建新成员
-4. 不传 userId 应保持向后兼容
+1. 房主自动加入时应传入 hostUserId
+2. 普通成员加入时不应传入 userId
+3. 房主加入后应显示房主界面
+4. 普通成员加入后应显示成员界面
 
 **断言示例**:
-1. `expect(response.body.data.isHost).toBe(true)`
-2. `expect(response.body.data.userId).toBe(hostUserId)`
-3. `const member = await prisma.roomMember.findUnique({ where: { userId: hostUserId } })`
-4. `expect(member.leftAt).toBeNull()`
+1. `expect(requestBody.userId).toBe(hostUserId)`
+2. `expect(joinData.data.isHost).toBe(true)`
+3. `expect(window.isHost).toBe(true)`
 
-**Test Command**: `cd watch-together-server && npm test -- rooms-join`
+**Test Command**: `cd watch-together && npm test -- room-init`
 
 ## Success Criteria
 
-- [x] `/join` 接口支持可选的 `userId` 请求参数
-- [x] 当传入的 `userId` 等于 `Room.hostId` 时，识别为房主
-- [x] 房主加入时复用现有 RoomMember 记录，更新 `leftAt` 为 null
-- [x] 房主加入时返回 `isHost: true`
-- [x] 普通成员加入时仍生成新的 `userId`，返回 `isHost: false`
-- [x] 传入无效的 `userId`（不等于 hostId）时，仍创建新成员
-- [x] 接口向后兼容，不传 `userId` 时行为不变
+- [ ] `joinRoomWithNickname` 函数检查是否为房主（通过 localStorage 或参数）
+- [ ] 如果是房主，在 API 请求中传入 `userId` 参数
+- [ ] 传入的 `userId` 来自 localStorage 中的 `watch-together.userId`
+- [ ] 普通成员加入时不传 `userId` 参数
+- [ ] 房主加入后正确识别为房主（`isHost: true`）
+- [ ] 房主加入后显示房主界面（iframe、修改 URL 按钮等）

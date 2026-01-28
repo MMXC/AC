@@ -1,9 +1,10 @@
 ---
 id: TASK-52
 title: 更新前端房主加入逻辑
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-27 22:04'
+updated_date: '2026-01-28 03:50'
 labels: []
 dependencies: []
 ---

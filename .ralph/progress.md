@@ -2399,3 +2399,22 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-28 06:07:39
 **Session 1 started** (model: auto)
+
+### 2026-01-28 [current time]
+**Session 1 completed** - 修改加入房间接口支持房主身份识别
+- 修改了 joinRoomSchema 支持可选的 userId 参数
+- 修改了 /join 接口实现，添加房主识别逻辑（当 userId === hostId 时复用 RoomMember 记录）
+- 更新了测试文件，添加了房主加入的测试用例（6个新测试用例）
+- 实现了所有成功标准：
+  ✓ /join 接口支持可选的 userId 请求参数
+  ✓ 当传入的 userId 等于 Room.hostId 时，识别为房主
+  ✓ 房主加入时复用现有 RoomMember 记录，更新 leftAt 为 null，lastActiveAt 为当前时间
+  ✓ 房主加入时返回 isHost: true
+  ✓ 普通成员加入时仍生成新的 userId，返回 isHost: false
+  ✓ 传入无效的 userId（不等于 hostId）时，仍创建新成员
+  ✓ 接口向后兼容，不传 userId 时行为不变
+- 所有代码编译通过，类型检查通过
+- 提交了更改到 git
+
+### 2026-01-28 06:29:03
+**Session 1 ended** - ✅ TASK COMPLETE
