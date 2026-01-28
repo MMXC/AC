@@ -95,18 +95,43 @@ function handleWebSocketConnected(event) {
         
         // 监听 WebSocket 消息
         ws.addEventListener('message', handleWebSocketMessage);
+        
+        // 初始化 WebRTC 管理器（如果存在）
+        if (typeof initWebRTCManager === 'function') {
+            try {
+                initWebRTCManager(ws);
+            } catch (error) {
+                console.warn('初始化 WebRTC 管理器失败:', error);
+            }
+        }
     }
 }
 
 /**
  * 处理 WebSocket 断开事件
  */
-function handleWebSocketDisconnected() {
+function handleWebSocketDisconnected(event) {
+    const wasStreaming = screenStreamState.isStreaming;
     screenStreamState.ws = null;
     
-    // 如果正在共享，停止共享
-    if (screenStreamState.isStreaming) {
+    // 如果正在共享，停止共享并显示错误提示
+    if (wasStreaming) {
         stopScreenSharing();
+        
+        // 显示连接中断错误提示
+        showScreenSharingError(
+            '连接中断',
+            'WebSocket 信令连接已断开，屏幕共享已停止。请检查网络连接后刷新页面重试。',
+            true // 可恢复，用户可以通过刷新页面重试
+        );
+        
+        // 更新占位符提示
+        updateVideoPlaceholder('连接中断', 'WebSocket 连接已断开，请刷新页面重试');
+    }
+    
+    // 通知成员端连接中断
+    if (!window.isHost) {
+        updateVideoPlaceholder('连接中断', '信令连接已断开，请刷新页面重试');
     }
 }
 
@@ -280,20 +305,39 @@ async function startScreenSharing() {
     } catch (error) {
         console.error('开始屏幕共享错误:', error);
         
-        // 处理错误
+        // 处理错误 - 使用友好的UI提示而非alert
+        let errorTitle = '屏幕共享失败';
+        let errorMessage = '';
+        let isRecoverable = false;
+        
         if (error.name === 'NotAllowedError') {
-            alert('屏幕共享权限被拒绝。请在浏览器设置中允许屏幕共享权限。');
+            errorTitle = '权限被拒绝';
+            errorMessage = '屏幕共享权限被拒绝。请点击浏览器地址栏的锁图标，允许屏幕共享权限后重试。';
+            isRecoverable = true;
         } else if (error.name === 'NotFoundError') {
-            alert('未找到可用的屏幕或窗口。请确保您的设备支持屏幕共享。');
+            errorTitle = '未找到屏幕源';
+            errorMessage = '未找到可用的屏幕或窗口。请确保您的设备支持屏幕共享功能。';
+            isRecoverable = false;
         } else if (error.name === 'NotSupportedError') {
-            alert('您的浏览器不支持屏幕共享功能。请使用 Chrome、Firefox 或 Edge 浏览器。');
+            errorTitle = '浏览器不支持';
+            errorMessage = '您的浏览器不支持屏幕共享功能。请使用 Chrome、Firefox 或 Edge 浏览器。';
+            isRecoverable = false;
+        } else if (error.name === 'AbortError') {
+            errorTitle = '操作已取消';
+            errorMessage = '屏幕共享选择已取消。';
+            isRecoverable = true;
         } else {
-            alert('开始屏幕共享失败：' + (error.message || '未知错误'));
+            errorTitle = '屏幕共享失败';
+            errorMessage = error.message || '未知错误，请稍后重试。';
+            isRecoverable = true;
         }
+        
+        // 显示友好的错误提示
+        showScreenSharingError(errorTitle, errorMessage, isRecoverable);
         
         // 发送错误消息
         sendScreenStreamError({
-            message: error.message || '开始屏幕共享失败',
+            message: errorMessage,
             code: error.name || 'UNKNOWN_ERROR',
         });
     }
@@ -513,6 +557,151 @@ function updateStartSharingButton(isStreaming) {
             button.classList.remove('streaming');
         }
     }
+}
+
+/**
+ * 显示屏幕共享错误提示（友好的UI提示）
+ */
+function showScreenSharingError(title, message, isRecoverable = false) {
+    // 创建或获取错误通知容器
+    let errorNotification = document.getElementById('screenSharingErrorNotification');
+    
+    if (!errorNotification) {
+        errorNotification = document.createElement('div');
+        errorNotification.id = 'screenSharingErrorNotification';
+        errorNotification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2d2d2d;
+            border: 1px solid #e74c3c;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 400px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease-out;
+        `;
+        
+        // 添加动画样式
+        if (!document.getElementById('errorNotificationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'errorNotificationStyles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(errorNotification);
+    }
+    
+    // 设置内容
+    errorNotification.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <div style="flex: 1;">
+                <h3 style="margin: 0 0 8px 0; color: #e74c3c; font-size: 1.1em; font-weight: 600;">
+                    ${title}
+                </h3>
+                <p style="margin: 0 0 12px 0; color: #aaa; font-size: 0.9em; line-height: 1.5;">
+                    ${message}
+                </p>
+                ${isRecoverable ? `
+                    <button id="retryScreenSharingBtn" style="
+                        padding: 8px 16px;
+                        background: #4a9eff;
+                        border: none;
+                        border-radius: 6px;
+                        color: #fff;
+                        font-size: 0.9em;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                    ">重试</button>
+                ` : ''}
+            </div>
+            <button id="closeErrorNotificationBtn" style="
+                background: transparent;
+                border: none;
+                color: #aaa;
+                font-size: 1.2em;
+                cursor: pointer;
+                padding: 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: color 0.2s;
+            ">×</button>
+        </div>
+    `;
+    
+    // 显示通知
+    errorNotification.style.display = 'block';
+    
+    // 绑定关闭按钮
+    const closeBtn = errorNotification.querySelector('#closeErrorNotificationBtn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            errorNotification.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => {
+                errorNotification.style.display = 'none';
+            }, 300);
+        });
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.color = '#fff';
+        });
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.color = '#aaa';
+        });
+    }
+    
+    // 绑定重试按钮
+    if (isRecoverable) {
+        const retryBtn = errorNotification.querySelector('#retryScreenSharingBtn');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                errorNotification.style.display = 'none';
+                startScreenSharing();
+            });
+            retryBtn.addEventListener('mouseenter', () => {
+                retryBtn.style.background = '#3a8eef';
+            });
+            retryBtn.addEventListener('mouseleave', () => {
+                retryBtn.style.background = '#4a9eff';
+            });
+        }
+    }
+    
+    // 自动关闭（5秒后）
+    setTimeout(() => {
+        if (errorNotification.style.display !== 'none') {
+            errorNotification.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => {
+                errorNotification.style.display = 'none';
+            }, 300);
+        }
+    }, 5000);
 }
 
 // 页面加载完成后初始化
