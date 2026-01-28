@@ -1,10 +1,10 @@
 ---
 id: TASK-38
 title: 支持一个房主向所有成员建立 WebRTC 连接
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-28 16:36'
+updated_date: '2026-01-28 20:25'
 labels: []
 dependencies: []
 ordinal: 4000
@@ -32,4 +32,4 @@ ordinal: 4000
 - [ ] #2 信令层能为每个成员正确路由对应的 WebRTC 信令
 - [ ] #3 新成员加入房间时可以增量建立连接，不影响已有连接
 - [ ] #4 成员离开房间时，房主端能关闭对应 PeerConnection 并释放资源
-<!-- AC:END -->
+<!-- AC:EN
