@@ -22,7 +22,7 @@ test_command: "无自动命令，代码评审 + TS 类型检查 + 单元测试"
 
 ## Success Criteria
 
-- [ ] #1 有文档或 TS 类型清晰列出所有 WebRTC 信令消息的 JSON 结构
-- [ ] #2 每个字段（roomId/fromUserId/toUserId/sdp/candidate 等）都有明确含义说明
-- [ ] #3 前端信令发送/接收层统一使用这些类型，不再硬编码字符串
-- [ ] #4 为未来扩展（多 track、多房主）预留扩展点或版本化策略
+- [x] #1 有文档或 TS 类型清晰列出所有 WebRTC 信令消息的 JSON 结构
+- [x] #2 每个字段（roomId/fromUserId/toUserId/sdp/candidate 等）都有明确含义说明
+- [x] #3 前端信令发送/接收层统一使用这些类型，不再硬编码字符串
+- [x] #4 为未来扩展（多 track、多房主）预留扩展点或版本化策略
