@@ -267,6 +267,40 @@ function handleWebSocketMessage(message) {
                 simulateOperationInIframe(message.data.operation);
             }
             break;
+        
+        // WebRTC 信令消息处理
+        case 'WEBRTC_OFFER':
+            // 成员端收到 Offer
+            if (typeof handleWebRTCOffer === 'function') {
+                handleWebRTCOffer(message);
+            }
+            break;
+            
+        case 'WEBRTC_ANSWER':
+            // 房主端收到 Answer（成员端不应收到）
+            console.log('收到 WebRTC Answer（成员端不应收到）:', message);
+            break;
+            
+        case 'WEBRTC_ICE_CANDIDATE':
+            // ICE Candidate 消息
+            if (typeof handleWebRTCICECandidate === 'function') {
+                handleWebRTCICECandidate(message);
+            }
+            break;
+            
+        case 'WEBRTC_END':
+            // WebRTC 连接结束
+            if (typeof handleWebRTCEnd === 'function') {
+                handleWebRTCEnd(message);
+            }
+            break;
+            
+        case 'WEBRTC_ERROR':
+            // WebRTC 错误
+            if (typeof handleWebRTCError === 'function') {
+                handleWebRTCError(message);
+            }
+            break;
             
         default:
             console.log('未知消息类型:', message.type);
@@ -513,6 +547,18 @@ if (typeof document !== 'undefined') {
     });
 }
 
+/**
+ * 获取 WebSocket 连接（供其他模块使用）
+ */
+function getWebSocketConnection() {
+    return ws;
+}
+
+// 将函数暴露到全局作用域，供其他脚本（如 video-player.js）使用
+if (typeof window !== 'undefined') {
+    window.getWebSocketConnection = getWebSocketConnection;
+}
+
 // 导出函数供测试使用
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -527,5 +573,6 @@ if (typeof module !== 'undefined' && module.exports) {
         getMessageHistory: () => messageHistory,
         getCurrentUserId: () => currentUserId,
         getCurrentUserNickname: () => currentUserNickname,
+        getWebSocketConnection,
     };
 }

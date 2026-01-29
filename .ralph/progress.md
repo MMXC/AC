@@ -53,3 +53,19 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-29 04:56:49
 **Session 1 ended** - ✅ TASK COMPLETE
+
+### 2026-01-29 05:04:26
+**Session 1 started** (model: auto)
+
+### 2026-01-29 [current time]
+**Session 1 completed** - 成员端播放器 UI 集成与状态展示
+- 创建了 `watch-together/js/video-player.js` VideoPlayer 组件，用于成员端显示 WebRTC 视频流和状态
+- 在 `watch-together/js/chat.js` 中添加了 WebRTC 信令消息处理（WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR）
+- 实现了状态文案显示：等待房主开始共享 / 正在连接 / 正在播放房主画面 / 房主已停止共享 / 连接错误
+- 确保状态文案与实际连接状态一致：只有在视频实际播放时才显示"正在播放房主画面"，避免假"播放中"
+- 在 `watch-together/join.html` 中引入了 `webrtc-signaling.js` 和 `video-player.js` 脚本
+- 更新了 `watch-together/js/webrtc-signaling.js`，将函数暴露到全局作用域供其他模块使用
+- 更新了 `watch-together/js/chat.js`，添加了 `getWebSocketConnection` 函数供 VideoPlayer 使用
+
+### 2026-01-29 05:12:09
+**Session 1 ended** - ✅ TASK COMPLETE
