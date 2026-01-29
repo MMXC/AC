@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 1
-- Current status: Task Complete - WebRTC信令消息协议设计已完成
+- Iterations completed: 2
+- Current status: Task Complete - 仅向房主暴露共享按钮并完成 WebRTC 权限集成
 
 ## How This Works
 

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Loopback Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            transition: background 0.3s;
+        }
+        button:hover:not(:disabled) {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .video-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .video-wrapper {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #333;
+        }
+        .video-wrapper h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #4CAF50;
+        }
+        video {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            background: #000;
+            border-radius: 4px;
+        }
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 6px;
+            min-height: 20px;
+        }
+        .status.info {
+            color: #2196F3;
+        }
+        .status.error {
+            color: #f44336;
+        }
+        .status.success {
+            color: #4CAF50;
+        }
+        @media (max-width: 768px) {
+            .video-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>WebRTC Loopback Demo</h1>
+    
+    <div class="controls">
+        <button id="startCameraBtn">开始 Loopback 测试 (摄像头)</button>
+        <button id="startScreenBtn">开始 Loopback 测试 (屏幕共享)</button>
+        <button id="stopBtn" disabled>停止测试</button>
+    </div>
+
+    <div class="status" id="status">准备就绪</div>
+
+    <div class="video-container">
+        <div class="video-wrapper">
+            <h2>本地预览 (pc1)</h2>
+            <video id="localVideo" autoplay muted playsinline></video>
+        </div>
+        <div class="video-wrapper">
+            <h2>远端播放 (pc2)</h2>
+            <video id="remoteVideo" autoplay playsinline></video>
+        </div>
+    </div>
+
+    <script>
+        let pc1 = null;
+        let pc2 = null;
+        let localStream = null;
+        let isRunning = false;
+
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        const startScreenBtn = document.getElementById('startScreenBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+
+        function updateStatus(message, type = 'info') {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            console.log(`[Status] ${message}`);
+        }
+
+        function updateButtons(running) {
+            isRunning = running;
+            startCameraBtn.disabled = running;
+            startScreenBtn.disabled = running;
+            stopBtn.disabled = !running;
+        }
+
+        async function startLoopback(useScreen = false) {
+            try {
+                updateStatus('正在获取媒体流...', 'info');
+                updateButtons(true);
+
+                // 获取媒体流
+                if (useScreen) {
+                    localStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: true,
+                        audio: true
+                    });
+                } else {
+                    localStream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true
+                    });
+                }
+
+                // 显示本地预览
+                localVideo.srcObject = localStream;
+                updateStatus('媒体流获取成功，正在建立连接...', 'success');
+
+                // 创建两个 PeerConnection
+                pc1 = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+                pc2 = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+
+                // #1: pc1 添加 MediaStream 轨道到 PeerConnection
+                localStream.getTracks().forEach(track => {
+                    pc1.addTrack(track, localStream);
+                    console.log(`[pc1] 添加轨道: ${track.kind}`, track);
+                });
+
+                // #2: 设置 ICE candidate 处理
+                pc1.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        console.log('[pc1] ICE candidate:', event.candidate);
+                        // 通过本地变量传递 ICE candidate
+                        pc2.addIceCandidate(event.candidate).catch(err => {
+                            console.error('[pc2] 添加 ICE candidate 失败:', err);
+                        });
+                    }
+                };
+
+                pc2.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        console.log('[pc2] ICE candidate:', event.candidate);
+                        // 通过本地变量传递 ICE candidate
+                        pc1.addIceCandidate(event.candidate).catch(err => {
+                            console.error('[pc1] 添加 ICE candidate 失败:', err);
+                        });
+                    }
+                };
+
+                // #3: pc2 接收远端流
+                pc2.ontrack = (event) => {
+                    console.log('[pc2] 收到远端轨道:', event.track);
+                    if (event.streams && event.streams[0]) {
+                        remoteVideo.srcObject = event.streams[0];
+                        updateStatus('连接建立成功！远端流正在播放', 'success');
+                    }
+                };
+
+                // 连接状态监控
+                pc1.onconnectionstatechange = () => {
+                    console.log('[pc1] 连接状态:', pc1.connectionState);
+                    if (pc1.connectionState === 'connected') {
+                        updateStatus('连接已建立！', 'success');
+                    }
+                };
+
+                pc2.onconnectionstatechange = () => {
+                    console.log('[pc2] 连接状态:', pc2.connectionState);
+                };
+
+                // #2: 创建 offer 和 answer，通过本地变量交换
+                updateStatus('正在创建 offer...', 'info');
+                const offer = await pc1.createOffer();
+                await pc1.setLocalDescription(offer);
+                console.log('[pc1] Offer 创建:', offer);
+
+                await pc2.setRemoteDescription(offer);
+                console.log('[pc2] 设置远程描述 (offer)');
+
+                updateStatus('正在创建 answer...', 'info');
+                const answer = await pc2.createAnswer();
+                await pc2.setLocalDescription(answer);
+                console.log('[pc2] Answer 创建:', answer);
+
+                await pc1.setRemoteDescription(answer);
+                console.log('[pc1] 设置远程描述 (answer)');
+
+                updateStatus('等待 ICE 连接建立...', 'info');
+
+            } catch (error) {
+                console.error('启动 Loopback 失败:', error);
+                updateStatus(`错误: ${error.message}`, 'error');
+                await stopLoopback();
+            }
+        }
+
+        // #4: 停止测试，正确关闭连接
+        async function stopLoopback() {
+            try {
+                updateStatus('正在停止测试...', 'info');
+                updateButtons(false);
+
+                // 停止所有媒体轨道
+                if (localStream) {
+                    localStream.getTracks().forEach(track => {
+                        track.stop();
+                        console.log(`停止轨道: ${track.kind}`);
+                    });
+                    localStream = null;
+                }
+
+                // 关闭 PeerConnection
+                if (pc1) {
+                    pc1.close();
+                    console.log('[pc1] 已关闭');
+                    pc1 = null;
+                }
+
+                if (pc2) {
+                    pc2.close();
+                    console.log('[pc2] 已关闭');
+                    pc2 = null;
+                }
+
+                // 清空 video 元素
+                localVideo.srcObject = null;
+                remoteVideo.srcObject = null;
+
+                updateStatus('测试已停止', 'info');
+            } catch (error) {
+                console.error('停止测试失败:', error);
+                updateStatus(`停止错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 事件监听
+        startCameraBtn.addEventListener('click', () => startLoopback(false));
+        startScreenBtn.addEventListener('click', () => startLoopback(true));
+        stopBtn.addEventListener('click', stopLoopback);
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', () => {
+            if (isRunning) {
+                stopLoopback();
+            }
+        });
+    </script>
+</body>
+</html>
