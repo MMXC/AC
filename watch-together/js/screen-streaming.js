@@ -70,8 +70,12 @@ function updateCanvasSize() {
  */
 function handleUserJoinedRoom(event) {
     const { userId, isHost } = event.detail || {};
-    
-    if (isHost) {
+    // 事件中优先使用 detail.isHost，其次回退到全局 window.isHost
+    const effectiveIsHost = typeof isHost === 'boolean'
+        ? isHost
+        : (typeof window !== 'undefined' && window.isHost === true);
+
+    if (effectiveIsHost) {
         // 房主端：显示开始共享按钮
         showStartSharingButton();
     } else {

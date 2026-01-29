@@ -256,7 +256,12 @@ describe('画面流/屏幕投影通路设计与最小实现', () => {
 
         test('房主端显示开始共享按钮', () => {
             const js = fs.readFileSync(screenStreamingJsPath, 'utf-8');
-            expect(js).toContain('if (isHost)');
+            // 允许通过 detail.isHost 或 window.isHost 判断房主身份
+            expect(
+                js.includes('if (isHost)') ||
+                js.includes('effectiveIsHost') ||
+                js.includes('window.isHost')
+            ).toBe(true);
             expect(js).toContain('showStartSharingButton');
         });
 
