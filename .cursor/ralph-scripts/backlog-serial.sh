@@ -20,6 +20,7 @@ POLL_INTERVAL="1"
 STOP_WHEN_EMPTY=true
 SKIP_PR=false
 AUTO_CREATE_PR=false
+AUTO_MERGE=false
 
 usage() {
   cat <<'EOF'
@@ -32,6 +33,7 @@ Options:
   --watch                   队列空了也不退出（持续等待新任务）
   --no-pr                   完成后不提示 PR 命令（默认会提示）
   --auto-pr                 完成后自动创建 PR（需要 gh CLI）
+  --auto-merge              完成后自动合并到主分支并 push（不依赖 gh）
   -h, --help                帮助
 
 流程：
@@ -46,6 +48,7 @@ Options:
   backlog-serial.sh --watch            # 持续等待新任务
   backlog-serial.sh --no-pr            # 不提示 PR 命令
   backlog-serial.sh --auto-pr          # 自动创建 PR
+  backlog-serial.sh --auto-merge       # 自动合并到主分支
 EOF
 }
 
@@ -69,6 +72,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --auto-pr)
       AUTO_CREATE_PR=true
+      shift
+      ;;
+    --auto-merge|--automerge)
+      AUTO_MERGE=true
       shift
       ;;
     -h|--help)
@@ -276,6 +283,49 @@ process_task() {
       echo "  --title \"TASK-$task_id: $task_title\" \\"
       echo "  --body \"来自 backlog 的任务：TASK-$task_id\\n\\n请参考 RALPH_TASK.md / backlog 说明。\""
       echo ""
+    fi
+  fi
+
+  # 自动合并到主分支（不依赖 gh）
+  if [[ "$AUTO_MERGE" == "true" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔀 自动合并到主分支: $MAIN_BRANCH"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    # 确保在主分支上合并
+    git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null
+    git -C "$WORKSPACE" pull >/dev/null 2>&1 || true
+
+    set +e
+    git -C "$WORKSPACE" merge --no-ff "$branch_name" -m "ralph: merge TASK-$task_id" 2>&1
+    merge_rc=$?
+    set -e
+
+    if [[ $merge_rc -ne 0 ]]; then
+      echo "⚠️  自动合并失败（可能有冲突）。已尝试回滚合并状态，请手动处理：" >&2
+      set +e
+      git -C "$WORKSPACE" merge --abort >/dev/null 2>&1
+      set -e
+      echo "  1) git checkout $MAIN_BRANCH" >&2
+      echo "  2) git merge $branch_name" >&2
+      echo "  3) 解决冲突后 git add -A && git commit" >&2
+      echo "  4) git push origin $MAIN_BRANCH" >&2
+    else
+      echo "✅ 已合并到 $MAIN_BRANCH"
+
+      set +e
+      git -C "$WORKSPACE" push origin "$MAIN_BRANCH" 2>&1
+      push_main_rc=$?
+      set -e
+
+      if [[ $push_main_rc -ne 0 ]]; then
+        echo "⚠️  push 主分支失败（可能未配置远程或权限问题），请手动执行：" >&2
+        echo "  git push origin $MAIN_BRANCH" >&2
+      else
+        echo "✅ 主分支已 push: $MAIN_BRANCH"
+      fi
     fi
   fi
   
