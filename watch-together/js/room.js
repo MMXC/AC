@@ -512,9 +512,9 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         
         // 触发自定义事件，通知其他脚本用户已加入房间
         if (typeof window !== 'undefined') {
-            console.log('用户已成功加入房间，触发 userJoinedRoom 事件', { userId: serverUserId, nickname: serverNickname, roomId });
+            console.log('用户已成功加入房间，触发 userJoinedRoom 事件', { userId: serverUserId, nickname: serverNickname, roomId, isHost });
             window.dispatchEvent(new CustomEvent('userJoinedRoom', {
-                detail: { userId: serverUserId, nickname: serverNickname, roomId }
+                detail: { userId: serverUserId, nickname: serverNickname, roomId, isHost }
             }));
         }
         

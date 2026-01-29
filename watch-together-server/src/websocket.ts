@@ -609,6 +609,114 @@ interface OpSourceOperationRequest {
 }
 
 /**
+ * WebRTC 信令消息基础接口
+ * 这里只定义最小字段集，后续任务可以扩展
+ */
+type WebRTCSignalingTypeString =
+  | 'WEBRTC_OFFER'
+  | 'WEBRTC_ANSWER'
+  | 'WEBRTC_ICE_CANDIDATE'
+  | 'WEBRTC_END'
+  | 'WEBRTC_ERROR';
+
+interface WebRTCSignalingMessageBase {
+  type: WebRTCSignalingTypeString;
+  roomId?: string;
+  fromUserId?: string;
+  toUserId?: string | null;
+  // 其他字段保持开放，方便后续任务扩展
+  [key: string]: unknown;
+}
+
+/**
+ * 处理 WebRTC 信令消息的权限与基础校验
+ *
+ * 当前任务只关心权限控制：
+ * - 只有房主可以发送 WEBRTC_OFFER
+ *
+ * @param ws WebSocket 连接
+ * @param message 消息对象
+ * @param roomId 房间 ID
+ * @param userId 用户 ID
+ */
+async function handleWebRTCSignalingMessage(
+  ws: WebSocket,
+  message: WebRTCSignalingMessageBase,
+  roomId: string,
+  userId: string
+): Promise<void> {
+  try {
+    // 目前仅对 WEBRTC_OFFER 做强校验，其它类型留给后续任务扩展
+    if (message.type !== 'WEBRTC_OFFER') {
+      ws.send(
+        JSON.stringify({
+          type: 'WEBRTC_ERROR',
+          errorMessage: `Unsupported WebRTC signaling type: ${message.type}`,
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    const prisma = getPrismaClient();
+
+    // 获取房间信息以确定房主
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      select: {
+        id: true,
+        hostId: true,
+        deletedAt: true,
+      },
+    });
+
+    if (!room || room.deletedAt !== null) {
+      ws.send(
+        JSON.stringify({
+          type: 'WEBRTC_ERROR',
+          errorMessage: 'Room not found or deleted',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 非房主尝试发送 WEBRTC_OFFER：记录日志并拒绝
+    if (room.hostId !== userId) {
+      wsLogger.warn(
+        { roomId, userId, hostId: room.hostId, signalingType: message.type },
+        'Non-host user attempted to send WEBRTC_OFFER'
+      );
+
+      ws.send(
+        JSON.stringify({
+          type: 'WEBRTC_ERROR',
+          errorMessage: 'Only host can send WEBRTC_OFFER',
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // 房主发送的 WEBRTC_OFFER 在本任务中只做权限校验
+    // 实际的信令转发逻辑由后续任务实现
+    wsLogger.info(
+      { roomId, userId, signalingType: message.type },
+      'Accepted WEBRTC_OFFER from host (no routing implemented in this task)'
+    );
+  } catch (error) {
+    wsLogger.error({ err: error as Error, roomId, userId }, 'Error handling WebRTC signaling message');
+    ws.send(
+      JSON.stringify({
+        type: 'WEBRTC_ERROR',
+        errorMessage: 'Internal server error while handling WebRTC signaling',
+        timestamp: new Date().toISOString(),
+      })
+    );
+  }
+}
+
+/**
  * 验证聊天消息格式
  *
  * @param message 消息对象
