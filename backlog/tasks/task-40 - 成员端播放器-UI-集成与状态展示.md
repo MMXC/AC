@@ -1,10 +1,10 @@
 ---
 id: TASK-40
 title: 成员端播放器 UI 集成与状态展示
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-28 11:55'
-updated_date: '2026-01-28 16:36'
+updated_date: '2026-01-28 20:59'
 labels: []
 dependencies: []
 ordinal: 1000

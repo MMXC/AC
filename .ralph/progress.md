@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 2
-- Current status: Task Complete - WebRTC Loopback Demo 已完成
+- Current status: Task Complete - 仅向房主暴露共享按钮并完成 WebRTC 权限集成
 
 ## How This Works
 
@@ -42,20 +42,14 @@ This is how Ralph maintains continuity across iterations.
 ### 2026-01-29 01:54:06
 **Session 1 ended** - ✅ TASK COMPLETE
 
-### 2026-01-29 03:33:45
+### 2026-01-29 04:45:46
 **Session 1 started** (model: auto)
 
 ### 2026-01-29 [current time]
-**Session 2 completed** - 单页面内完成 WebRTC Loopback Demo（无服务器）
-- 创建了 `watch-together/webrtc-loopback-demo.html`，实现完整的 WebRTC Loopback 测试页面
-- 实现了两个 RTCPeerConnection (pc1/pc2)，通过本地 JS 变量传递 offer/answer/ICE
-- pc1 成功获取 MediaStream（支持 getUserMedia 和 getDisplayMedia）并通过 addTrack 添加到 PeerConnection
-- pc1 与 pc2 之间通过本地变量成功交换 offer/answer/ICE，建立 WebRTC 连接
-- pc2 的 <video> 能正常播放从 pc1 发送的远端流
-- 实现了停止功能，正确关闭 PeerConnection 和相关 MediaStream 轨道
-- 提供了两个按钮分别测试摄像头和屏幕共享
-- 包含状态显示和错误处理
-- 更新了 RALPH_TASK.md，标记所有成功标准为已完成
+**Session 2 completed** - 仅向房主暴露开始/停止共享按钮并与权限系统集成
+- 修正房间前端的角色事件数据，在 `joinRoomWithNickname` 触发的 `userJoinedRoom` 事件中补充 `isHost` 字段，并在 `screen-streaming.js` 中统一使用事件中的 `isHost`（缺失时回退到 `window.isHost`），确保共享按钮仅对房主可见，成员端隐藏
+- 在 WebSocket 服务器 `src/websocket.ts` 中新增 `handleWebRTCSignalingMessage`，对所有 `WEBRTC_*` 消息进行入口识别，并对 `WEBRTC_OFFER` 强制校验：只有房主（`room.hostId`）可以发送；普通成员伪造该消息时会记录警告日志并返回 `WEBRTC_ERROR`
+- 新增端到端测试 `tests/webrtc-permissions.test.ts`，通过真实 WebSocket 连接模拟普通成员手动发送 `WEBRTC_OFFER`，验证服务器返回 `WEBRTC_ERROR`，避免权限旁路；同时保持现有聊天/URL/操作同步逻辑不受影响
 
-### 2026-01-29 03:36:38
+### 2026-01-29 04:56:49
 **Session 1 ended** - ✅ TASK COMPLETE
