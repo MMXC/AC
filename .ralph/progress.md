@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 1
-- Current status: Task Complete - WebRTC Loopback Demo（无服务器）已实现
+- Current status: Task Complete - 通过 WebSocket 信令在房主与单成员间建立 WebRTC 连接
 
 ## How This Works
 
@@ -60,3 +60,13 @@ This is how Ralph maintains continuity across iterations.
 - #4: 停止测试时关闭 pc1/pc2、停止所有轨道、清空 video.srcObject
 - 支持「摄像头/麦克风」与「屏幕」两种媒体源，按钮「开始 Loopback 测试」「停止测试」
 - 所有成功标准已标记为完成
+
+### 2026-01-30 23:20:43
+**Session 1 started** (model: auto)
+
+### 2026-01-30 [current time]
+**Session 1 completed** - 通过 WebSocket 信令在房主与单成员间建立 WebRTC 连接
+- Mock 服务器（`watch-together/mock-server/server.js`）：增加 WebRTC 信令透明转发。按 `roomId`/`toUserId` 将 WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR 点对点转发；维护 `wsByRoomUser` 映射，目标不在线时打日志不崩溃。
+- 成员端（`watch-together/js/screen-streaming.js`）：收到远端 track 时优先使用 `VideoPlayer.attachStream(remoteStream)` 播放（满足成功标准 #4）；关闭连接时调用 `VideoPlayer.detachStream()`。
+- 房主端已有逻辑保持不变：`startWebRTCPeerConnectionAsHost` 发送 WEBRTC_OFFER，成员端 `handleWebRTCOffer` 回送 WEBRTC_ANSWER，双方处理 WEBRTC_ICE_CANDIDATE。
+- RALPH_TASK 四项成功标准已全部勾选；webrtc-signaling 与 screen-streaming 相关测试通过。
