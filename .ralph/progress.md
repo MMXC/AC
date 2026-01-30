@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 1
-- Current status: Task Complete - VideoPlayer 组件已实现
+- Current status: Task Complete - WebRTC Loopback Demo（无服务器）已实现
 
 ## How This Works
 
@@ -47,3 +47,16 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-30 23:10:34
 **Session 1 started** (model: auto)
+
+### 2026-01-30 23:14:18
+**Session 1 started** (model: auto)
+
+### 2026-01-30 [current time]
+**Session 1 completed** - 单页面 WebRTC Loopback Demo（无服务器）
+- 创建了 `loopback-demo/index.html`，单页内完成 pc1/pc2 的 offer/answer/ICE 本地交换
+- #1: pc1 通过 getUserMedia/getDisplayMedia 获取 MediaStream，使用 addTrack 加入 PeerConnection
+- #2: 通过本地 JS 变量交换 offer/answer，ICE 候选排队后在 setRemoteDescription 后刷新，建立连接
+- #3: pc2.ontrack 将远端流绑定到「远端播放」&lt;video&gt;
+- #4: 停止测试时关闭 pc1/pc2、停止所有轨道、清空 video.srcObject
+- 支持「摄像头/麦克风」与「屏幕」两种媒体源，按钮「开始 Loopback 测试」「停止测试」
+- 所有成功标准已标记为完成
