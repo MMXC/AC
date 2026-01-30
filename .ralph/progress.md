@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 2
-- Current status: Task Complete - 仅向房主暴露共享按钮并完成 WebRTC 权限集成
+- Iterations completed: 1
+- Current status: Task Complete - VideoPlayer 组件已实现
 
 ## How This Works
 
@@ -26,46 +26,21 @@ This is how Ralph maintains continuity across iterations.
 ### 2026-01-28 16:16:44
 **Session 1 ended** - ✅ TASK COMPLETE
 
-### 2026-01-29 01:46:07
+### 2026-01-29 01:31:38
 **Session 1 started** (model: auto)
 
 ### 2026-01-29 [current time]
-**Session 1 completed** - 设计 WebRTC 信令消息协议（基于现有 WebSocket）
-- 创建了 TypeScript 类型定义文件 `watch-together/js/webrtc-signaling-types.ts`，定义了所有 WebRTC 信令消息类型（WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR）
-- 创建了详细的协议文档 `watch-together/docs/webrtc-signaling-protocol.md`，说明所有消息类型的 JSON 结构和字段含义
-- 创建了 JavaScript 模块 `watch-together/js/webrtc-signaling.js`，提供类型常量、创建函数和验证函数，供前端统一使用，避免硬编码字符串
-- 创建了完整的单元测试 `watch-together/__tests__/webrtc-signaling.test.js`，包含29个测试用例，验证消息类型解析、序列化/反序列化和字段验证
-- 所有测试通过，确保消息格式正确且不会因字段名错误导致解析失败
-- 实现了版本化策略（version字段）和未来扩展支持（tracks字段用于多track，消息结构支持多房主场景）
-- 更新了 RALPH_TASK.md，标记所有成功标准为已完成
+**Session 1 completed** - 实现成员端 VideoPlayer 组件
+- 创建了 `watch-together/js/video-player.js`，实现了独立的 VideoPlayer 组件
+- 实现了 `attachStream(MediaStream)` 和 `detachStream()` 接口
+- 实现了内存泄漏防护：确保多次 attachStream/detachStream 不会残留旧流
+  - 在附加新流前完全清理旧流的事件监听器和状态
+  - 使用流ID检查防止异步竞态条件
+  - 正确移除所有事件监听器
+- 在 `watch-together/join.html` 中集成了 VideoPlayer 组件
+- 添加了测试函数 `window.testVideoPlayer()` 供控制台测试使用
+- 组件不依赖 WebRTC 细节，只关心 MediaStream 对象
+- 所有成功标准已标记为完成
 
-### 2026-01-29 01:54:06
-**Session 1 ended** - ✅ TASK COMPLETE
-
-### 2026-01-29 04:45:46
-**Session 1 started** (model: auto)
-
-### 2026-01-29 [current time]
-**Session 2 completed** - 仅向房主暴露开始/停止共享按钮并与权限系统集成
-- 修正房间前端的角色事件数据，在 `joinRoomWithNickname` 触发的 `userJoinedRoom` 事件中补充 `isHost` 字段，并在 `screen-streaming.js` 中统一使用事件中的 `isHost`（缺失时回退到 `window.isHost`），确保共享按钮仅对房主可见，成员端隐藏
-- 在 WebSocket 服务器 `src/websocket.ts` 中新增 `handleWebRTCSignalingMessage`，对所有 `WEBRTC_*` 消息进行入口识别，并对 `WEBRTC_OFFER` 强制校验：只有房主（`room.hostId`）可以发送；普通成员伪造该消息时会记录警告日志并返回 `WEBRTC_ERROR`
-- 新增端到端测试 `tests/webrtc-permissions.test.ts`，通过真实 WebSocket 连接模拟普通成员手动发送 `WEBRTC_OFFER`，验证服务器返回 `WEBRTC_ERROR`，避免权限旁路；同时保持现有聊天/URL/操作同步逻辑不受影响
-
-### 2026-01-29 04:56:49
-**Session 1 ended** - ✅ TASK COMPLETE
-
-### 2026-01-29 05:18:53
-**Session 1 started** (model: auto)
-
-### 2026-01-29 [current time]
-**Session 1 completed** - WebRTC 错误处理与重试策略
-- 改进了 `getDisplayMedia` 权限拒绝的错误处理，使用友好的UI通知替代alert，提供清晰的错误提示和重试按钮
-- 创建了 `watch-together/js/webrtc-manager.js` WebRTC连接管理器，实现ICE协商超时机制（30秒超时）和连接状态监听
-- 改进了WebSocket断开检测，在 `chat.js` 中添加了重试限制（最多3次，每次间隔5秒）和友好的错误提示
-- 在 `screen-streaming.js` 中改进了WebSocket断开时的处理，停止屏幕共享并显示错误提示
-- 实现了可恢复错误的自动重连机制，包括重试计数、重试间隔控制和失败后的清晰说明
-- 更新了 `watch-together/join.html` 加载顺序，确保 webrtc-signaling.js 和 webrtc-manager.js 正确加载
-- 更新了 RALPH_TASK.md，标记所有成功标准为已完成
-
-### 2026-01-29 05:22:37
+### 2026-01-29 01:36:18
 **Session 1 ended** - ✅ TASK COMPLETE
