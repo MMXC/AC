@@ -1,28 +1,28 @@
 ---
-backlog_id: backlog-37
-task: 通过 WebSocket 信令在房主与单个成员之间建立 WebRTC 连接
-test_command: "手动：房主与一个成员加入同一房间，房主点击开始共享，确认成员端出现并播放房主画面"
+backlog_id: backlog-38
+task: 支持一个房主向所有成员建立 WebRTC 连接
+test_command: "手动：1 房主 + 2 成员加入同一房间，房主开始共享，确认两个成员都能看到房主画面"
 ---
 
-# Task: 通过 WebSocket 信令在房主与单个成员之间建立 WebRTC 连接
+# Task: 支持一个房主向所有成员建立 WebRTC 连接
 
 ## Description
 
-基于任务 B1/B2 定义的信令格式和转发逻辑，在实际房间环境中实现“房主 ↔ 单一成员”的 WebRTC 媒体通路。房主作为 caller，成员作为 callee，通过 WebSocket 交换 offer/answer/ICE，将房主的 getDisplayMedia 流发送到成员端的 VideoPlayer。
+在房主端为房间内每个非房主用户维护一个独立的 RTCPeerConnection，并通过 WebSocket 信令为每个成员建立 WebRTC 媒体通路，让所有在线成员都能看到房主视频流。
 
-**Test Command**: `手动：房主与一个成员加入同一房间，房主点击开始共享，确认成员端出现并播放房主画面`
+**Test Command**: `手动：1 房主 + 2 成员加入同一房间，房主开始共享，确认两个成员都能看到房主画面`
 
 **测试用例**:
 
 **测试场景**:
-1. 局域网环境下房主与单成员成功建立 WebRTC 连接并传输视频流
-2. 刷新任一端页面后可重新建立连接
+1. 在房主在线时陆续加入多个成员，所有人都能收到房主流
+2. 某成员离开房间后，其余成员连接不受影响
 
-**Test Command**: `手动：房主与一个成员加入同一房间，房主点击开始共享，确认成员端出现并播放房主画面`
+**Test Command**: `手动：1 房主 + 2 成员加入同一房间，房主开始共享，确认两个成员都能看到房主画面`
 
 ## Success Criteria
 
-- [x] #1 房主点击开始共享能向目标成员发送 WEBRTC_OFFER
-- [x] #2 成员收到 WEBRTC_OFFER 后能创建 answer 并用 WEBRTC_ANSWER 回传
-- [x] #3 双方能正确处理并转发 WEBRTC_ICE_CANDIDATE 直至连接建立
-- [x] #4 成员端 VideoPlayer 成功接收到远端 MediaStream 并播放画面
+- [ ] #1 房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）
+- [ ] #2 信令层能为每个成员正确路由对应的 WebRTC 信令
+- [ ] #3 新成员加入房间时可以增量建立连接，不影响已有连接
+- [ ] #4 成员离开房间时，房主端能关闭对应 PeerConnection 并释放资源
