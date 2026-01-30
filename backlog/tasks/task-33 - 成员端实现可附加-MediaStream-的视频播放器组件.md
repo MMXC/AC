@@ -1,10 +1,10 @@
 ---
 id: TASK-33
 title: 成员端实现可附加 MediaStream 的视频播放器组件
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-30 14:01'
+updated_date: '2026-01-30 15:02'
 labels: []
 dependencies: []
 ordinal: 10000
