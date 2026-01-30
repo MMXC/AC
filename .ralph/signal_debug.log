@@ -630,3 +630,20 @@
 [22:55:28] Signal file exists: yes
 [22:55:28] Signal file size: 9
 [22:55:28] Returning signal: 'FINISHED'
+[23:10:34] Initialized signal_file: /mnt/c/project/AC/.ralph/.parser_signal
+[23:10:34] Starting agent with parser, signal_file=/mnt/c/project/AC/.ralph/.parser_signal
+[23:10:34] Command: cursor-agent -p --force --output-format stream-json --model auto
+[23:10:34] Agent started with PID: 89294
+[23:10:35] Parser initialized: WORKSPACE=/mnt/c/project/AC
+[23:10:35] SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[23:10:35] Testing write to signal file...
+[23:10:35] Signal file exists and is writable
+[23:10:35] Parser started, SIGNAL_FILE=/mnt/c/project/AC/.ralph/.parser_signal
+[23:10:35] Starting to read from stdin...
+[23:10:42] WARNING: Parser received 0 lines from stdin!
+[23:10:42] This might indicate cursor-agent is not outputting JSON or there's a pipe issue
+[23:10:42] Parser finished, processed 0 lines
+[23:10:44] After agent wait, checking signal file: /mnt/c/project/AC/.ralph/.parser_signal
+[23:10:44] Signal file exists: yes
+[23:10:44] Signal file size: 0
+[23:10:44] Returning signal: 'empty'

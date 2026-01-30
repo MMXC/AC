@@ -1,10 +1,10 @@
 ---
 id: TASK-35
 title: 服务器端实现 WebRTC 信令转发（透明路由）
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-30 10:12'
+updated_date: '2026-01-30 15:10'
 labels: []
 dependencies: []
 ordinal: 6000
