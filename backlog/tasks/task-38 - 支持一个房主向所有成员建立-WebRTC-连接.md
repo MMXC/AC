@@ -1,14 +1,13 @@
 ---
 id: TASK-38
 title: 支持一个房主向所有成员建立 WebRTC 连接
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-30 15:39'
+updated_date: '2026-01-30 16:03'
 labels: []
 dependencies: []
-ordinal: 1000
-test_command: "skill:watch-together-webapp-testing TASK-38"
+ordinal: 9000
 ---
 
 ## Description

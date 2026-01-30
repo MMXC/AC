@@ -1,14 +1,13 @@
 ---
 id: TASK-37
 title: 通过 WebSocket 信令在房主与单个成员之间建立 WebRTC 连接
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-30 15:28'
+updated_date: '2026-01-30 16:03'
 labels: []
 dependencies: []
-ordinal: 4000
-test_command: "skill:watch-together-webapp-testing TASK-37"
+ordinal: 10000
 ---
 
 ## Description

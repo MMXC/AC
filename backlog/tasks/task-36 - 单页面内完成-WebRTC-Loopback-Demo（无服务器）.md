@@ -1,14 +1,13 @@
 ---
 id: TASK-36
 title: 单页面内完成 WebRTC Loopback Demo（无服务器）
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-30 15:17'
+updated_date: '2026-01-30 16:03'
 labels: []
 dependencies: []
-ordinal: 5000
-test_command: "skill:watch-together-webapp-testing TASK-36"
+ordinal: 11000
 ---
 
 ## Description
