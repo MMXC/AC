@@ -22,7 +22,7 @@ test_command: "手动：1 房主 + 2 成员加入同一房间，房主开始共�
 
 ## Success Criteria
 
-- [ ] #1 房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）
-- [ ] #2 信令层能为每个成员正确路由对应的 WebRTC 信令
-- [ ] #3 新成员加入房间时可以增量建立连接，不影响已有连接
-- [ ] #4 成员离开房间时，房主端能关闭对应 PeerConnection 并释放资源
+- [x] #1 房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）
+- [x] #2 信令层能为每个成员正确路由对应的 WebRTC 信令
+- [x] #3 新成员加入房间时可以增量建立连接，不影响已有连接
+- [x] #4 成员离开房间时，房主端能关闭对应 PeerConnection 并释放资源

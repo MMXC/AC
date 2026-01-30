@@ -16,10 +16,16 @@ let screenStreamState = {
     quality: 0.7, // 图片质量（0-1）
 };
 
-// WebRTC 状态（房主与单个成员之间的一条媒体通路）
+// WebRTC 状态
+// 房主端：peerConnections 为 Map<userId, RTCPeerConnection>，localStream 为当前共享流
+// 成员端：保留单个 peerConnection / remoteStream / targetUserId
 let webrtcState = {
-    peerConnection: null,
+    /** 房主端：每个成员一个 PC，key 为成员 userId */
+    peerConnections: new Map(),
+    /** 房主端：当前共享的本地流（同一流添加到所有 PC） */
     localStream: null,
+    /** 成员端：与房主的单条连接 */
+    peerConnection: null,
     remoteStream: null,
     targetUserId: null,
 };
@@ -50,6 +56,8 @@ function initScreenStreaming() {
     // 监听用户加入房间事件
     if (typeof window !== 'undefined') {
         window.addEventListener('userJoinedRoom', handleUserJoinedRoom);
+        window.addEventListener('memberJoinedRoom', handleMemberJoinedRoom);
+        window.addEventListener('memberLeftRoom', handleMemberLeftRoom);
     }
     
     // 监听 WebSocket 连接事件（从 chat.js）
@@ -572,46 +580,25 @@ function createPeerConnection() {
 }
 
 /**
- * 房主端：启动 WebRTC PeerConnection，并向单个成员发送 Offer
+ * 房主端：为指定成员创建 PeerConnection 并发送 Offer（单条连接）
  */
-async function startWebRTCPeerConnectionAsHost(stream) {
+async function addPeerConnectionForMember(targetUserId, stream) {
     if (typeof window === 'undefined') return;
-    if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) {
-        throw new Error('WebSocket 未连接，无法发送 WebRTC 信令');
-    }
-    if (!window.currentRoomId || !window.currentUserId) {
-        throw new Error('当前房间或用户信息缺失，无法建立 WebRTC 连接');
-    }
-
-    // 选择一个目标成员（当前场景假设只有一个成员）
-    let targetUserId = null;
-    if (typeof getMembersList === 'function') {
-        const members = getMembersList() || [];
-        const candidates = members.filter(m => m.id !== window.currentUserId);
-        if (candidates.length > 0) {
-            targetUserId = candidates[0].id;
-        }
-    }
-
-    if (!targetUserId) {
-        throw new Error('当前房间中没有可以建立 WebRTC 连接的成员');
+    if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) return;
+    if (!window.currentRoomId || !window.currentUserId) return;
+    if (webrtcState.peerConnections.has(targetUserId)) {
+        closePeerConnectionForMember(targetUserId);
     }
 
     const pc = createPeerConnection();
-    webrtcState.peerConnection = pc;
-    webrtcState.localStream = stream;
-    webrtcState.targetUserId = targetUserId;
+    webrtcState.peerConnections.set(targetUserId, pc);
 
-    // 将屏幕流中的 track 添加到 PeerConnection 中
     stream.getTracks().forEach(track => {
         pc.addTrack(track, stream);
     });
 
-    // ICE 候选收集并通过 WebSocket 发送给目标成员
     pc.onicecandidate = (event) => {
-        if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) {
-            return;
-        }
+        if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) return;
         const candidate = event.candidate ? event.candidate.toJSON() : null;
         try {
             const iceMessage = createICECandidateMessage({
@@ -627,18 +614,15 @@ async function startWebRTCPeerConnectionAsHost(stream) {
     };
 
     pc.onconnectionstatechange = () => {
-        console.log('WebRTC 连接状态（房主端）:', pc.connectionState);
+        console.log(`WebRTC 连接状态 [${targetUserId}]:`, pc.connectionState);
     };
 
-    // 创建并发送 Offer
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
     const tracks = {};
     const videoTrack = stream.getVideoTracks()[0];
-    if (videoTrack && videoTrack.id) {
-        tracks.videoTrackId = videoTrack.id;
-    }
+    if (videoTrack && videoTrack.id) tracks.videoTrackId = videoTrack.id;
 
     const offerMessage = createOfferMessage({
         roomId: window.currentRoomId,
@@ -647,9 +631,75 @@ async function startWebRTCPeerConnectionAsHost(stream) {
         sdp: offer.sdp,
         tracks,
     });
-
     screenStreamState.ws.send(JSON.stringify(offerMessage));
     console.log('已发送 WebRTC Offer 给成员:', targetUserId);
+}
+
+/**
+ * 房主端：关闭对指定成员的 PeerConnection 并释放资源
+ */
+function closePeerConnectionForMember(targetUserId) {
+    const pc = webrtcState.peerConnections.get(targetUserId);
+    if (pc) {
+        try {
+            pc.close();
+        } catch (e) {
+            console.error('关闭 WebRTC 连接时出错:', e);
+        }
+        webrtcState.peerConnections.delete(targetUserId);
+        console.log('已关闭对成员的 WebRTC 连接:', targetUserId);
+    }
+}
+
+/**
+ * 房主端：新成员加入房间时，若正在共享则为其建立一条 WebRTC 连接
+ */
+function handleMemberJoinedRoom(event) {
+    const { userId } = event.detail || {};
+    if (!userId || !window.isHost || !screenStreamState.isStreaming) return;
+    if (userId === window.currentUserId) return;
+    const stream = webrtcState.localStream || screenStreamState.mediaStream;
+    if (!stream) return;
+    addPeerConnectionForMember(userId, stream).catch(err => {
+        console.error('为新成员建立 WebRTC 连接失败:', userId, err);
+    });
+}
+
+/**
+ * 房主端：成员离开房间时关闭对该成员的 PeerConnection
+ */
+function handleMemberLeftRoom(event) {
+    const { userId } = event.detail || {};
+    if (!userId || !window.isHost) return;
+    closePeerConnectionForMember(userId);
+}
+
+/**
+ * 房主端：启动 WebRTC，向当前所有成员各建立一条 PeerConnection 并发送 Offer
+ */
+async function startWebRTCPeerConnectionAsHost(stream) {
+    if (typeof window === 'undefined') return;
+    if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) {
+        throw new Error('WebSocket 未连接，无法发送 WebRTC 信令');
+    }
+    if (!window.currentRoomId || !window.currentUserId) {
+        throw new Error('当前房间或用户信息缺失，无法建立 WebRTC 连接');
+    }
+
+    webrtcState.localStream = stream;
+    const members = typeof getMembersList === 'function' ? getMembersList() || [] : [];
+    const candidates = members.filter(m => m.id !== window.currentUserId);
+
+    for (const member of candidates) {
+        try {
+            await addPeerConnectionForMember(member.id, stream);
+        } catch (err) {
+            console.error('为成员建立 WebRTC 连接失败:', member.id, err);
+        }
+    }
+    if (candidates.length === 0) {
+        console.log('当前无其他成员，有新成员加入时将自动建立连接');
+    }
 }
 
 /**
@@ -658,6 +708,18 @@ async function startWebRTCPeerConnectionAsHost(stream) {
  */
 function stopWebRTCPeerConnection(notifyPeer) {
     if (typeof window === 'undefined') return;
+
+    // 房主端：关闭所有成员的 PeerConnection
+    if (webrtcState.peerConnections && webrtcState.peerConnections.size > 0) {
+        webrtcState.peerConnections.forEach((pc) => {
+            try {
+                pc.close();
+            } catch (e) {
+                console.error('关闭 WebRTC 连接时出错:', e);
+            }
+        });
+        webrtcState.peerConnections.clear();
+    }
 
     const pc = webrtcState.peerConnection;
     if (pc) {
@@ -688,7 +750,7 @@ function stopWebRTCPeerConnection(notifyPeer) {
             const endMessage = createEndMessage({
                 roomId: window.currentRoomId,
                 fromUserId: window.currentUserId,
-                toUserId: webrtcState.targetUserId || null,
+                toUserId: null,
                 reason: 'host-stopped-sharing',
             });
             screenStreamState.ws.send(JSON.stringify(endMessage));
@@ -999,14 +1061,15 @@ async function handleWebRTCOffer(message) {
 async function handleWebRTCAnswer(message) {
     if (typeof window === 'undefined') return;
     if (!window.currentUserId || !window.currentRoomId) return;
-    if (!window.isHost) return; // 只有房主应当收到 Answer
+    if (!window.isHost) return;
 
     if (message.toUserId !== window.currentUserId) return;
     if (message.roomId !== window.currentRoomId) return;
 
-    const pc = webrtcState.peerConnection;
+    const fromUserId = message.fromUserId;
+    const pc = webrtcState.peerConnections && webrtcState.peerConnections.get(fromUserId);
     if (!pc) {
-        console.warn('收到 WebRTC Answer 时本地没有 PeerConnection');
+        console.warn('收到 WebRTC Answer 时本地没有对应成员的 PeerConnection:', fromUserId);
         return;
     }
 
@@ -1014,25 +1077,22 @@ async function handleWebRTCAnswer(message) {
         type: 'answer',
         sdp: message.sdp,
     }));
-    console.log('房主端已应用 WebRTC Answer');
+    console.log('房主端已应用 WebRTC Answer，来自成员:', fromUserId);
 }
 
 async function handleWebRTCIceCandidate(message) {
     if (typeof window === 'undefined') return;
     if (!window.currentUserId || !window.currentRoomId) return;
 
-    // 只处理发给当前用户的 ICE
     if (message.toUserId !== window.currentUserId) return;
     if (message.roomId !== window.currentRoomId) return;
+    if (message.fromUserId === window.currentUserId) return;
 
-    const pc = webrtcState.peerConnection;
+    const pc = window.isHost
+        ? (webrtcState.peerConnections && webrtcState.peerConnections.get(message.fromUserId))
+        : webrtcState.peerConnection;
     if (!pc) {
-        console.warn('收到 WebRTC ICE 候选时本地没有 PeerConnection');
-        return;
-    }
-
-    // 自己发出的 ICE 可能通过广播又收到一次，这里直接忽略
-    if (message.fromUserId === window.currentUserId) {
+        console.warn('收到 WebRTC ICE 候选时本地没有对应 PeerConnection:', message.fromUserId);
         return;
     }
 
@@ -1051,18 +1111,20 @@ async function handleWebRTCIceCandidate(message) {
 function handleWebRTCEnd(message) {
     if (typeof window === 'undefined') return;
     if (!window.currentUserId || !window.currentRoomId) return;
-
     if (message.roomId !== window.currentRoomId) return;
 
-    // 只有在当前连接相关时才处理结束
-    if (
-        message.toUserId === null || // 广播
+    const isRelevant =
+        message.toUserId === null ||
         message.toUserId === window.currentUserId ||
-        message.fromUserId === window.currentUserId
-    ) {
-        console.log('收到 WebRTC 结束消息，关闭本地连接');
-        stopWebRTCPeerConnection(false);
+        message.fromUserId === window.currentUserId;
+    if (!isRelevant) return;
+
+    if (window.isHost && message.fromUserId && message.fromUserId !== window.currentUserId) {
+        closePeerConnectionForMember(message.fromUserId);
+        return;
     }
+    console.log('收到 WebRTC 结束消息，关闭本地连接');
+    stopWebRTCPeerConnection(false);
 }
 
 function handleWebRTCError(message) {
