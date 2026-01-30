@@ -322,3 +322,20 @@ if (typeof module !== 'undefined' && module.exports) {
     isErrorMessage,
   };
 }
+
+// 在浏览器环境中，将内容暴露到全局作用域
+if (typeof window !== 'undefined') {
+  window.WebRTCSignalingType = WebRTCSignalingType;
+  window.PROTOCOL_VERSION = PROTOCOL_VERSION;
+  window.createOfferMessage = createOfferMessage;
+  window.createAnswerMessage = createAnswerMessage;
+  window.createICECandidateMessage = createICECandidateMessage;
+  window.createEndMessage = createEndMessage;
+  window.createErrorMessage = createErrorMessage;
+  window.validateWebRTCSignalingMessage = validateWebRTCSignalingMessage;
+  window.isOfferMessage = isOfferMessage;
+  window.isAnswerMessage = isAnswerMessage;
+  window.isICECandidateMessage = isICECandidateMessage;
+  window.isEndMessage = isEndMessage;
+  window.isErrorMessage = isErrorMessage;
+}
