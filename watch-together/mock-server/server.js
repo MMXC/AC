@@ -251,6 +251,7 @@ const wss = new WebSocketServer({ server });
 
 // 存储 WebSocket 连接
 const wsConnections = new Map(); // roomId -> Set<ws>
+const wsByRoomUser = new Map(); // `${roomId}:${userId}` -> ws（用于 WebRTC 点对点转发）
 
 function broadcastToRoom(roomId, message) {
   const connections = wsConnections.get(roomId);
@@ -264,6 +265,16 @@ function broadcastToRoom(roomId, message) {
   }
 }
 
+function sendToUser(roomId, toUserId, message) {
+  const key = `${roomId}:${toUserId}`;
+  const ws = wsByRoomUser.get(key);
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify(message));
+  } else {
+    console.warn(`WebRTC 信令目标用户不在线: roomId=${roomId}, toUserId=${toUserId}`);
+  }
+}
+
 wss.on('connection', (ws, req) => {
   // 从 URL 中获取房间 ID
   const url = new URL(req.url, 'http://localhost');
@@ -272,13 +283,14 @@ wss.on('connection', (ws, req) => {
   
   console.log(`WebSocket 连接: roomId=${roomId}, userId=${userId}`);
   
-  if (roomId) {
+  if (roomId && userId) {
     // 将连接添加到房间
     if (!wsConnections.has(roomId)) {
       wsConnections.set(roomId, new Set());
     }
     wsConnections.get(roomId).add(ws);
-    
+    wsByRoomUser.set(`${roomId}:${userId}`, ws);
+
     // 发送当前房间状态
     const room = rooms.get(roomId);
     if (room) {
@@ -353,6 +365,21 @@ wss.on('connection', (ws, req) => {
             }
           }
           break;
+
+        case 'WEBRTC_OFFER':
+        case 'WEBRTC_ANSWER':
+        case 'WEBRTC_ICE_CANDIDATE':
+        case 'WEBRTC_END':
+        case 'WEBRTC_ERROR':
+          // WebRTC 信令：按 toUserId 点对点转发，不解析 SDP/ICE
+          if (roomId && message.roomId === roomId) {
+            if (message.toUserId) {
+              sendToUser(roomId, message.toUserId, message);
+            } else {
+              broadcastToRoom(roomId, message);
+            }
+          }
+          break;
       }
     } catch (err) {
       console.error('消息解析错误:', err);
@@ -361,7 +388,10 @@ wss.on('connection', (ws, req) => {
   
   ws.on('close', () => {
     console.log(`WebSocket 断开: roomId=${roomId}, userId=${userId}`);
-    
+
+    if (roomId && userId) {
+      wsByRoomUser.delete(`${roomId}:${userId}`);
+    }
     if (roomId) {
       const connections = wsConnections.get(roomId);
       if (connections) {

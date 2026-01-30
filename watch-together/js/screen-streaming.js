@@ -674,6 +674,9 @@ function stopWebRTCPeerConnection(notifyPeer) {
         } catch (e) {
             console.error('停止远端流轨道时出错:', e);
         }
+        if (typeof window !== 'undefined' && window.VideoPlayer && typeof window.VideoPlayer.detachStream === 'function') {
+            window.VideoPlayer.detachStream();
+        }
     }
 
     webrtcState.peerConnection = null;
@@ -939,12 +942,13 @@ async function handleWebRTCOffer(message) {
         // WebRTC 会自动将接收到的 tracks 添加到 event.streams[0]
         const remoteStream = event.streams[0];
         webrtcState.remoteStream = remoteStream;
-        
-        // 将远端流设置到 video 元素
-        if (videoElement) {
+
+        // 优先使用 VideoPlayer 组件接收远端流并播放（满足成功标准 #4）
+        if (typeof window !== 'undefined' && window.VideoPlayer && typeof window.VideoPlayer.attachStream === 'function') {
+            window.VideoPlayer.attachStream(remoteStream);
+        } else if (videoElement) {
             videoElement.srcObject = remoteStream;
             videoElement.style.display = 'block';
-            // 确保 video 元素播放
             videoElement.play().catch(err => {
                 console.error('播放视频失败:', err);
             });
