@@ -9,6 +9,160 @@ let currentUserNickname = null;
 let currentRoomId = null;
 let messageHistory = [];
 
+// WebSocket 重连配置
+const WS_RECONNECT_CONFIG = {
+    maxRetries: 3, // 最大重试次数
+    retryInterval: 5000, // 重试间隔：5秒
+    retryCount: 0, // 当前重试次数
+};
+
+/**
+ * 显示 WebSocket 错误提示
+ */
+function showWebSocketError(title, message, isRecoverable = false) {
+    // 创建或获取错误通知容器
+    let errorNotification = document.getElementById('websocketErrorNotification');
+    
+    if (!errorNotification) {
+        errorNotification = document.createElement('div');
+        errorNotification.id = 'websocketErrorNotification';
+        errorNotification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2d2d2d;
+            border: 1px solid #e74c3c;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 400px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease-out;
+        `;
+        
+        // 添加动画样式（如果还没有）
+        if (!document.getElementById('errorNotificationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'errorNotificationStyles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(errorNotification);
+    }
+    
+    // 设置内容
+    errorNotification.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <div style="flex: 1;">
+                <h3 style="margin: 0 0 8px 0; color: #e74c3c; font-size: 1.1em; font-weight: 600;">
+                    ${title}
+                </h3>
+                <p style="margin: 0 0 12px 0; color: #aaa; font-size: 0.9em; line-height: 1.5;">
+                    ${message}
+                </p>
+                ${isRecoverable ? `
+                    <button id="refreshPageBtn" style="
+                        padding: 8px 16px;
+                        background: #4a9eff;
+                        border: none;
+                        border-radius: 6px;
+                        color: #fff;
+                        font-size: 0.9em;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        margin-right: 8px;
+                    ">刷新页面</button>
+                ` : ''}
+            </div>
+            <button id="closeWebSocketErrorBtn" style="
+                background: transparent;
+                border: none;
+                color: #aaa;
+                font-size: 1.2em;
+                cursor: pointer;
+                padding: 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: color 0.2s;
+            ">×</button>
+        </div>
+    `;
+    
+    // 显示通知
+    errorNotification.style.display = 'block';
+    
+    // 绑定关闭按钮
+    const closeBtn = errorNotification.querySelector('#closeWebSocketErrorBtn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            errorNotification.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => {
+                errorNotification.style.display = 'none';
+            }, 300);
+        });
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.color = '#fff';
+        });
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.color = '#aaa';
+        });
+    }
+    
+    // 绑定刷新按钮
+    if (isRecoverable) {
+        const refreshBtn = errorNotification.querySelector('#refreshPageBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                window.location.reload();
+            });
+            refreshBtn.addEventListener('mouseenter', () => {
+                refreshBtn.style.background = '#3a8eef';
+            });
+            refreshBtn.addEventListener('mouseleave', () => {
+                refreshBtn.style.background = '#4a9eff';
+            });
+        }
+    }
+    
+    // 自动关闭（10秒后，如果是可恢复的错误）
+    if (isRecoverable) {
+        setTimeout(() => {
+            if (errorNotification.style.display !== 'none') {
+                errorNotification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    errorNotification.style.display = 'none';
+                }, 300);
+            }
+        }, 10000);
+    }
+}
+
 /**
  * 初始化聊天功能
  */
@@ -92,6 +246,9 @@ function connectWebSocket() {
     ws.onopen = () => {
         console.log('WebSocket 连接已建立');
         
+        // 重置重试计数
+        WS_RECONNECT_CONFIG.retryCount = 0;
+        
         // 触发 WebSocket 连接事件，供其他模块使用（如 screen-streaming.js）
         if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('websocketConnected', {
@@ -118,37 +275,56 @@ function connectWebSocket() {
         
         // 触发 WebSocket 断开事件
         if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('websocketDisconnected'));
+            window.dispatchEvent(new CustomEvent('websocketDisconnected', {
+                detail: { code: event.code, reason: event.reason }
+            }));
         }
         
         // 如果是因为连接数限制而关闭（1008），不要重连并显示错误提示
         if (event.code === 1008) {
             console.error('WebSocket 连接因连接数限制而关闭，停止重连');
+            WS_RECONNECT_CONFIG.retryCount = 0; // 重置重试计数
             // 显示用户友好的错误提示
             const errorMessage = event.reason || '连接过多，请关闭多余页面后刷新';
-            if (typeof showError === 'function') {
-                showError(`连接失败：${errorMessage}`);
-            } else {
-                // 如果没有 showError 函数，直接显示错误区域
-                const errorDiv = document.getElementById('error');
-                const errorMessageEl = document.getElementById('errorMessage');
-                if (errorDiv && errorMessageEl) {
-                    errorDiv.style.display = 'block';
-                    errorMessageEl.textContent = `连接失败：${errorMessage}`;
-                } else {
-                    alert(`连接失败：${errorMessage}`);
-                }
-            }
+            showWebSocketError('连接失败', `连接失败：${errorMessage}`, false);
             return;
         }
+        
+        // 如果是正常关闭（1000），不重连
+        if (event.code === 1000) {
+            WS_RECONNECT_CONFIG.retryCount = 0;
+            return;
+        }
+        
         // 只有在用户已加入房间且不是主动关闭的情况下才重连
         // 确保 window.currentUserId 是字符串类型
-        if (currentRoomId && window.currentUserId && typeof window.currentUserId === 'string' && event.code !== 1000) {
-            setTimeout(() => {
-                if (currentRoomId && window.currentUserId && typeof window.currentUserId === 'string') {
-                    connectWebSocket();
+        if (currentRoomId && window.currentUserId && typeof window.currentUserId === 'string') {
+            // 检查重试次数
+            if (WS_RECONNECT_CONFIG.retryCount < WS_RECONNECT_CONFIG.maxRetries) {
+                WS_RECONNECT_CONFIG.retryCount++;
+                const retryMessage = `WebSocket 连接断开，正在重试 (${WS_RECONNECT_CONFIG.retryCount}/${WS_RECONNECT_CONFIG.maxRetries})...`;
+                console.log(retryMessage);
+                
+                // 显示重试提示（仅在第一次重试时显示）
+                if (WS_RECONNECT_CONFIG.retryCount === 1) {
+                    showWebSocketError('连接断开', 'WebSocket 信令连接已断开，正在自动重连...', true);
                 }
-            }, 3000);
+                
+                setTimeout(() => {
+                    if (currentRoomId && window.currentUserId && typeof window.currentUserId === 'string') {
+                        connectWebSocket();
+                    }
+                }, WS_RECONNECT_CONFIG.retryInterval);
+            } else {
+                // 重试次数已用完
+                console.error('WebSocket 重连次数已达上限，停止重连');
+                WS_RECONNECT_CONFIG.retryCount = 0; // 重置计数
+                showWebSocketError(
+                    '连接失败',
+                    'WebSocket 连接已断开，自动重连失败。请检查网络连接后刷新页面。',
+                    true // 可恢复，用户可以通过刷新页面重试
+                );
+            }
         }
     };
 }
@@ -265,6 +441,40 @@ function handleWebSocketMessage(message) {
             console.log('收到操作来源操作:', message.data);
             if (window.isHost && typeof simulateOperationInIframe === 'function') {
                 simulateOperationInIframe(message.data.operation);
+            }
+            break;
+        
+        // WebRTC 信令消息处理
+        case 'WEBRTC_OFFER':
+            // 成员端收到 Offer
+            if (typeof handleWebRTCOffer === 'function') {
+                handleWebRTCOffer(message);
+            }
+            break;
+            
+        case 'WEBRTC_ANSWER':
+            // 房主端收到 Answer（成员端不应收到）
+            console.log('收到 WebRTC Answer（成员端不应收到）:', message);
+            break;
+            
+        case 'WEBRTC_ICE_CANDIDATE':
+            // ICE Candidate 消息
+            if (typeof handleWebRTCICECandidate === 'function') {
+                handleWebRTCICECandidate(message);
+            }
+            break;
+            
+        case 'WEBRTC_END':
+            // WebRTC 连接结束
+            if (typeof handleWebRTCEnd === 'function') {
+                handleWebRTCEnd(message);
+            }
+            break;
+            
+        case 'WEBRTC_ERROR':
+            // WebRTC 错误
+            if (typeof handleWebRTCError === 'function') {
+                handleWebRTCError(message);
             }
             break;
             
@@ -513,6 +723,18 @@ if (typeof document !== 'undefined') {
     });
 }
 
+/**
+ * 获取 WebSocket 连接（供其他模块使用）
+ */
+function getWebSocketConnection() {
+    return ws;
+}
+
+// 将函数暴露到全局作用域，供其他脚本（如 video-player.js）使用
+if (typeof window !== 'undefined') {
+    window.getWebSocketConnection = getWebSocketConnection;
+}
+
 // 导出函数供测试使用
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -527,5 +749,6 @@ if (typeof module !== 'undefined' && module.exports) {
         getMessageHistory: () => messageHistory,
         getCurrentUserId: () => currentUserId,
         getCurrentUserNickname: () => currentUserNickname,
+        getWebSocketConnection,
     };
 }
