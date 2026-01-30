@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 2
-- Current status: Task Complete - 服务器端 WebRTC 信令转发功能已实现
+- Iterations completed: 1
+- Current status: Task Complete - VideoPlayer 组件已实现
 
 ## How This Works
 
@@ -26,35 +26,21 @@ This is how Ralph maintains continuity across iterations.
 ### 2026-01-28 16:16:44
 **Session 1 ended** - ✅ TASK COMPLETE
 
-### 2026-01-29 01:46:07
+### 2026-01-29 01:31:38
 **Session 1 started** (model: auto)
 
 ### 2026-01-29 [current time]
-**Session 1 completed** - 设计 WebRTC 信令消息协议（基于现有 WebSocket）
-- 创建了 TypeScript 类型定义文件 `watch-together/js/webrtc-signaling-types.ts`，定义了所有 WebRTC 信令消息类型（WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR）
-- 创建了详细的协议文档 `watch-together/docs/webrtc-signaling-protocol.md`，说明所有消息类型的 JSON 结构和字段含义
-- 创建了 JavaScript 模块 `watch-together/js/webrtc-signaling.js`，提供类型常量、创建函数和验证函数，供前端统一使用，避免硬编码字符串
-- 创建了完整的单元测试 `watch-together/__tests__/webrtc-signaling.test.js`，包含29个测试用例，验证消息类型解析、序列化/反序列化和字段验证
-- 所有测试通过，确保消息格式正确且不会因字段名错误导致解析失败
-- 实现了版本化策略（version字段）和未来扩展支持（tracks字段用于多track，消息结构支持多房主场景）
-- 更新了 RALPH_TASK.md，标记所有成功标准为已完成
+**Session 1 completed** - 实现成员端 VideoPlayer 组件
+- 创建了 `watch-together/js/video-player.js`，实现了独立的 VideoPlayer 组件
+- 实现了 `attachStream(MediaStream)` 和 `detachStream()` 接口
+- 实现了内存泄漏防护：确保多次 attachStream/detachStream 不会残留旧流
+  - 在附加新流前完全清理旧流的事件监听器和状态
+  - 使用流ID检查防止异步竞态条件
+  - 正确移除所有事件监听器
+- 在 `watch-together/join.html` 中集成了 VideoPlayer 组件
+- 添加了测试函数 `window.testVideoPlayer()` 供控制台测试使用
+- 组件不依赖 WebRTC 细节，只关心 MediaStream 对象
+- 所有成功标准已标记为完成
 
-### 2026-01-29 01:54:06
-**Session 1 ended** - ✅ TASK COMPLETE
-
-### 2026-01-29 03:46:38
-**Session 1 started** (model: auto)
-
-### 2026-01-29 [current time]
-**Session 1 completed** - 服务器端实现 WebRTC 信令转发（透明路由）
-- 在 `watch-together-server/src/websocket.ts` 中添加了 WebRTC 信令消息处理功能
-- 实现了 `handleWebRTCSignaling` 函数，支持识别并转发所有 WebRTC 信令消息类型（WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR）
-- 根据 `toUserId` 字段将消息转发给目标用户，支持单播（指定用户）和广播（toUserId 为 null）两种模式
-- 实现了透明转发：不解析或修改 SDP/ICE 内容，直接转发原始 JSON 消息
-- 添加了完整的消息验证逻辑，确保 roomId、fromUserId、toUserId 等字段的有效性
-- 实现了目标用户不在线时的错误处理：记录警告日志但不崩溃，并向发送者返回错误消息
-- 在消息处理流程中添加了 WebRTC 消息类型判断，确保不会干扰现有的聊天/操作同步消息流
-- 所有成功标准已标记为完成，代码已提交到 git
-
-### 2026-01-29 03:52:02
+### 2026-01-29 01:36:18
 **Session 1 ended** - ✅ TASK COMPLETE
