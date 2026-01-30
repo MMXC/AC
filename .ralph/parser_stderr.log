@@ -139,3 +139,8 @@ C: Connection stalled
 [15:27:49] cursor-agent exited with code: 130
 C: [canceled] http/2 stream closed with error code CANCEL (0x8)
 [04:20:10] cursor-agent exited with code: 1
+[22:45:40] cursor-agent exited with code: 1
+w: Connection stalled
+[22:47:46] cursor-agent exited with code: 1
+w: Connection stalled
+[22:53:29] cursor-agent exited with code: 1
