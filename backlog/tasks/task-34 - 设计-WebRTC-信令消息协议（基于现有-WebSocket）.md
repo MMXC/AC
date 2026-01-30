@@ -1,13 +1,13 @@
 ---
 id: TASK-34
 title: 设计 WebRTC 信令消息协议（基于现有 WebSocket）
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-30 14:07'
+updated_date: '2026-01-30 15:50'
 labels: []
 dependencies: []
-ordinal: 8000
+ordinal: 7000
 ---
 
 ## Description

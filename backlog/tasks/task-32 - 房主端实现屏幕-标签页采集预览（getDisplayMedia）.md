@@ -1,14 +1,13 @@
 ---
 id: TASK-32
 title: 房主端实现屏幕/标签页采集预览（getDisplayMedia）
-status: In Progress
+status: To Do
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-30 14:55'
+updated_date: '2026-01-30 15:50'
 labels: []
 dependencies: []
-ordinal: 9000
-test_command: "skill:watch-together-webapp-testing TASK-32"
+ordinal: 6000
 ---
 
 ## Description
@@ -16,7 +15,7 @@ test_command: "skill:watch-together-webapp-testing TASK-32"
 <!-- SECTION:DESCRIPTION:BEGIN -->
 在房主房间页面实现“开始共享 / 停止共享”按钮，通过 navigator.mediaDevices.getDisplayMedia 采集屏幕或浏览器标签页，并在本地 <video> 元素中预览采集到的 MediaStream。确保点击停止后正确关闭 MediaStream 轨道并清理预览。
 
-**Test Command**: `skill:watch-together-webapp-testing TASK-32`
+**Test Command**: `手动：在浏览器中打开房主页面，点击开始/停止共享按钮，观察本地预览行为`
 
 **测试用例**:
 
@@ -24,7 +23,7 @@ test_command: "skill:watch-together-webapp-testing TASK-32"
 1. 首次授权、已授权、拒绝授权三种浏览器权限状态下分别测试开始/停止共享流程
 2. 共享浏览器标签页、共享整个屏幕、共享应用窗口三种模式下验证预览行为
 
-**Test Command**: `skill:watch-together-webapp-testing TASK-32`
+**Test Command**: `手动：在浏览器中打开房主页面，点击开始/停止共享按钮，观察本地预览行为`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
