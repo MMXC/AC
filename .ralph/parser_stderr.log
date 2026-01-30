@@ -137,5 +137,5 @@ C: Connection stalled
 [15:25:20] cursor-agent exited with code: 1
 [15:27:38] cursor-agent exited with code: 1
 [15:27:49] cursor-agent exited with code: 130
-C: WritableIterable is closed
-[04:56:46] cursor-agent exited with code: 1
+C: [canceled] http/2 stream closed with error code CANCEL (0x8)
+[04:20:10] cursor-agent exited with code: 1

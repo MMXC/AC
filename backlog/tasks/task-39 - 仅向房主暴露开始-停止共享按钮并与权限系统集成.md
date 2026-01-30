@@ -1,9 +1,11 @@
 ---
 id: TASK-39
 title: 仅向房主暴露开始/停止共享按钮并与权限系统集成
+status: In Progress
 status: Done
 assignee: []
 created_date: '2026-01-28 11:54'
+updated_date: '2026-01-28 20:29'
 updated_date: '2026-01-28 20:56'
 labels: []
 dependencies: []
