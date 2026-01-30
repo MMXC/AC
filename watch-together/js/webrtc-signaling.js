@@ -1,8 +1,12 @@
 /**
  * WebRTC 信令消息模块
- * 
+ *
  * 提供 WebRTC 信令消息的类型常量、创建函数和验证函数。
  * 前端信令发送/接收层应统一使用这些常量和函数，避免硬编码字符串。
+ *
+ * 说明：
+ * - 在浏览器环境中，本文件通过 `<script>` 直接引入，所有函数会作为全局变量使用
+ * - 在 Node/Jest 环境中，通过 CommonJS (`require`) 引入，使用 `module.exports`
  */
 
 /**
@@ -279,7 +283,7 @@ function isEndMessage(message) {
 
 /**
  * 类型检查函数：检查消息是否为 Error 消息
- * 
+ *
  * @param {Object} message - 消息对象
  * @returns {boolean} 是否为 Error 消息
  */
@@ -287,8 +291,9 @@ function isErrorMessage(message) {
   return message && message.type === WebRTCSignalingType.WEBRTC_ERROR;
 }
 
-// 将函数暴露到全局作用域，供其他脚本使用
+// 在浏览器环境中，将常量和函数挂到全局作用域，方便其他脚本直接使用
 if (typeof window !== 'undefined') {
+  // 使用直接赋值而不是 Object.assign，避免被构建工具摇树优化掉
   window.WebRTCSignalingType = WebRTCSignalingType;
   window.PROTOCOL_VERSION = PROTOCOL_VERSION;
   window.createOfferMessage = createOfferMessage;
