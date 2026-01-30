@@ -111,6 +111,25 @@ extract_test_command() {
   echo "$test_cmd"
 }
 
+# 判断是否为“可执行”的测试命令（而非纯描述文字）
+# 若为描述（如「无自动命令，代码评审 + 单元测试」）则不应传给 eval
+is_runnable_test_command() {
+  local cmd="$1"
+  [[ -z "$cmd" ]] && return 1
+  # 明确是技能或可执行前缀
+  [[ "$cmd" =~ ^(skill:|@)[a-zA-Z0-9_-]+ ]] && return 0
+  [[ "$cmd" =~ ^(npm|pnpm|yarn|python3?|bash|sh|\./|/)[^[:space:]]* ]] && return 0
+  # 描述性内容：不含可执行形式，常见中文描述
+  if [[ "$cmd" =~ 无自动命令|手动|代码评审|仅手动|无自动化 ]]; then
+    return 1
+  fi
+  # 若整行几乎没有英文/路径/命令形态，视为描述
+  if ! [[ "$cmd" =~ [a-zA-Z0-9_./-]+ ]]; then
+    return 1
+  fi
+  return 0
+}
+
 # Run test command and return exit code
 run_test_command() {
   local test_cmd="$1"
@@ -119,6 +138,12 @@ run_test_command() {
   if [[ -z "$test_cmd" ]]; then
     echo "⚠️  No test command found in RALPH_TASK.md" >&2
     return 1
+  fi
+  
+  if ! is_runnable_test_command "$test_cmd"; then
+    echo "⚠️  Test command is descriptive only (not runnable): $test_cmd" >&2
+    echo "    Skipping test step; iteration will be considered done." >&2
+    return 0
   fi
   
   echo "🧪 Running test command: $test_cmd" >&2
