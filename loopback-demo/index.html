@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebRTC Loopback Demo（无服务器）</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 1rem; max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.25rem; }
+    .videos { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    .video-box { border: 1px solid #ccc; padding: 0.5rem; border-radius: 6px; }
+    .video-box label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+    video { width: 100%; max-height: 240px; background: #111; border-radius: 4px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 1rem 0; }
+    button { padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; border: 1px solid #666; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .source { margin-right: 0.5rem; }
+    .log { font-size: 0.85rem; max-height: 120px; overflow-y: auto; background: #f5f5f5; padding: 0.5rem; border-radius: 4px; margin-top: 1rem; }
+    .log p { margin: 0.2rem 0; }
+    .log .err { color: #c00; }
+  </style>
+</head>
+<body>
+  <h1>WebRTC Loopback Demo（无服务器）</h1>
+  <p>单页面内 pc1/pc2 通过本地变量交换 offer/answer/ICE，验证 WebRTC API。</p>
+
+  <div class="videos">
+    <div class="video-box">
+      <label>本地预览</label>
+      <video id="localVideo" autoplay playsinline muted></video>
+    </div>
+    <div class="video-box">
+      <label>远端播放</label>
+      <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span class="source">媒体源：</span>
+    <label><input type="radio" name="source" value="user" checked> 摄像头/麦克风 (getUserMedia)</label>
+    <label><input type="radio" name="source" value="display"> 屏幕 (getDisplayMedia)</label>
+    <button id="btnStart">开始 Loopback 测试</button>
+    <button id="btnStop" disabled>停止测试</button>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <script>
+    (function () {
+      const localVideo = document.getElementById('localVideo');
+      const remoteVideo = document.getElementById('remoteVideo');
+      const btnStart = document.getElementById('btnStart');
+      const btnStop = document.getElementById('btnStop');
+      const logEl = document.getElementById('log');
+
+      let pc1 = null;
+      let pc2 = null;
+      let localStream = null;
+
+      function log(msg, isErr) {
+        const p = document.createElement('p');
+        p.textContent = msg;
+        if (isErr) p.className = 'err';
+        logEl.appendChild(p);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function getMediaSource() {
+        return document.querySelector('input[name="source"]:checked').value;
+      }
+
+      async function getStream() {
+        const source = getMediaSource();
+        if (source === 'display') {
+          return await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        }
+        return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+
+      const pendingCandidates = { pc1: [], pc2: [] };
+
+      function flushIceQueue(pc, queueKey) {
+        const queue = pendingCandidates[queueKey];
+        while (queue.length) {
+          const c = queue.shift();
+          pc.addIceCandidate(c).catch(logErr);
+        }
+      }
+
+      function collectIce(pc, targetPc, targetKey) {
+        pc.onicecandidate = (e) => {
+          if (!e.candidate) return;
+          if (targetPc.remoteDescription) {
+            targetPc.addIceCandidate(e.candidate).catch(logErr);
+          } else {
+            pendingCandidates[targetKey].push(e.candidate);
+          }
+        };
+      }
+
+      function logErr(e) {
+        log('Error: ' + (e.message || e), true);
+      }
+
+      async function startLoopback() {
+        try {
+          log('获取媒体流...');
+          localStream = await getStream();
+          localVideo.srcObject = localStream;
+          log('已获取 MediaStream，创建 PeerConnection...');
+
+          pc1 = new RTCPeerConnection();
+          pc2 = new RTCPeerConnection();
+
+          // #1: pc1 通过 addTrack 将 MediaStream 的轨道加入 PeerConnection
+          localStream.getTracks().forEach((track) => pc1.addTrack(track, localStream));
+          log('pc1 addTrack 完成');
+
+          // #2: 通过本地 JS 变量交换 offer/answer/ICE
+          collectIce(pc1, pc2, 'pc2');
+          collectIce(pc2, pc1, 'pc1');
+
+          // #3: pc2 收到远端轨道时绑定到远端 <video>
+          pc2.ontrack = (e) => {
+            if (remoteVideo.srcObject !== e.streams[0]) {
+              remoteVideo.srcObject = e.streams[0];
+              log('远端流已连接到远端 video');
+            }
+          };
+
+          const offer = await pc1.createOffer();
+          await pc1.setLocalDescription(offer);
+          await pc2.setRemoteDescription(offer);
+          flushIceQueue(pc2, 'pc2');
+          const answer = await pc2.createAnswer();
+          await pc2.setLocalDescription(answer);
+          await pc1.setRemoteDescription(answer);
+          flushIceQueue(pc1, 'pc1');
+          log('offer/answer 交换完成，连接建立中...');
+
+          btnStart.disabled = true;
+          btnStop.disabled = false;
+        } catch (e) {
+          logErr(e);
+        }
+      }
+
+      // #4: 停止时正确关闭 PeerConnection 和 MediaStream 轨道
+      function stopLoopback() {
+        log('停止测试，释放资源...');
+        if (pc1) {
+          pc1.close();
+          pc1 = null;
+        }
+        if (pc2) {
+          pc2.close();
+          pc2 = null;
+        }
+        if (localStream) {
+          localStream.getTracks().forEach((t) => t.stop());
+          localStream = null;
+        }
+        localVideo.srcObject = null;
+        remoteVideo.srcObject = null;
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+        log('已关闭 PeerConnection 与轨道');
+      }
+
+      btnStart.addEventListener('click', startLoopback);
+      btnStop.addEventListener('click', stopLoopback);
+    })();
+  </script>
+</body>
+</html>
