@@ -8,6 +8,7 @@ updated_date: '2026-01-30 10:11'
 labels: []
 dependencies: []
 ordinal: 2000
+test_command: "skill:watch-together-webapp-testing TASK-40"
 ---
 
 ## Description
@@ -15,7 +16,7 @@ ordinal: 2000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 将 VideoPlayer 集成到真实房间页面，为成员端提供清晰的状态文案（等待房主开始共享 / 正在播放房主画面 / 房主已停止共享），并在 WebRTC 状态变化时正确更新。
 
-**Test Command**: `手动：1 房主 + 1 成员反复打开/关闭共享，观察成员端状态文案和视频行为`
+**Test Command**: `skill:watch-together-webapp-testing TASK-40`
 
 **测试用例**:
 
@@ -23,7 +24,7 @@ ordinal: 2000
 1. 开始共享 → 成员端从“等待”切换为“播放”状态
 2. 停止共享 → 成员端从“播放”切换为“已停止/等待”状态
 
-**Test Command**: `手动：1 房主 + 1 成员反复打开/关闭共享，观察成员端状态文案和视频行为`
+**Test Command**: `skill:watch-together-webapp-testing TASK-40`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

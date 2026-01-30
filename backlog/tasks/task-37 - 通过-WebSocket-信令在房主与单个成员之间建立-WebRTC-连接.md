@@ -8,6 +8,7 @@ updated_date: '2026-01-30 15:28'
 labels: []
 dependencies: []
 ordinal: 4000
+test_command: "skill:watch-together-webapp-testing TASK-37"
 ---
 
 ## Description
@@ -15,7 +16,7 @@ ordinal: 4000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 基于任务 B1/B2 定义的信令格式和转发逻辑，在实际房间环境中实现“房主 ↔ 单一成员”的 WebRTC 媒体通路。房主作为 caller，成员作为 callee，通过 WebSocket 交换 offer/answer/ICE，将房主的 getDisplayMedia 流发送到成员端的 VideoPlayer。
 
-**Test Command**: `手动：房主与一个成员加入同一房间，房主点击开始共享，确认成员端出现并播放房主画面`
+**Test Command**: `skill:watch-together-webapp-testing TASK-37`
 
 **测试用例**:
 
@@ -23,7 +24,7 @@ ordinal: 4000
 1. 局域网环境下房主与单成员成功建立 WebRTC 连接并传输视频流
 2. 刷新任一端页面后可重新建立连接
 
-**Test Command**: `手动：房主与一个成员加入同一房间，房主点击开始共享，确认成员端出现并播放房主画面`
+**Test Command**: `skill:watch-together-webapp-testing TASK-37`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

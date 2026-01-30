@@ -8,6 +8,7 @@ updated_date: '2026-01-30 15:17'
 labels: []
 dependencies: []
 ordinal: 5000
+test_command: "skill:watch-together-webapp-testing TASK-36"
 ---
 
 ## Description
@@ -15,7 +16,7 @@ ordinal: 5000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 在单个浏览器页面中创建两个 RTCPeerConnection（pc1/pc2），通过本地变量传递 offer/answer/ICE，将 getDisplayMedia 或 getUserMedia 得到的流从 pc1 发送到 pc2，并在页面上展示“本地预览”和“远端播放”两个 <video>，用于验证 WebRTC API 使用是否正确。
 
-**Test Command**: `手动：打开本地 demo 页面，点击“开始 Loopback 测试”，观察两个 <video> 是否正常显示`
+**Test Command**: `skill:watch-together-webapp-testing TASK-36`
 
 **测试用例**:
 
@@ -23,7 +24,7 @@ ordinal: 5000
 1. 使用 getUserMedia 测试 Loopback
 2. 使用 getDisplayMedia 测试 Loopback
 
-**Test Command**: `手动：打开本地 demo 页面，点击“开始 Loopback 测试”，观察两个 <video> 是否正常显示`
+**Test Command**: `skill:watch-together-webapp-testing TASK-36`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

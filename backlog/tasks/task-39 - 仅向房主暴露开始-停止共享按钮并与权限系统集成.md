@@ -9,6 +9,7 @@ updated_date: '2026-01-28 20:56'
 labels: []
 dependencies: []
 ordinal: 3000
+test_command: "skill:watch-together-webapp-testing TASK-39"
 ---
 
 ## Description
@@ -16,7 +17,7 @@ ordinal: 3000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 仅当当前用户为房主时显示共享控制按钮；普通成员不显示或禁用。同时在后端/信令层增加校验，拒绝普通成员伪造发起共享的 WebRTC 信令，确保只有房主可以作为媒体流发送方。
 
-**Test Command**: `手动：分别以房主和普通成员身份进入房间，检查按钮与权限行为`
+**Test Command**: `skill:watch-together-webapp-testing TASK-39`
 
 **测试用例**:
 
@@ -24,7 +25,7 @@ ordinal: 3000
 1. 房主登录时按钮可见且可操作，普通成员登录时按钮不可见
 2. 普通成员在控制台尝试伪造 WEBRTC_OFFER，后端日志中能记录并拒绝该行为
 
-**Test Command**: `手动：分别以房主和普通成员身份进入房间，检查按钮与权限行为`
+**Test Command**: `skill:watch-together-webapp-testing TASK-39`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

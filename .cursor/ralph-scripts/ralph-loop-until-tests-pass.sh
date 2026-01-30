@@ -151,15 +151,15 @@ run_test_command() {
   
   cd "$workspace"
   
-  # 确保 docker-compose 服务运行（如果项目使用 docker-compose）
+  # 确保 docker-compose 使用最新代码并运行（改完代码后自动 build + up，再测试）
   if [[ -f "docker-compose.yml" ]] || [[ -f "docker-compose.yaml" ]]; then
-    echo "🔧 检查 docker-compose 服务状态..." >&2
-    if ! docker-compose ps 2>/dev/null | grep -q "Up"; then
-      echo "⚠️  docker-compose 服务未运行，正在启动..." >&2
-      docker-compose up -d >&2 || echo "⚠️  启动 docker-compose 失败，继续测试..." >&2
-      # 等待服务启动
-      sleep 5
+    echo "🔧 docker-compose: 构建并启动服务（确保测试使用最新代码）..." >&2
+    if [[ "${DOCKER_COMPOSE_SKIP_BUILD:-}" != "1" ]]; then
+      docker-compose build >&2 || echo "⚠️  docker-compose build 失败，继续尝试 up..." >&2
     fi
+    docker-compose up -d >&2 || echo "⚠️  docker-compose up 失败，继续测试..." >&2
+    # 等待服务就绪
+    sleep 5
   fi
   
   # 创建测试结果日志文件

@@ -8,6 +8,7 @@ updated_date: '2026-01-30 10:11'
 labels: []
 dependencies: []
 ordinal: 3000
+test_command: "skill:watch-together-webapp-testing TASK-41"
 ---
 
 ## Description
@@ -15,7 +16,7 @@ ordinal: 3000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 为 getDisplayMedia、ICE 协商失败、信令中断等关键路径增加错误处理和有限重试策略，为房主/成员提供清晰的错误提示，并在合理范围内自动重试或提示用户刷新/重进。
 
-**Test Command**: `手动：刻意制造权限拒绝、断网、关闭服务器等错误场景，观察前后端提示与行为`
+**Test Command**: `skill:watch-together-webapp-testing TASK-41`
 
 **测试用例**:
 
@@ -23,7 +24,7 @@ ordinal: 3000
 1. 权限拒绝、ICE 失败、信令中断三种场景分别触发错误分支
 2. 测试自动重连次数与间隔是否符合预期（例如 3 次，每次间隔 5 秒）
 
-**Test Command**: `手动：刻意制造权限拒绝、断网、关闭服务器等错误场景，观察前后端提示与行为`
+**Test Command**: `skill:watch-together-webapp-testing TASK-41`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

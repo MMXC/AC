@@ -8,6 +8,7 @@ updated_date: '2026-01-30 15:02'
 labels: []
 dependencies: []
 ordinal: 10000
+test_command: "skill:watch-together-webapp-testing TASK-33"
 ---
 
 ## Description
@@ -15,7 +16,7 @@ ordinal: 10000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 在成员房间页面实现独立的 VideoPlayer 组件，对外暴露 attachStream(MediaStream) 和 detachStream() 接口，用于播放远端 MediaStream（目前先用假数据或本地 getUserMedia 模拟）。组件不关心 WebRTC 细节，只关心 MediaStream。
 
-**Test Command**: `手动：在成员页面控制台通过测试函数传入 MediaStream，观察 <video> 播放行为`
+**Test Command**: `skill:watch-together-webapp-testing TASK-33`
 
 **测试用例**:
 
@@ -24,7 +25,7 @@ ordinal: 10000
 2. 快速多次调用 attachStream 传入不同流，确认不会残留旧视频画面
 3. 调用 detachStream 后，组件 UI 正确更新为“暂无视频流”
 
-**Test Command**: `手动：在成员页面控制台通过测试函数传入 MediaStream，观察 <video> 播放行为`
+**Test Command**: `skill:watch-together-webapp-testing TASK-33`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
