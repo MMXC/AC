@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # backlog-claim-task.sh
 #
@@ -157,8 +157,8 @@ dependencies_satisfied() {
       return 1
     fi
     local status
-    status="$(printf '%s\n' "$status_line" | sed -E 's/^Status:[[:space:]]*//I' | tr -d '[:space:]')"
-    # 常见格式：Status: ○ To Do / In Progress / Done
+    # 常见格式：Status: ○ To Do / Status: ○ Done；去掉 Status: 和可选符号 ○ 后归一化，避免 "○Done" 无法匹配 Done
+    status="$(printf '%s\n' "$status_line" | sed -E 's/^Status:[[:space:]]*○?[[:space:]]*//I' | tr -d '[:space:]')"
     case "$status" in
       Done|done|DONE)
         ;;
@@ -179,18 +179,22 @@ fi
 
 acquire_lock
 
-# 获取 To Do 列表，并提取 TASK-<num>，按数字排序
+# 获取 To Do 列表，并提取 TASK-<num> 或 task-<num>（config 中 task_prefix 可能为 "task"），按数字排序
 task_ids="$(
   backlog task list -s "To Do" --plain 2>/dev/null \
-    | awk 'match($0,/TASK-([0-9]+)/,m){print m[1]}' \
+    | grep -oEi 'task-[0-9]+' \
+    | sed 's/task-//i' \
     | sort -n -u \
     || true
 )"
 
 if [[ -z "$task_ids" ]]; then
   # 无任务可抢占
+  [[ -n "${BACKLOG_CLAIM_DEBUG:-}" ]] && echo "[claim-debug] task_ids 为空（list 输出可能无 task-N 或格式不同）" >&2
   exit 2
 fi
+
+[[ -n "${BACKLOG_CLAIM_DEBUG:-}" ]] && echo "[claim-debug] 解析到 To Do 任务 ID: $(echo "$task_ids" | tr '\n' ' ')" >&2
 
 selected_id=""
 
@@ -210,18 +214,21 @@ while IFS= read -r tid; do
       ;;
     "running"|"failed")
       # 被占用或失败冻结，跳过
+      [[ -n "${BACKLOG_CLAIM_DEBUG:-}" ]] && echo "[claim-debug] 跳过 task-$tid: claim 状态=$status" >&2
       continue
       ;;
   esac
 
   # 如果任务声明了 dependencies，则要求所有依赖任务已完成（Done）
   if ! dependencies_satisfied "$tid"; then
+    [[ -n "${BACKLOG_CLAIM_DEBUG:-}" ]] && echo "[claim-debug] 跳过 task-$tid: 依赖未满足" >&2
     continue
   fi
 
   # 标记 backlog 状态为 In Progress（在锁内执行，避免并发抢同一个）
   if ! backlog task edit "$tid" -s "In Progress" >/dev/null 2>&1; then
     # 如果 backlog 更新失败，不占用这个任务，继续找下一个
+    [[ -n "${BACKLOG_CLAIM_DEBUG:-}" ]] && echo "[claim-debug] 跳过 task-$tid: backlog edit 失败" >&2
     continue
   fi
 
@@ -238,6 +245,7 @@ while IFS= read -r tid; do
 done <<< "$task_ids"
 
 if [[ -z "$selected_id" ]]; then
+  [[ -n "${BACKLOG_CLAIM_DEBUG:-}" ]] && echo "[claim-debug] 有 To Do 任务但全部被跳过（可能：claim 占用/失败、依赖未 Done、backlog edit 失败）" >&2
   exit 2
 fi
 
