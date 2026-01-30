@@ -402,23 +402,31 @@ function handleWebSocketMessage(message) {
             break;
 
         case 'MEMBER_JOINED':
-            // 成员加入，更新成员列表
+            // 成员加入，更新成员列表，并派发事件供房主建立 WebRTC 连接
             console.log('成员加入:', message.data);
             if (message.data && message.data.userId && message.data.nickname) {
-                // 调用 addMember 函数更新成员列表（如果可用）
                 if (typeof addMember === 'function') {
                     addMember(message.data.userId, message.data.nickname);
                     console.log('已添加成员到列表:', message.data.userId, message.data.nickname);
                 } else {
                     console.warn('addMember 函数不可用，无法更新成员列表');
                 }
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('memberJoinedRoom', {
+                        detail: { userId: message.data.userId, nickname: message.data.nickname },
+                    }));
+                }
             }
             break;
         case 'MEMBER_LEFT':
-            // 成员离开，更新成员列表
+            // 成员离开，更新成员列表，并派发事件供房主关闭对应 WebRTC 连接
             console.log('成员离开:', message.data);
             if (message.data && message.data.userId) {
-                // 调用 removeMember 函数更新成员列表（如果可用）
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('memberLeftRoom', {
+                        detail: { userId: message.data.userId },
+                    }));
+                }
                 if (typeof removeMember === 'function') {
                     removeMember(message.data.userId);
                     console.log('已从列表中移除成员:', message.data.userId);

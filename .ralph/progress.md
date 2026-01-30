@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 1
-- Current status: Task Complete - 通过 WebSocket 信令在房主与单成员间建立 WebRTC 连接
+- Current status: Task Complete - 房主向所有成员建立 WebRTC 连接（多成员独立 PC）
 
 ## How This Works
 
@@ -70,3 +70,15 @@ This is how Ralph maintains continuity across iterations.
 - 成员端（`watch-together/js/screen-streaming.js`）：收到远端 track 时优先使用 `VideoPlayer.attachStream(remoteStream)` 播放（满足成功标准 #4）；关闭连接时调用 `VideoPlayer.detachStream()`。
 - 房主端已有逻辑保持不变：`startWebRTCPeerConnectionAsHost` 发送 WEBRTC_OFFER，成员端 `handleWebRTCOffer` 回送 WEBRTC_ANSWER，双方处理 WEBRTC_ICE_CANDIDATE。
 - RALPH_TASK 四项成功标准已全部勾选；webrtc-signaling 与 screen-streaming 相关测试通过。
+
+### 2026-01-30 23:31:26
+**Session 1 started** (model: auto)
+
+### 2026-01-30 [current time]
+**Session 1 completed** - 房主向所有成员建立 WebRTC 连接
+- 房主端（`watch-together/js/screen-streaming.js`）：webrtcState 改为 peerConnections Map（userId -> RTCPeerConnection），localStream 共享给所有 PC；startWebRTCPeerConnectionAsHost 向当前所有非房主成员各建一条 PC 并发送 Offer；addPeerConnectionForMember / closePeerConnectionForMember 单成员增删；stopWebRTCPeerConnection 关闭所有 PC 并广播 WEBRTC_END；handleWebRTCAnswer / handleWebRTCIceCandidate 按 fromUserId 查找对应 PC；handleWebRTCEnd 房主收到某成员 END 时仅关闭该成员 PC。
+- 新成员加入：监听 memberJoinedRoom，房主正在共享时为该成员建立 PC 并发送 Offer（增量连接）。
+- 成员离开：监听 memberLeftRoom，房主关闭该成员的 PC 并释放资源。
+- 信令层（mock-server 已有）：按 toUserId 点对点转发，无需改动。
+- chat.js：MEMBER_JOINED / MEMBER_LEFT 时派发 memberJoinedRoom / memberLeftRoom 供 screen-streaming 使用。
+- RALPH_TASK 四项成功标准已全部勾选；screen-streaming 与 webrtc-signaling 相关测试通过。
