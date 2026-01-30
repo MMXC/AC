@@ -602,19 +602,6 @@ type WebRTCSignalingType =
   | 'WEBRTC_ERROR';
 
 /**
- * WebRTC 信令基础消息接口
- */
-interface BaseWebRTCSignalingMessage {
-  type: WebRTCSignalingType;
-  roomId: string;
-  fromUserId: string;
-  toUserId: string | null;
-  timestamp: number | string;
-  // 其他字段保持透明转发，不在服务器做强约束
-  [key: string]: unknown;
-}
-
-/**
  * 判断是否为 WebRTC 信令消息类型
  */
 function isWebRTCSignalingType(type: unknown): type is WebRTCSignalingType {
@@ -884,114 +871,6 @@ function validateOpSourceOperationMessage(message: any): string | null {
   }
 
   return null;
-}
-
-/**
- * 验证 WebRTC 信令消息的基础结构
- *
- * 服务器端只做最小校验，保持“透明路由”：
- * - 确保 roomId / fromUserId / toUserId 基本合法
- * - 确保连接上下文与消息中的 roomId / fromUserId 一致
- *
- * 其他业务字段交由前端和后续任务处理。
- */
-function validateWebRTCSignalingMessageOnServer(
-  message: any,
-  roomId: string,
-  userId: string
-): string | null {
-  if (!isWebRTCSignalingType(message.type)) {
-    return 'Invalid WebRTC signaling message type';
-  }
-
-  if (!message.roomId || typeof message.roomId !== 'string') {
-    return 'roomId is required and must be a string';
-  }
-  if (message.roomId !== roomId) {
-    return 'roomId does not match the connection roomId';
-  }
-
-  if (!message.fromUserId || typeof message.fromUserId !== 'string') {
-    return 'fromUserId is required and must be a string';
-  }
-  if (message.fromUserId !== userId) {
-    return 'fromUserId does not match the connection userId';
-  }
-
-  if (message.toUserId !== null && typeof message.toUserId !== 'string') {
-    return 'toUserId must be null or a string';
-  }
-
-  // timestamp 为 number 或 ISO 字符串都可以，缺失时后续会自动填充
-  if (
-    message.timestamp !== undefined &&
-    typeof message.timestamp !== 'number' &&
-    typeof message.timestamp !== 'string'
-  ) {
-    return 'timestamp must be a number or string when present';
-  }
-
-  return null;
-}
-
-/**
- * 处理 WebRTC 信令消息（透明路由）
- *
- * - 不解析 SDP / ICE 具体内容
- * - 只根据 roomId / fromUserId / toUserId 做路由
- */
-async function handleWebRTCSignalingMessage(
-  ws: WebSocket,
-  rawMessage: any,
-  roomId: string,
-  userId: string
-): Promise<void> {
-  try {
-    const validationError = validateWebRTCSignalingMessageOnServer(rawMessage, roomId, userId);
-    if (validationError) {
-      ws.send(
-        JSON.stringify({
-          type: 'ERROR',
-          error: validationError,
-          timestamp: new Date().toISOString(),
-        })
-      );
-      return;
-    }
-
-    const message: BaseWebRTCSignalingMessage = {
-      ...rawMessage,
-      roomId,
-      fromUserId: userId,
-      toUserId: rawMessage.toUserId ?? null,
-      timestamp: rawMessage.timestamp ?? Date.now(),
-    };
-
-    // 如果指定了目标用户，则点对点发送；否则广播到房间（包括发送者）
-    if (message.toUserId) {
-      const sent = sendToUser(roomId, message.toUserId, message);
-      if (!sent) {
-        ws.send(
-          JSON.stringify({
-            type: 'ERROR',
-            error: 'Target user is not connected',
-            timestamp: new Date().toISOString(),
-          })
-        );
-      }
-    } else {
-      broadcastToRoom(roomId, message);
-    }
-  } catch (error) {
-    wsLogger.error({ err: error as Error, roomId, userId }, 'Error handling WebRTC signaling message');
-    ws.send(
-      JSON.stringify({
-        type: 'ERROR',
-        error: 'Failed to process WebRTC signaling message',
-        timestamp: new Date().toISOString(),
-      })
-    );
-  }
 }
 
 /**

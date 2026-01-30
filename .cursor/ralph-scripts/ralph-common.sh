@@ -636,7 +636,36 @@ finalize_completed_task() {
     local task_content
     task_content=$(cat "$task_file")
     
-    # Create notes content with timestamp and task content
+    # 检查是否有测试结果截图目录，若有则生成「测试通过」条目
+    local test_artifacts_dir="$workspace/backlog/test-results/task-$task_id"
+    local test_passed_section=""
+    if [[ -d "$test_artifacts_dir" ]]; then
+      local png_files
+      png_files=$(find "$test_artifacts_dir" -maxdepth 1 -name "*.png" -type f 2>/dev/null | sort)
+      if [[ -n "$png_files" ]]; then
+        test_passed_section=""
+        test_passed_section+=$'\n'
+        test_passed_section+="## 测试通过 (Test Passed)"
+        test_passed_section+=$'\n'
+        test_passed_section+=$'\n'
+        test_passed_section+="- **测试时间**: $(date '+%Y-%m-%d %H:%M:%S')"
+        test_passed_section+=$'\n'
+        test_passed_section+="- **测试结果截图** (保存在 \`backlog/test-results/task-$task_id/\`):"
+        test_passed_section+=$'\n'
+        while IFS= read -r png_path; do
+          [[ -z "$png_path" ]] && continue
+          local fname
+          fname=$(basename "$png_path")
+          # 使用相对路径，便于在文档/仓库中引用
+          test_passed_section+="  - [${fname}](backlog/test-results/task-$task_id/${fname})"
+          test_passed_section+=$'\n'
+        done <<< "$png_files"
+        test_passed_section+=$'\n'
+        echo "  ✅ 已关联测试结果截图 ($(echo "$png_files" | wc -l) 张) 到归档内容" >&2
+      fi
+    fi
+    
+    # Create notes content with timestamp, test passed section (if any), and task content
     # Use a temporary file to avoid shell quoting issues with special characters
     local notes_file
     notes_file=$(mktemp)
@@ -645,6 +674,11 @@ finalize_completed_task() {
       echo ""
       echo "---"
       echo ""
+      if [[ -n "$test_passed_section" ]]; then
+        echo "$test_passed_section"
+        echo "---"
+        echo ""
+      fi
       echo "## RALPH_TASK.md 归档内容"
       echo ""
       echo "\`\`\`"
@@ -664,23 +698,40 @@ finalize_completed_task() {
         rm -f "$notes_file"
       else
         echo "  ⚠️  Failed to save RALPH_TASK.md to backlog notes (CLI may not support --notes/--append-notes)" >&2
-        rm -f "$notes_file"
-        # Try alternative: save to a file in backlog directory
+        # Try alternative: save full notes (含测试通过条目) to backlog/docs
         local backlog_doc_file="$workspace/backlog/docs/task-$task_id-ralph-task.md"
         mkdir -p "$(dirname "$backlog_doc_file")" 2>/dev/null || true
-        if cp "$task_file" "$backlog_doc_file" 2>/dev/null; then
-          echo "  ✅ Saved RALPH_TASK.md to $backlog_doc_file as fallback" >&2
+        if cp "$notes_file" "$backlog_doc_file" 2>/dev/null; then
+          echo "  ✅ Saved RALPH_TASK.md (含测试通过条目) to $backlog_doc_file as fallback" >&2
         fi
+        rm -f "$notes_file"
       fi
     fi
   else
     echo "  ⚠️  backlog CLI not available, skipping doc save" >&2
-    # Fallback: save to backlog directory
+    # Fallback: build notes_file and save to backlog/docs (需先构建 test_passed_section 与 notes)
+    local test_artifacts_dir="$workspace/backlog/test-results/task-$task_id"
+    local test_passed_section=""
+    if [[ -d "$test_artifacts_dir" ]]; then
+      local png_files
+      png_files=$(find "$test_artifacts_dir" -maxdepth 1 -name "*.png" -type f 2>/dev/null | sort)
+      if [[ -n "$png_files" ]]; then
+        test_passed_section=$'\n'"## 测试通过 (Test Passed)"$'\n\n'"- **测试时间**: $(date '+%Y-%m-%d %H:%M:%S')"$'\n'"- **测试结果截图**:"$'\n'
+        while IFS= read -r png_path; do
+          [[ -z "$png_path" ]] && continue
+          test_passed_section+="  - [$(basename "$png_path")](backlog/test-results/task-$task_id/$(basename "$png_path"))"$'\n'
+        done <<< "$png_files"
+      fi
+    fi
     local backlog_doc_file="$workspace/backlog/docs/task-$task_id-ralph-task.md"
     mkdir -p "$(dirname "$backlog_doc_file")" 2>/dev/null || true
-    if cp "$task_file" "$backlog_doc_file" 2>/dev/null; then
-      echo "  ✅ Saved RALPH_TASK.md to $backlog_doc_file as fallback" >&2
-    fi
+    {
+      echo "$(date '+%Y-%m-%d %H:%M:%S') - 任务完成，RALPH_TASK.md 已归档"
+      echo ""; echo "---"; echo ""
+      [[ -n "$test_passed_section" ]] && echo "$test_passed_section" && echo "---" && echo ""
+      echo "## RALPH_TASK.md 归档内容"; echo ""
+      echo "\`\`\`"; cat "$task_file"; echo "\`\`\`"
+    } > "$backlog_doc_file" 2>/dev/null && echo "  ✅ Saved to $backlog_doc_file (含测试通过条目)" >&2 || true
   fi
   
   # Step 3: Delete RALPH_TASK.md
@@ -737,6 +788,7 @@ Before doing anything:
 2. Read \`.ralph/guardrails.md\` - lessons from past failures (FOLLOW THESE)
 3. Read \`.ralph/progress.md\` - what's been accomplished
 4. Read \`.ralph/errors.log\` - recent failures to avoid
+5. Read \`.ralph/test-results.log\` - latest test results (if exists) - **CRITICAL**: Fix any test failures before continuing
 
 ## Working Directory (Critical)
 
@@ -779,6 +831,9 @@ If you get rotated, the next agent picks up from your last commit. Your commits 
    - Don't just read files and exit
    - Make real changes to the codebase
 6. **Test your changes** - run the test command from RALPH_TASK.md
+   - If tests fail, read \`.ralph/test-results.log\` to see what failed
+   - Fix the issues and run tests again
+   - Tests MUST pass before marking criteria as complete
 7. **Mark completed criteria**: Edit RALPH_TASK.md and change \`[ ]\` to \`[x]\`
    - Example: \`- [ ] Implement parser\` becomes \`- [x] Implement parser\`
    - This is how progress is tracked - YOU MUST update the file

@@ -1,13 +1,13 @@
 ---
 id: TASK-40
 title: 成员端播放器 UI 集成与状态展示
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-01-28 11:55'
-updated_date: '2026-01-28 21:12'
+updated_date: '2026-01-30 10:11'
 labels: []
 dependencies: []
-ordinal: 1000
+ordinal: 2000
 ---
 
 ## Description

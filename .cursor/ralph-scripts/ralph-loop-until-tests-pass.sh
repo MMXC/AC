@@ -125,8 +125,117 @@ run_test_command() {
   echo "" >&2
   
   cd "$workspace"
-  eval "$test_cmd"
-  local exit_code=$?
+  
+  # 确保 docker-compose 服务运行（如果项目使用 docker-compose）
+  if [[ -f "docker-compose.yml" ]] || [[ -f "docker-compose.yaml" ]]; then
+    echo "🔧 检查 docker-compose 服务状态..." >&2
+    if ! docker-compose ps 2>/dev/null | grep -q "Up"; then
+      echo "⚠️  docker-compose 服务未运行，正在启动..." >&2
+      docker-compose up -d >&2 || echo "⚠️  启动 docker-compose 失败，继续测试..." >&2
+      # 等待服务启动
+      sleep 5
+    fi
+  fi
+  
+  # 创建测试结果日志文件
+  local test_results_file="$workspace/.ralph/test-results.log"
+  mkdir -p "$workspace/.ralph" 2>/dev/null || true
+  
+  # 记录测试开始时间
+  {
+    echo "═══════════════════════════════════════════════════════════════════"
+    echo "Test Run: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Command: $test_cmd"
+    echo "═══════════════════════════════════════════════════════════════════"
+  } >> "$test_results_file"
+  
+  # Check if this is a skill reference
+  if [[ "$test_cmd" =~ ^skill:([a-zA-Z0-9_-]+)(.*)$ ]] || [[ "$test_cmd" =~ ^@([a-zA-Z0-9_-]+)(.*)$ ]]; then
+    local skill_name="${BASH_REMATCH[1]}"
+    local skill_args="${BASH_REMATCH[2]}"
+    
+    echo "🔧 Detected skill reference: $skill_name" >&2
+    
+    # Handle watch-together-webapp-testing skill
+    if [[ "$skill_name" == "watch-together-webapp-testing" ]]; then
+      local skill_dir="$workspace/.cursor/skills/watch-together-webapp-testing"
+      local runner_script="$skill_dir/run-test.sh"
+      
+      if [[ -f "$runner_script" ]]; then
+        echo "📋 Using skill runner: $runner_script" >&2
+        # 运行测试并捕获输出
+        if bash "$runner_script" $skill_args 2>&1 | tee -a "$test_results_file"; then
+          local exit_code=0
+        else
+          local exit_code=${PIPESTATUS[0]}
+        fi
+        
+        # 记录测试结果
+        {
+          echo ""
+          echo "Test Result: $([ $exit_code -eq 0 ] && echo 'PASSED' || echo 'FAILED')"
+          echo "Exit Code: $exit_code"
+          echo "═══════════════════════════════════════════════════════════════════"
+          echo ""
+        } >> "$test_results_file"
+        
+        return $exit_code
+      else
+        # Fallback: try to find test script directly
+        local task_id=$(echo "$skill_args" | awk '{print $1}')
+        if [[ -n "$task_id" ]]; then
+          local task_num="${task_id#TASK-}"
+          local test_script="$skill_dir/tests/test-${task_id}.py"
+          
+          if [[ -f "$test_script" ]]; then
+            echo "📋 Running test script: $test_script" >&2
+            # 运行测试并捕获输出
+            if python3 "$test_script" 2>&1 | tee -a "$test_results_file"; then
+              local exit_code=0
+            else
+              local exit_code=${PIPESTATUS[0]}
+            fi
+            
+            # 记录测试结果
+            {
+              echo ""
+              echo "Test Result: $([ $exit_code -eq 0 ] && echo 'PASSED' || echo 'FAILED')"
+              echo "Exit Code: $exit_code"
+              echo "═══════════════════════════════════════════════════════════════════"
+              echo ""
+            } >> "$test_results_file"
+            
+            return $exit_code
+          fi
+        fi
+        
+        echo "❌ Skill runner not found: $runner_script" >&2
+        echo "   Available skills:" >&2
+        ls -1 "$workspace/.cursor/skills/" 2>/dev/null | sed 's/^/     - /' >&2 || echo "     (none)" >&2
+        return 1
+      fi
+    else
+      echo "❌ Unknown skill: $skill_name" >&2
+      return 1
+    fi
+  fi
+  
+  # Regular command execution
+  # 运行测试并捕获输出
+  if eval "$test_cmd" 2>&1 | tee -a "$test_results_file"; then
+    local exit_code=0
+  else
+    local exit_code=${PIPESTATUS[0]}
+  fi
+  
+  # 记录测试结果
+  {
+    echo ""
+    echo "Test Result: $([ $exit_code -eq 0 ] && echo 'PASSED' || echo 'FAILED')"
+    echo "Exit Code: $exit_code"
+    echo "═══════════════════════════════════════════════════════════════════"
+    echo ""
+  } >> "$test_results_file"
   
   return $exit_code
 }
@@ -255,6 +364,9 @@ main() {
       echo ""
       echo "❌ Tests Failed"
       echo ""
+      echo "📋 Test results saved to: .ralph/test-results.log"
+      echo "   The next iteration will read this file to understand what failed."
+      echo ""
       
       # Check if we should continue
       if [[ $iteration -ge $MAX_ITERATIONS ]]; then
@@ -264,7 +376,7 @@ main() {
         echo "You can:"
         echo "  1. Fix issues manually and run tests again"
         echo "  2. Run this script again with more iterations: -n $((MAX_ITERATIONS + 10))"
-        echo "  3. Review .ralph/errors.log and .ralph/progress.md"
+        echo "  3. Review .ralph/errors.log, .ralph/test-results.log and .ralph/progress.md"
         exit 1
       fi
       
@@ -287,6 +399,7 @@ main() {
           ;;
         *)
           echo "📝 Agent finished. Continuing to next iteration..."
+          echo "   Next iteration will read .ralph/test-results.log to fix test failures."
           iteration=$((iteration + 1))
           ;;
       esac

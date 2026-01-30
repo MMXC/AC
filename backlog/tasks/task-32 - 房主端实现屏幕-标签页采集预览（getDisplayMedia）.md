@@ -1,13 +1,13 @@
 ---
 id: TASK-32
 title: 房主端实现屏幕/标签页采集预览（getDisplayMedia）
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-28 17:21'
+updated_date: '2026-01-30 10:12'
 labels: []
 dependencies: []
-ordinal: 10000
+ordinal: 9000
 ---
 
 ## Description

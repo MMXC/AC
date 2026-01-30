@@ -1,13 +1,13 @@
 ---
 id: TASK-38
 title: 支持一个房主向所有成员建立 WebRTC 连接
-status: In Progress
+status: To Do
 assignee: []
 created_date: '2026-01-28 11:54'
-updated_date: '2026-01-28 20:25'
+updated_date: '2026-01-30 10:11'
 labels: []
 dependencies: []
-ordinal: 4000
+ordinal: 1000
 ---
 
 ## Description
