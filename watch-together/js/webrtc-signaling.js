@@ -287,6 +287,23 @@ function isErrorMessage(message) {
   return message && message.type === WebRTCSignalingType.WEBRTC_ERROR;
 }
 
+// 将函数暴露到全局作用域，供其他脚本使用
+if (typeof window !== 'undefined') {
+  window.WebRTCSignalingType = WebRTCSignalingType;
+  window.PROTOCOL_VERSION = PROTOCOL_VERSION;
+  window.createOfferMessage = createOfferMessage;
+  window.createAnswerMessage = createAnswerMessage;
+  window.createICECandidateMessage = createICECandidateMessage;
+  window.createEndMessage = createEndMessage;
+  window.createErrorMessage = createErrorMessage;
+  window.validateWebRTCSignalingMessage = validateWebRTCSignalingMessage;
+  window.isOfferMessage = isOfferMessage;
+  window.isAnswerMessage = isAnswerMessage;
+  window.isICECandidateMessage = isICECandidateMessage;
+  window.isEndMessage = isEndMessage;
+  window.isErrorMessage = isErrorMessage;
+}
+
 // 导出所有内容供 CommonJS 使用（兼容性）
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -304,4 +321,21 @@ if (typeof module !== 'undefined' && module.exports) {
     isEndMessage,
     isErrorMessage,
   };
+}
+
+// 在浏览器环境中，将内容暴露到全局作用域
+if (typeof window !== 'undefined') {
+  window.WebRTCSignalingType = WebRTCSignalingType;
+  window.PROTOCOL_VERSION = PROTOCOL_VERSION;
+  window.createOfferMessage = createOfferMessage;
+  window.createAnswerMessage = createAnswerMessage;
+  window.createICECandidateMessage = createICECandidateMessage;
+  window.createEndMessage = createEndMessage;
+  window.createErrorMessage = createErrorMessage;
+  window.validateWebRTCSignalingMessage = validateWebRTCSignalingMessage;
+  window.isOfferMessage = isOfferMessage;
+  window.isAnswerMessage = isAnswerMessage;
+  window.isICECandidateMessage = isICECandidateMessage;
+  window.isEndMessage = isEndMessage;
+  window.isErrorMessage = isErrorMessage;
 }
