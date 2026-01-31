@@ -16,7 +16,7 @@ test_command: "docker compose up -d postgres watch-together-server && docker com
 
 ## Success Criteria
 
-- [ ] #1 prisma/schema.prisma 定义 Room、RoomMember、Message 等模型
-- [ ] #2 模型字段与前端期望的 roomId、hostId、currentUrl、members 等对应
-- [ ] #3 prisma migrate deploy 能成功执行
-- [ ] #4 prisma generate 能生成 Prisma Client
+- [x] #1 prisma/schema.prisma 定义 Room、RoomMember、Message 等模型
+- [x] #2 模型字段与前端期望的 roomId、hostId、currentUrl、members 等对应
+- [x] #3 prisma migrate deploy 能成功执行
+- [x] #4 prisma generate 能生成 Prisma Client

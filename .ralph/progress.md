@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 2
-- Current status: Task Complete - POST /api/v1/rooms 创建房间接口
+- Iterations completed: 3
+- Current status: Task Complete - watch-together-server 数据模型与 Prisma Schema（Ralph Iteration 1）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session 1 completed** - watch-together-server 数据模型与 Prisma Schema
+- 在 `watch-together-server/prisma/schema.prisma` 中为 Room 增加 hostId、currentUrl、inviteLink，为 RoomMember 增加 isHost，与前端期望的 roomId、hostId、currentUrl、members 对应
+- 新增迁移 `prisma/migrations/20260201000000_add_room_host_url_invite_and_member_is_host`（ADD COLUMN IF NOT EXISTS 以兼容已有库）
+- 测试命令通过：`docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma validate && docker compose exec watch-together-server npx prisma migrate deploy`；prisma generate 在镜像构建与容器内均成功
+- RALPH_TASK 四项成功标准已全部勾选
 
 ### 2026-01-31 [Ralph Iteration 2]
 **Session 2 completed** - POST /api/v1/rooms 创建房间接口
@@ -140,3 +147,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-31 19:54:54
 **Session 2 started** (model: auto)
+
+### 2026-02-01 01:13:33
+**Session 1 started** (model: auto)
