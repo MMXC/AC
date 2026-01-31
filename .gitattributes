@@ -3,3 +3,4 @@
 # Shell scripts: force LF so shebang works in WSL/Git Bash (avoid "required file not found")
 .cursor/ralph-scripts/*.sh text eol=lf
 .cursor/skills/**/*.sh text eol=lf
+watch-together-server/scripts/*.sh text eol=lf

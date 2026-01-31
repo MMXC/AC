@@ -15,6 +15,9 @@
 # production
 /build
 
+# Python venv (Playwright 测试技能)
+.cursor/skills/**/.venv/
+
 # misc
 .DS_Store
 *.pem

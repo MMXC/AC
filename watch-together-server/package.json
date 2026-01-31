@@ -1,0 +1,18 @@
+{
+  "name": "watch-together-server",
+  "version": "0.1.0",
+  "main": "dist/server.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "scripts": {
+    "start": "node dist/server.js",
+    "test:api": "bash scripts/test-rooms-api.sh all",
+    "test:api:create": "bash scripts/test-rooms-api.sh create",
+    "test:api:get": "bash scripts/test-rooms-api.sh get",
+    "test:api:join": "bash scripts/test-rooms-api.sh join",
+    "test:api:url": "bash scripts/test-rooms-api.sh url",
+    "test:api:leave": "bash scripts/test-rooms-api.sh leave"
+  }
+}

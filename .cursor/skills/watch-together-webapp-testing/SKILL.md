@@ -18,17 +18,19 @@ license: Complete terms in LICENSE.txt
 
 ### 1. 在 backlog task 中指定测试技能
 
-在 backlog task 的 `**Test Command**` 中指定：
+在 backlog task 的 `**Test Command**` 中指定（使用占位符，避免写死任务 ID）：
 
 ```
-**Test Command**: `skill:watch-together-webapp-testing TASK-<id>`
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 ```
 
-或者在 RALPH_TASK.md 的 frontmatter 中：
+`${TASK_ID}` 会在运行时替换为 backlog 分配的任务 ID（如 TASK-42）。由于 backlog 自动创建任务时 ID 不固定，不应写死 TASK-32 等。
+
+或在 RALPH_TASK.md 的 frontmatter 中：
 
 ```yaml
 ---
-test_command: "skill:watch-together-webapp-testing TASK-32"
+test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 ```
 

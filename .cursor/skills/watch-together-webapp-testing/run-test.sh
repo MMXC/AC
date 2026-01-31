@@ -65,9 +65,54 @@ if [[ ! -f "$TEST_SCRIPT" ]]; then
     echo "✅ 测试脚本已生成: $TEST_SCRIPT"
 fi
 
-# 检查 Python 和 Playwright
+# 检查 Python
 if ! command -v python3 &> /dev/null; then
     echo "❌ 未找到 python3"
+    exit 1
+fi
+
+# 使用虚拟环境（避免 PEP 668 限制）；失败时回退到 --break-system-packages
+VENV_DIR="$SCRIPT_DIR/.venv"
+PYTHON=""
+if [[ ! -d "$VENV_DIR" ]] || [[ ! -x "$VENV_DIR/bin/python" && ! -x "$VENV_DIR/Scripts/python.exe" ]]; then
+    echo "📦 创建虚拟环境..."
+    rm -rf "$VENV_DIR" 2>/dev/null || true
+    if ! python3 -m venv "$VENV_DIR" 2>/dev/null; then
+        echo "   venv 不可用（建议: sudo apt install python3.12-venv），回退到系统 Python..."
+        rm -rf "$VENV_DIR" 2>/dev/null || true
+    fi
+fi
+if [[ -x "$VENV_DIR/bin/python" ]]; then
+    PYTHON="$VENV_DIR/bin/python"
+elif [[ -x "$VENV_DIR/Scripts/python.exe" ]]; then
+    PYTHON="$VENV_DIR/Scripts/python.exe"
+fi
+if [[ -z "$PYTHON" ]]; then
+    PYTHON="python3"
+fi
+
+# 确保 Playwright 已安装
+if ! "$PYTHON" -c "from playwright.sync_api import sync_playwright" 2>/dev/null; then
+    echo "📦 安装 Playwright..."
+    if "$PYTHON" -m pip install --quiet playwright 2>/dev/null; then
+        :
+    else
+        "$PYTHON" -m pip install --quiet playwright --break-system-packages
+    fi
+    "$PYTHON" -m playwright install chromium
+fi
+
+# 确保 Chromium 系统依赖已安装（如 libasound2，WSL/无界面环境常见缺失）
+if ! "$PYTHON" -c "
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b = p.chromium.launch(headless=True)
+    b.close()
+" 2>/dev/null; then
+    echo "⚠️  Chromium 无法启动（缺少系统依赖，如 libasound2）"
+    echo "   请执行以下命令之一（使用 venv 中的 Python 运行 playwright）："
+    echo "   sudo $PYTHON -m playwright install-deps chromium"
+    echo "   或: sudo apt install libasound2t64 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libnss3"
     exit 1
 fi
 
@@ -76,7 +121,7 @@ echo "运行测试脚本: $TEST_SCRIPT"
 echo ""
 
 cd "$PROJECT_ROOT"
-python3 "$TEST_SCRIPT"
+"$PYTHON" "$TEST_SCRIPT"
 
 exit_code=$?
 

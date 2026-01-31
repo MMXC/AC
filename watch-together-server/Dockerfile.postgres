@@ -1,0 +1,6 @@
+# watch-together - PostgreSQL 数据库
+FROM postgres:15-alpine
+
+ENV POSTGRES_USER=watchtogether
+ENV POSTGRES_PASSWORD=watchtogether123
+ENV POSTGRES_DB=watchtogether

@@ -31,18 +31,20 @@ def parse_decomposed_tasks(file_path):
     while i < len(lines):
         line = lines[i].strip()
         
-        # 检测任务开始：### 任务 N: 标题
-        task_match = re.match(r'^###\s+任务\s+(\d+):\s*(.+)$', line)
+        # 检测任务开始：### 任务 N: 标题 或 ### 任务 id: 标题（支持 api-db1、6a 等格式）
+        task_match = re.match(r'^###\s+任务\s+([a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*):\s*(.+)$', line)
         if task_match:
             # 保存上一个任务
             if current_task:
                 tasks.append(current_task)
             
             # 开始新任务
-            task_num = task_match.group(1)
+            task_id_raw = task_match.group(1)
             title = task_match.group(2)
+            # 默认 id：纯数字用 backend-NNN，否则用原文（如 api-db1、6a）
+            default_id = f'backend-{int(task_id_raw):03d}' if task_id_raw.isdigit() else task_id_raw
             current_task = {
-                'id': f'backend-{int(task_num):03d}',
+                'id': default_id,
                 'title': title,
                 'description': '',
                 'test_command': '',
@@ -108,9 +110,16 @@ def parse_decomposed_tasks(file_path):
                 if dep_match:
                     deps = dep_match.group(1).strip()
                     if deps != '无':
-                        # 解析依赖（可能是 "任务 1" 或 "backend-001"）
-                        dep_ids = re.findall(r'(?:任务\s+(\d+)|backend-(\d+))', deps)
-                        current_task['dependencies'] = [f'backend-{int(d[0] or d[1]):03d}' for d in dep_ids]
+                        # 解析依赖：任务 N、backend-NNN、api-db1、webrtc-a1 等 ID
+                        dep_ids = []
+                        for m in re.finditer(r'(?:任务\s+(\d+)|backend-(\d+)|([a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)+))', deps):
+                            if m.group(1):
+                                dep_ids.append(f'backend-{int(m.group(1)):03d}')
+                            elif m.group(2):
+                                dep_ids.append(f'backend-{int(m.group(2)):03d}')
+                            elif m.group(3):
+                                dep_ids.append(m.group(3))
+                        current_task['dependencies'] = dep_ids
             
             # 测试用例部分
             elif re.match(r'^-\s*\*\*测试用例\*\*:', line):

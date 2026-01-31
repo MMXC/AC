@@ -310,6 +310,17 @@ main() {
   local test_cmd
   test_cmd=$(extract_test_command "$task_file")
   
+  # Substitute ${TASK_ID} with actual task ID from RALPH_TASK (backlog_id: backlog-N -> TASK-N)
+  if [[ "$test_cmd" == *'${TASK_ID}'* ]]; then
+    local backlog_id task_num resolved_id
+    backlog_id=$(grep -E '^backlog_id:' "$task_file" 2>/dev/null | sed -E 's/^backlog_id:[[:space:]]*["'\'']?([^"'\'']+)["'\'']?.*$/\1/' | head -1)
+    task_num="${backlog_id#backlog-}"
+    if [[ -n "$task_num" ]] && [[ "$task_num" =~ ^[0-9]+$ ]]; then
+      resolved_id="TASK-$task_num"
+      test_cmd="${test_cmd//\$\{TASK_ID\}/$resolved_id}"
+    fi
+  fi
+  
   if [[ -z "$test_cmd" ]]; then
     echo "❌ No test command found in RALPH_TASK.md"
     echo ""
