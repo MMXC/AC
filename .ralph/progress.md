@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 4
-- Current status: Task Complete - watch-together-server 后端接口汇总（E2E）
+- Iterations completed: 5
+- Current status: Task Complete - 成员端 VideoPlayer 组件（可附加 MediaStream）
 
 ## How This Works
 
@@ -14,6 +14,16 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session 3 completed** - 成员端 VideoPlayer 组件（可附加 MediaStream）
+- 验证 watch-together/js/video-player.js 已实现 attachStream(MediaStream) / detachStream()，满足四项成功标准
+- #1 多次 attach/detach 无内存泄漏：附加新流前移除旧流 ended 监听、清空 srcObject；detach 时移除监听并清空状态
+- #2 合法 MediaStream 时 <video> 正常播放画面与音频：srcObject = stream、play()、muted = false
+- #3 detach 后显示「等待流」：隐藏 video、显示 videoPlaceholder，文案「暂无视频流」「等待视频流附加」
+- #4 仅依赖 MediaStream，不依赖 WebRTC：无 RTCPeerConnection 等，screen-streaming.js 通过 VideoPlayer.attachStream 接收远端流
+- join.html 已包含 videoContainer、videoStream、videoPlaceholder 并引入 video-player.js
+- RALPH_TASK.md 四项成功标准已勾选；screen-streaming-basic.test.js 通过（其余失败为既有用例 shared-browser-area / share-room-link）
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session 2 completed** - watch-together-server 后端接口汇总（E2E）
@@ -160,4 +170,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 01:37:28
+**Session 1 started** (model: auto)
+
+### 2026-02-01 02:30:18
 **Session 1 started** (model: auto)
