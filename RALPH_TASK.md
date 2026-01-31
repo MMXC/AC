@@ -1,5 +1,5 @@
 ---
-backlog_id: backlog-67
+backlog_id: backlog-91
 task: Prisma 迁移脚本与 deploy 流程
 test_command: "docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy"
 ---
