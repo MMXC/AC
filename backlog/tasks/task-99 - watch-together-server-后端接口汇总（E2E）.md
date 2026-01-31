@@ -1,9 +1,10 @@
 ---
 id: TASK-99
 title: watch-together-server 后端接口汇总（E2E）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:16'
+updated_date: '2026-01-31 17:36'
 labels: []
 dependencies: []
 ---
