@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 pc1 能成功获取 MediaStream 并通过 addTrack 添加到 PeerConnection
-- [ ] #2 pc1 与 pc2 通过本地变量成功交换 offer/answer/ICE，建立 WebRTC 连接
-- [ ] #3 pc2 的 <video> 能正常播放从 pc1 发送的远端流
-- [ ] #4 停止测试时能正确关闭 PeerConnection 和相关 MediaStream 轨道
+- [x] #1 pc1 能成功获取 MediaStream 并通过 addTrack 添加到 PeerConnection
+- [x] #2 pc1 与 pc2 通过本地变量成功交换 offer/answer/ICE，建立 WebRTC 连接
+- [x] #3 pc2 的 <video> 能正常播放从 pc1 发送的远端流
+- [x] #4 停止测试时能正确关闭 PeerConnection 和相关 MediaStream 轨道

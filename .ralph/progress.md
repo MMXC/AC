@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 7
-- Current status: Task Complete - 服务器端实现 WebRTC 信令转发（透明路由）backlog-103
+- Iterations completed: 8
+- Current status: Task Complete - 单页面内完成 WebRTC Loopback Demo（无服务器）backlog-104
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 单页面内完成 WebRTC Loopback Demo（backlog-104）
+- 读取 RALPH 状态：RALPH_TASK（backlog-104）、guardrails、progress、errors、test-results
+- 确认 loopback-demo/index.html 已存在并满足四项成功标准：#1 pc1 通过 getUserMedia/getDisplayMedia 获取 MediaStream 并用 addTrack 加入 pc1；#2 本地变量交换 offer/answer、ICE 候选在 setRemoteDescription 后刷新建立连接；#3 pc2.ontrack 将远端流绑定到「远端播放」&lt;video&gt;；#4 stopLoopback 关闭 pc1/pc2、停止所有轨道、清空 video.srcObject
+- 运行测试命令：skill:watch-together-webapp-testing TASK-104（传入 RALPH_TASK.md），测试脚本自动生成并执行，exit 0
+- RALPH_TASK.md 四项成功标准已勾选为 [x]
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 服务器端实现 WebRTC 信令转发（backlog-103）
@@ -206,4 +213,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 02:45:27
+**Session 1 started** (model: auto)
+
+### 2026-02-01 02:51:41
 **Session 1 started** (model: auto)
