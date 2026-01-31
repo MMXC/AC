@@ -1,22 +1,22 @@
 ---
-backlog_id: backlog-101
-task: 成员端实现可附加 MediaStream 的视频播放器组件
-test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
+backlog_id: backlog-102
+task: 设计 WebRTC 信令消息协议（基于现有 WebSocket）
+test_command: "cd watch-together && npm test -- webrtc-signaling"
 ---
 
-# Task: 成员端实现可附加 MediaStream 的视频播放器组件
+# Task: 设计 WebRTC 信令消息协议（基于现有 WebSocket）
 
 ## Description
 
-在成员房间页面实现 VideoPlayer 组件，对外暴露 attachStream(MediaStream) 和 detachStream()，用于播放远端 MediaStream（先用 getUserMedia 模拟）。组件不关心 WebRTC 细节，只关心 MediaStream。
+基于现有房间 WebSocket/sync 通道，定义 WebRTC 信令消息格式：WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE 等，以及字段 roomId、fromUserId、toUserId、sdp、candidate。用文档或 TS 类型固化结构。
 
-**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
+**Test Command**: `cd watch-together && npm test -- webrtc-signaling`
 
-**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
+**Test Command**: `cd watch-together && npm test -- webrtc-signaling`
 
 ## Success Criteria
 
-- [x] #1 VideoPlayer 可多次 attachStream / detachStream 而无内存泄漏或挂死
-- [x] #2 附加合法 MediaStream 时，成员端 <video> 能正常播放画面和（可选）音频
-- [x] #3 detachStream 后，视频区域清空或显示「等待流」状态
-- [x] #4 组件不依赖 WebRTC 细节，只关心 MediaStream 对象
+- [x] #1 有文档或 TS 类型清晰列出所有 WebRTC 信令消息的 JSON 结构
+- [x] #2 每个字段有明确含义说明
+- [x] #3 前端信令发送/接收层统一使用这些类型
+- [x] #4 为未来扩展预留扩展点或版本化策略
