@@ -4,6 +4,7 @@
 根据 backlog task 或 RALPH_TASK.md 自动生成 Playwright 测试脚本
 """
 
+import os
 import sys
 import re
 import json
