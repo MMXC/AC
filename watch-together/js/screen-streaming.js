@@ -770,9 +770,13 @@ function stopWebRTCPeerConnection(notifyPeer) {
 }
 
 /**
- * 显示开始共享按钮
+ * 显示开始共享按钮（仅房主可见）
  */
 function showStartSharingButton() {
+    if (typeof window !== 'undefined' && !window.isHost) {
+        hideStartSharingButton();
+        return;
+    }
     let button = document.getElementById('startSharingButton');
     
     if (!button) {
@@ -813,6 +817,7 @@ function hideStartSharingButton() {
  * 更新开始共享按钮状态
  */
 function updateStartSharingButton(isStreaming) {
+    if (typeof window !== 'undefined' && !window.isHost) return;
     const button = document.getElementById('startSharingButton');
     if (button) {
         if (isStreaming) {
