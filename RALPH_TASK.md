@@ -1,14 +1,14 @@
 ---
-backlog_id: backlog-107
-task: 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate
+backlog_id: backlog-108
+task: 成员端实现 ontrack 回调并将远端 MediaStream 传给 VideoPlayer
 test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate
+# Task: 成员端实现 ontrack 回调并将远端 MediaStream 传给 VideoPlayer
 
 ## Description
 
-在房主端与成员端的 RTCPeerConnection 上监听 onicecandidate，将候选通过 WebSocket 发送 WEBRTC_ICE_CANDIDATE；接收方解析后调用 addIceCandidate，直至连接建立。
+在成员端 RTCPeerConnection 上设置 ontrack 回调，收到远端流时从 event.streams[0] 获取 MediaStream，调用 VideoPlayer.attachStream(stream)，使成员端 <video> 播放房主共享画面。
 
 **Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [x] #1 房主与成员端都能在 onicecandidate 中发送 WEBRTC_ICE_CANDIDATE
-- [x] #2 接收方能正确解析并调用 addIceCandidate
-- [x] #3 ICE 候选能通过 WebSocket 正确路由到目标连接
-- [x] #4 双方 connectionState 能变为 connected
+- [ ] #1 ontrack 回调能正确触发并获取 event.streams[0]
+- [ ] #2 能调用 VideoPlayer.attachStream(stream) 将远端流传入
+- [ ] #3 成员端 <video> 能实时播放房主共享画面
+- [ ] #4 房主停止共享时，成员端能正确 detachStream 并更新 UI
