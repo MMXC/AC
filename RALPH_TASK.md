@@ -1,22 +1,22 @@
 ---
-backlog_id: backlog-91
-task: Prisma 迁移脚本与 deploy 流程
-test_command: "docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy"
+backlog_id: backlog-94
+task: POST /api/v1/rooms 创建房间接口
+test_command: "docker compose up -d && cd watch-together-server && npm run test:api:create"
 ---
 
-# Task: Prisma 迁移脚本与 deploy 流程
+# Task: POST /api/v1/rooms 创建房间接口
 
 ## Description
 
-在 watch-together-server 中建立 Prisma 迁移脚本流程：1) 创建 migrations 目录与初始迁移；2) 在 package.json 配置 migrate:deploy、migrate:dev；3) CI/启动前可执行 migrate deploy；4) 文档化迁移流程。
+在 watch-together-server 中实现 POST /api/v1/rooms，接收 { name?, hostNickname?, url }，创建 Room 与房主 RoomMember，返回 { success, data: { roomId, hostId, hostUserId, currentUrl, name, inviteLink, members } }，与 create-room.js 期望格式一致。
 
-**Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`
 
-**Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`
 
 ## Success Criteria
 
-- [x] #1 prisma/migrations 目录存在且包含迁移文件
-- [x] #2 npm run migrate:deploy 能成功执行
-- [x] #3 package.json 中有 migrate:deploy、migrate:dev 等 scripts
-- [x] #4 README 或 docs 说明迁移流程
+- [ ] #1 接口路径为 /api/v1/rooms，方法 POST
+- [ ] #2 接收 name、hostNickname、url（url 必填且为合法 http/https）
+- [ ] #3 返回 201 与 JSON，含 success、data.roomId、data.hostUserId、data.currentUrl 等
+- [ ] #4 数据库正确插入 Room 和 RoomMember 记录
