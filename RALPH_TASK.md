@@ -1,20 +1,22 @@
 ---
-backlog_id: backlog-99
-task: watch-together-server 后端接口汇总（E2E）
-test_command: "docker compose up -d && cd watch-together-server && npm run test:api"
+backlog_id: backlog-100
+task: 房主端实现屏幕/标签页采集预览（getDisplayMedia）
+test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: watch-together-server 后端接口汇总（E2E）
+# Task: 房主端实现屏幕/标签页采集预览（getDisplayMedia）
 
 ## Description
 
-汇总 api-a1～api-a6，使 watch-together-server 提供完整 REST 房间接口。前端 create-room、room 等页面可正常调用 localhost:3000，创建房间、加入房间、获取房间、更新 URL、离开房间流程可端到端跑通。
+在房主房间页面实现「开始共享 / 停止共享」按钮，通过 navigator.mediaDevices.getDisplayMedia 采集屏幕或浏览器标签页，并在本地 <video> 元素中预览。确保点击停止后正确关闭 MediaStream 轨道并清理预览。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api`（脚本会先轮询 /health 等待 API 就绪。）
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
+
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
 ## Success Criteria
 
-- [x] #1 POST /api/v1/rooms 创建房间成功
-- [x] #2 GET /api/v1/rooms/:roomId 获取房间成功
-- [x] #3 POST join、PUT url、POST leave 均能正常执行
-- [x] #4 前端创建房间后能跳转到 /room/:roomId 并加载房间内容
+- [ ] #1 点击「开始共享」后浏览器弹出屏幕/标签页选择对话框，用户可成功选择内容
+- [ ] #2 选择内容后，本地预览 <video> 可实时显示采集画面
+- [ ] #3 点击「停止共享」后，预览停止且 MediaStream 轨道已关闭
+- [ ] #4 多次开始/停止共享不会造成异常
