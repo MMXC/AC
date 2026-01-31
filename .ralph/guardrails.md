@@ -33,3 +33,8 @@
 - **Instruction**: You MUST create at least one file in each session. Do NOT just read files and exit. Start with the first unchecked criterion and immediately create the required files. If the first criterion is "create package.json", then CREATE package.json file with actual content right away.
 - **Added after**: Multiple sessions (20+) finishing without creating any files (2026-01-25)
 
+### Sign: RALPH_TASK Location
+- **Trigger**: When RALPH_TASK.md is not found at repository root
+- **Instruction**: Check subdirectories for RALPH_TASK.md (e.g. watch-together/RALPH_TASK.md). Use that file for task description and success criteria. Root RALPH_TASK.md may be a pointer to the active task.
+- **Added after**: Iteration 8 - root RALPH_TASK.md missing; task lived in watch-together/RALPH_TASK.md
+
