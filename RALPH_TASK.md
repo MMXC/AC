@@ -1,14 +1,14 @@
 ---
-backlog_id: backlog-107
-task: 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate
+backlog_id: backlog-109
+task: 通过 WebSocket 信令在房主与单个成员之间建立 WebRTC 连接（汇总）
 test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate
+# Task: 通过 WebSocket 信令在房主与单个成员之间建立 WebRTC 连接（汇总）
 
 ## Description
 
-在房主端与成员端的 RTCPeerConnection 上监听 onicecandidate，将候选通过 WebSocket 发送 WEBRTC_ICE_CANDIDATE；接收方解析后调用 addIceCandidate，直至连接建立。
+基于 webrtc-c2a～c2d 完成「房主 ↔ 单一成员」的 WebRTC 媒体通路。房主作为 caller，成员作为 callee，通过 WebSocket 交换 offer/answer/ICE，将房主的 getDisplayMedia 流发送到成员端 VideoPlayer。
 
 **Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [x] #1 房主与成员端都能在 onicecandidate 中发送 WEBRTC_ICE_CANDIDATE
-- [x] #2 接收方能正确解析并调用 addIceCandidate
-- [x] #3 ICE 候选能通过 WebSocket 正确路由到目标连接
-- [x] #4 双方 connectionState 能变为 connected
+- [x] #1 房主点击开始共享能向目标成员发送 WEBRTC_OFFER
+- [x] #2 成员收到 WEBRTC_OFFER 后能创建 answer 并用 WEBRTC_ANSWER 回传
+- [x] #3 双方能正确处理 WEBRTC_ICE_CANDIDATE 直至连接建立
+- [x] #4 成员端 VideoPlayer 成功接收远端 MediaStream 并播放画面
