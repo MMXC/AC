@@ -1,9 +1,10 @@
 ---
 id: TASK-93
 title: watch-together-server 数据模型与 Prisma Schema
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:14'
+updated_date: '2026-01-31 17:12'
 labels: []
 dependencies: []
 ---
