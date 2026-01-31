@@ -1,7 +1,7 @@
 ---
 id: TASK-91
 title: Prisma 迁移脚本与 deploy 流程
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-01-31 11:14'
 updated_date: '2026-01-31 11:35'
