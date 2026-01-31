@@ -273,11 +273,20 @@ async function startScreenSharing() {
     // 注意：WebSocket 连接是可选的，用于向其他成员发送画面数据
     // 本地预览功能不需要 WebSocket
     
+    const videoContainer = document.getElementById('videoContainer');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+    const videoStreamEl = document.getElementById('videoStream');
+    const canvasElement = document.getElementById('canvasStream');
+
+    if (!videoStreamEl) {
+        console.error('未找到 videoStream 元素，无法显示本地预览');
+        return;
+    }
+
     try {
-        // 请求屏幕共享权限
+        // 请求屏幕/标签页共享权限（不限制 mediaSource，用户可在对话框中选择屏幕或标签页）
         const stream = await navigator.mediaDevices.getDisplayMedia({
             video: {
-                mediaSource: 'screen',
                 width: { ideal: 1920 },
                 height: { ideal: 1080 },
             },
@@ -287,39 +296,41 @@ async function startScreenSharing() {
         screenStreamState.mediaStream = stream;
         screenStreamState.isStreaming = true;
         
-        // 监听流结束事件（用户点击停止共享）
-        stream.getVideoTracks()[0].addEventListener('ended', () => {
-            stopScreenSharing();
-        });
+        // 监听流结束事件（用户点击系统停止共享）
+        const videoTracks = stream.getVideoTracks();
+        if (videoTracks.length > 0) {
+            videoTracks[0].addEventListener('ended', () => {
+                stopScreenSharing();
+            });
+        }
         
-        // 创建 video 元素用于捕获画面（旧的基于 Canvas 的传输仍然保留，作为降级方案）
-        const videoElement = document.createElement('video');
-        videoElement.srcObject = stream;
-        videoElement.autoplay = true;
-        videoElement.playsInline = true;
+        // 使用页面上的 <video id="videoStream"> 作为本地预览，实时显示采集画面
+        videoStreamEl.srcObject = stream;
+        videoStreamEl.autoplay = true;
+        videoStreamEl.playsInline = true;
         
-        // 显示 video 容器和 video 元素，隐藏占位符
+        // 显示 video 容器和本地预览 video，隐藏占位符；房主端用 video 预览，隐藏 canvas
         if (videoContainer) {
             videoContainer.style.display = 'flex';
         }
-        if (videoElement) {
-            videoElement.style.display = 'block';
-        }
+        videoStreamEl.style.display = 'block';
         if (videoPlaceholder) {
             videoPlaceholder.style.display = 'none';
         }
+        if (canvasElement) {
+            canvasElement.style.display = 'none';
+        }
         
-        // 等待视频加载
+        // 等待视频元数据加载
         await new Promise((resolve, reject) => {
-            videoElement.onloadedmetadata = () => {
+            videoStreamEl.onloadedmetadata = () => {
                 resolve();
             };
-            videoElement.onerror = (error) => {
-                reject(error);
+            videoStreamEl.onerror = (err) => {
+                reject(err);
             };
-            // 设置超时，避免无限等待
             setTimeout(() => {
-                if (videoElement.readyState === 0) {
+                if (videoStreamEl.readyState === 0) {
                     reject(new Error('视频加载超时'));
                 } else {
                     resolve();
@@ -337,9 +348,8 @@ async function startScreenSharing() {
             console.error('启动 WebRTC 连接失败，回退到旧的图片流方案:', webrtcError);
         }
 
-        // 无论 WebRTC 是否成功，仍然启动旧的帧捕获逻辑作为兜底，
-        // 以保证已有的画面流测试和功能不受影响
-        startFrameCapture(videoElement);
+        // 无论 WebRTC 是否成功，仍然启动旧的帧捕获逻辑作为兜底（使用同一 video 元素）
+        startFrameCapture(videoStreamEl);
         
         // 更新 UI
         updateStartSharingButton(true);
@@ -400,11 +410,12 @@ function stopScreenSharing() {
         screenStreamState.captureInterval = null;
     }
     
-    // 获取 video 元素并清理预览
+    // 获取 DOM 元素并清理预览
     const videoElement = document.getElementById('videoStream');
     const videoPlaceholder = document.getElementById('videoPlaceholder');
+    const canvasElement = document.getElementById('canvasStream');
     
-    // 停止媒体流轨道
+    // 停止媒体流轨道（必须关闭，否则无法再次 getDisplayMedia）
     if (screenStreamState.mediaStream) {
         screenStreamState.mediaStream.getTracks().forEach(track => {
             track.stop();
@@ -412,10 +423,13 @@ function stopScreenSharing() {
         screenStreamState.mediaStream = null;
     }
     
-    // 清理 video 元素的 srcObject
+    // 清理本地预览：清空 video 的 srcObject 并隐藏
     if (videoElement) {
         videoElement.srcObject = null;
         videoElement.style.display = 'none';
+    }
+    if (canvasElement) {
+        canvasElement.style.display = 'none';
     }
     
     // 显示占位符

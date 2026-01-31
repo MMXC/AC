@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 4
-- Current status: Task Complete - watch-together-server 后端接口汇总（E2E）
+- Iterations completed: 5
+- Current status: Task Complete - 房主端实现屏幕/标签页采集预览（getDisplayMedia）
 
 ## How This Works
 
@@ -14,6 +14,12 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 2]
+**Session completed** - 房主端实现屏幕/标签页采集预览（getDisplayMedia）
+- 在 watch-together/js/screen-streaming.js 中：房主点击「开始共享」使用 getDisplayMedia 采集屏幕/标签页（未限制 mediaSource，用户可选）；使用页面上的 \<video id="videoStream"\> 作为本地预览并实时显示采集画面；获取并正确显示 videoContainer、videoPlaceholder，房主端隐藏 canvas。
+- 点击「停止共享」后：停止所有 MediaStream 轨道、清空 video.srcObject、隐藏 video 与 canvas、显示占位符；确保多次开始/停止共享不会造成异常（isStreaming 校验、完全清理）。
+- RALPH_TASK 四项成功标准已全部勾选；screen-streaming 相关单元测试 44 个通过。
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session 2 completed** - watch-together-server 后端接口汇总（E2E）
@@ -161,3 +167,9 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-01 01:37:28
 **Session 1 started** (model: auto)
+
+### 2026-02-01 01:44:14
+**Session 1 started** (model: auto)
+
+### 2026-02-01 01:45:20
+**Session 2 started** (model: auto)
