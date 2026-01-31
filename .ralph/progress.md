@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 1
-- Current status: Task Complete - Prisma 迁移脚本与 deploy 流程
+- Iterations completed: 2
+- Current status: Task Complete - POST /api/v1/rooms 创建房间接口
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-01-31 [Ralph Iteration 2]
+**Session 2 completed** - POST /api/v1/rooms 创建房间接口
+- 在 watch-together-server/dist/app.js 中实现 POST /api/v1/rooms：接收 name、hostNickname、url（url 必填且合法 http/https），校验后使用 Prisma 创建 Room 与房主 RoomMember，返回 201 与 JSON（success、data.roomId、hostId、hostUserId、currentUrl、name、inviteLink、members），与 create-room.js 期望格式一致
+- Dockerfile 增加 `npx prisma generate` 步骤，使容器内 @prisma/client 可用
+- 测试命令通过：docker compose up -d && cd watch-together-server && npm run test:api:create
+- RALPH_TASK 四项成功标准已全部勾选
 
 ### 2026-01-31 [current time]
 **Session 1 completed** - Prisma 迁移脚本与 deploy 流程
@@ -127,3 +134,9 @@ This is how Ralph maintains continuity across iterations.
 - 确认 watch-together-server 已有：prisma/migrations/20260131000000_init、package.json 中 migrate:deploy/migrate:dev、docs/migrations.md
 - 再次运行测试命令通过：`docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy`
 - 将 RALPH_TASK.md 四项成功标准由 [ ] 改为 [x]；更新 progress.md
+
+### 2026-01-31 19:51:17
+**Session 1 started** (model: auto)
+
+### 2026-01-31 19:54:54
+**Session 2 started** (model: auto)
