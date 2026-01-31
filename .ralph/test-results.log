@@ -323,3 +323,39 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 01:18:08
+Command: docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma validate && docker compose exec watch-together-server npx prisma migrate deploy
+═══════════════════════════════════════════════════════════════════
+time="2026-02-01T01:18:08+08:00" level=warning msg="Found orphan containers ([watch-together-api]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container watch-together-redis  Running
+ Container watch-together-postgres  Running
+ Container watch-together-server  Running
+ Container watch-together-redis  Waiting
+ Container watch-together-postgres  Waiting
+ Container watch-together-postgres  Healthy
+ Container watch-together-redis  Healthy
+Prisma schema loaded from prisma/schema.prisma
+The schema at prisma/schema.prisma is valid 🚀
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "watchtogether", schema "public" at "postgres:5432"
+
+2 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+┌─────────────────────────────────────────────────────────┐
+│  Update available 5.22.0 -> 7.3.0                       │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+

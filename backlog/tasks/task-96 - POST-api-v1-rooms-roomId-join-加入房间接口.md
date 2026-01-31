@@ -1,9 +1,10 @@
 ---
 id: TASK-96
 title: 'POST /api/v1/rooms/:roomId/join 加入房间接口'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:15'
+updated_date: '2026-01-31 17:18'
 labels: []
 dependencies: []
 ---
