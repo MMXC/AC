@@ -1,14 +1,14 @@
 ---
-backlog_id: backlog-110
-task: 支持一个房主向所有成员建立 WebRTC 连接
+backlog_id: backlog-111
+task: 仅向房主暴露开始/停止共享按钮并与权限系统集成
 test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: 支持一个房主向所有成员建立 WebRTC 连接
+# Task: 仅向房主暴露开始/停止共享按钮并与权限系统集成
 
 ## Description
 
-在房主端为房间内每个非房主用户维护独立 RTCPeerConnection，通过 WebSocket 信令为每个成员建立 WebRTC 媒体通路，让所有在线成员都能看到房主视频流。
+仅当当前用户为房主时显示共享控制按钮；普通成员不显示或禁用。在后端/信令层增加校验，拒绝普通成员伪造发起共享的 WebRTC 信令，确保只有房主可作为媒体流发送方。
 
 **Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [x] #1 房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）
-- [x] #2 信令层能为每个成员正确路由 WebRTC 信令
-- [x] #3 新成员加入时可增量建立连接，不影响已有连接
-- [x] #4 成员离开时，房主端能关闭对应 PeerConnection 并释放资源
+- [ ] #1 currentUser.isOwner === true 时显示共享按钮，否则不显示/禁用
+- [ ] #2 普通成员伪造共享请求时，后端拒绝
+- [ ] #3 房主停止共享后，按钮/文案状态能及时恢复
+- [ ] #4 权限逻辑不影响普通成员正常观看已有 WebRTC 视频流
