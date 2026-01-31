@@ -1,14 +1,14 @@
 ---
-backlog_id: backlog-112
-task: 成员端播放器 UI 集成与状态展示
+backlog_id: backlog-113
+task: WebRTC 错误处理与重试策略
 test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: 成员端播放器 UI 集成与状态展示
+# Task: WebRTC 错误处理与重试策略
 
 ## Description
 
-将 VideoPlayer 集成到真实房间页面，为成员端提供状态文案（等待房主开始共享 / 正在播放房主画面 / 房主已停止共享），并在 WebRTC 状态变化时正确更新。
+为 getDisplayMedia、ICE 协商失败、信令中断等关键路径增加错误处理和有限重试，为房主/成员提供清晰错误提示，并在合理范围内自动重试或提示用户刷新/重进。
 
 **Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 房主未开始共享时，成员端显示「等待房主开始共享...」
-- [ ] #2 WebRTC 建立并收到远端流时，显示视频和「正在播放房主画面」
-- [ ] #3 房主停止共享或连接断开时，停止播放并显示「房主已停止共享」或错误提示
-- [ ] #4 状态文案与实际连接状态一致
+- [ ] #1 房主拒绝 getDisplayMedia 权限时有明确错误提示
+- [ ] #2 ICE 长时间协商失败时能超时退出并提示用户检查网络
+- [ ] #3 WebSocket 信令中断时，前端能检测并停止共享/播放，提示错误
+- [ ] #4 对可恢复错误在限制次数内尝试自动重连，失败后给出清晰说明
