@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 1
-- Current status: Task Complete - Prisma 迁移脚本与 deploy 流程
+- Current status: Task Complete - PostgreSQL 容器与初始化脚本（Ralph Iteration 1 验证）
 
 ## How This Works
 
@@ -117,3 +117,14 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-31 18:31:24
 **Session 1 started** (model: auto)
+
+### 2026-01-31 19:29:20
+**Session 1 started** (model: auto)
+
+### 2026-01-31 [current time]
+**Session 1 completed** - PostgreSQL 容器与初始化脚本（Ralph Iteration 1）
+- 验证 docker-compose.yml 中 postgres 服务：Dockerfile.postgres（postgres:15-alpine）、POSTGRES_USER/PASSWORD/DB、健康检查 pg_isready -U watchtogether、volumes postgres_data
+- 运行测试命令通过：`docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether`
+- 验证 DATABASE_URL 连接：`docker compose exec postgres psql -U watchtogether -d watchtogether -t -c "SELECT 1"` 成功
+- 验证重启后数据持久化：创建 _ralph_persist_check 表并写入数据，重启 postgres 后数据仍在
+- RALPH_TASK 四项成功标准已全部勾选
