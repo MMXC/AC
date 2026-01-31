@@ -1,9 +1,10 @@
 ---
 id: TASK-105
 title: 房主端实现 offer 创建与 WEBRTC_OFFER 发送
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:17'
+updated_date: '2026-01-31 18:56'
 labels: []
 dependencies: []
 ---
