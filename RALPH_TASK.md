@@ -1,14 +1,14 @@
 ---
-backlog_id: backlog-111
-task: 仅向房主暴露开始/停止共享按钮并与权限系统集成
+backlog_id: backlog-112
+task: 成员端播放器 UI 集成与状态展示
 test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: 仅向房主暴露开始/停止共享按钮并与权限系统集成
+# Task: 成员端播放器 UI 集成与状态展示
 
 ## Description
 
-仅当当前用户为房主时显示共享控制按钮；普通成员不显示或禁用。在后端/信令层增加校验，拒绝普通成员伪造发起共享的 WebRTC 信令，确保只有房主可作为媒体流发送方。
+将 VideoPlayer 集成到真实房间页面，为成员端提供状态文案（等待房主开始共享 / 正在播放房主画面 / 房主已停止共享），并在 WebRTC 状态变化时正确更新。
 
 **Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [x] #1 currentUser.isOwner === true 时显示共享按钮，否则不显示/禁用
-- [x] #2 普通成员伪造共享请求时，后端拒绝
-- [x] #3 房主停止共享后，按钮/文案状态能及时恢复
-- [x] #4 权限逻辑不影响普通成员正常观看已有 WebRTC 视频流
+- [ ] #1 房主未开始共享时，成员端显示「等待房主开始共享...」
+- [ ] #2 WebRTC 建立并收到远端流时，显示视频和「正在播放房主画面」
+- [ ] #3 房主停止共享或连接断开时，停止播放并显示「房主已停止共享」或错误提示
+- [ ] #4 状态文案与实际连接状态一致
