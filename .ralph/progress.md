@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 9
-- Current status: Task Complete - 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate（backlog-107）
+- Iterations completed: 10
+- Current status: Task Complete - 通过 WebSocket 信令在房主与单成员间建立 WebRTC 连接（汇总 backlog-109）
 
 ## How This Works
 
@@ -14,6 +14,12 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 通过 WebSocket 信令在房主与单成员间建立 WebRTC 连接（汇总 backlog-109）
+- 验证 screen-streaming.js / webrtc-signaling.js / video-player.js 已实现完整流程：#1 房主点击开始共享 → getDisplayMedia → startWebRTCPeerConnectionAsHost → addPeerConnectionForMember 发送 WEBRTC_OFFER；#2 成员 handleWebRTCOffer → setRemoteDescription → createAnswer → WEBRTC_ANSWER 回传；#3 双方 onicecandidate 发送 WEBRTC_ICE_CANDIDATE，handleWebRTCIceCandidate + pending 队列 + drainPendingIceCandidates 直至连接建立；#4 成员端 pc.ontrack → VideoPlayer.attachStream(remoteStream) 播放画面
+- 运行 watch-together 单元测试：webrtc-signaling + screen-streaming 共 73 个用例通过
+- RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate（backlog-107）
@@ -229,4 +235,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 03:07:43
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:20:01
 **Session 1 started** (model: auto)

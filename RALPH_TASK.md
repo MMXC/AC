@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 房主点击开始共享能向目标成员发送 WEBRTC_OFFER
-- [ ] #2 成员收到 WEBRTC_OFFER 后能创建 answer 并用 WEBRTC_ANSWER 回传
-- [ ] #3 双方能正确处理 WEBRTC_ICE_CANDIDATE 直至连接建立
-- [ ] #4 成员端 VideoPlayer 成功接收远端 MediaStream 并播放画面
+- [x] #1 房主点击开始共享能向目标成员发送 WEBRTC_OFFER
+- [x] #2 成员收到 WEBRTC_OFFER 后能创建 answer 并用 WEBRTC_ANSWER 回传
+- [x] #3 双方能正确处理 WEBRTC_ICE_CANDIDATE 直至连接建立
+- [x] #4 成员端 VideoPlayer 成功接收远端 MediaStream 并播放画面
