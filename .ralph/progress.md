@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 5
-- Current status: Task Complete - 成员端 VideoPlayer 组件（可附加 MediaStream）
+- Iterations completed: 6
+- Current status: Task Complete - 设计 WebRTC 信令消息协议（基于现有 WebSocket）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session 1 completed** - 设计 WebRTC 信令消息协议（backlog-102）
+- 确认 watch-together/docs/webrtc-signaling-protocol.md 与 watch-together/js/webrtc-signaling-types.ts 已完整列出所有 WebRTC 信令消息（WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR）的 JSON 结构与字段说明
+- #1 #2：文档与 TS 类型已满足；#4：文档含版本化策略（version 字段）、扩展性设计（tracks、多房主预留）
+- #3：前端信令层统一使用类型：chat.js 与 screen-streaming.js 的 WebRTC 消息分支改为使用 WebRTCSignalingType 常量（或 fallback 对象），发送层已使用 createOfferMessage/createAnswerMessage/createICECandidateMessage
+- 测试命令通过：cd watch-together && npm test -- webrtc-signaling（29 个用例全部通过）
+- RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 2]
 **Session 1 completed** - 修复 test-results 失败（generate-test.py NameError）
@@ -184,3 +192,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-01 02:34:02
 **Session 2 started** (model: auto)
+
+### 2026-02-01 02:39:15
+**Session 1 started** (model: auto)
