@@ -250,3 +250,15 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-01-31 19:31:53
+Command: docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether
+═══════════════════════════════════════════════════════════════════
+time="2026-01-31T19:31:53+08:00" level=warning msg="Found orphan containers ([watch-together-api]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container watch-together-postgres  Running
+/var/run/postgresql:5432 - accepting connections
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
