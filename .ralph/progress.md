@@ -93,3 +93,14 @@ This is how Ralph maintains continuity across iterations.
 - 验证 DATABASE_URL 连接（psql 查询）与重启后数据持久化（_ralph_check 表）
 - 移除 compose 中已废弃的 `version` 以消除警告
 - RALPH_TASK 四项成功标准已全部勾选
+
+### 2026-01-31 18:25:13
+**Session 1 started** (model: auto)
+
+### 2026-01-31 [current time]
+**Session 1 completed** - PostgreSQL 容器与初始化脚本（Ralph Iteration 1 验证）
+- 确认 `docker-compose.yml` 中 postgres 服务已完整配置：Dockerfile.postgres（postgres:15-alpine）、POSTGRES_USER/PASSWORD/DB、健康检查 pg_isready、volumes postgres_data
+- 运行测试命令通过：`docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether`
+- 验证 DATABASE_URL 连接：`docker compose exec postgres psql -U watchtogether -d watchtogether -t -c "SELECT 1"` 返回成功
+- volumes 配置正确（postgres_data:/var/lib/postgresql/data），重启后数据持久化
+- RALPH_TASK 四项成功标准已全部勾选
