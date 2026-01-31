@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 房主与成员端都能在 onicecandidate 中发送 WEBRTC_ICE_CANDIDATE
-- [ ] #2 接收方能正确解析并调用 addIceCandidate
-- [ ] #3 ICE 候选能通过 WebSocket 正确路由到目标连接
-- [ ] #4 双方 connectionState 能变为 connected
+- [x] #1 房主与成员端都能在 onicecandidate 中发送 WEBRTC_ICE_CANDIDATE
+- [x] #2 接收方能正确解析并调用 addIceCandidate
+- [x] #3 ICE 候选能通过 WebSocket 正确路由到目标连接
+- [x] #4 双方 connectionState 能变为 connected
