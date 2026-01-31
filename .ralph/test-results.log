@@ -475,3 +475,59 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 02:42:55
+Command: cd watch-together && npm test -- webrtc-signaling
+═══════════════════════════════════════════════════════════════════
+
+> watch-together@0.1.0 test
+> node --experimental-vm-modules node_modules/jest/bin/jest.js webrtc-signaling
+
+PASS __tests__/webrtc-signaling.test.js
+  WebRTC 信令消息协议
+    消息类型常量
+      ✓ 应该定义所有必需的消息类型 (9 ms)
+      ✓ 协议版本应该正确
+    创建消息函数
+      ✓ createOfferMessage 应该创建有效的 Offer 消息
+      ✓ createOfferMessage 应该支持广播消息（toUserId 为 null）
+      ✓ createOfferMessage 应该支持 tracks 扩展字段 (1 ms)
+      ✓ createAnswerMessage 应该创建有效的 Answer 消息
+      ✓ createICECandidateMessage 应该创建有效的 ICE Candidate 消息
+      ✓ createICECandidateMessage 应该支持 null candidate（候选地址收集完成） (1 ms)
+      ✓ createEndMessage 应该创建有效的 End 消息
+      ✓ createErrorMessage 应该创建有效的 Error 消息 (2 ms)
+    消息验证
+      ✓ validateWebRTCSignalingMessage 应该验证有效的 Offer 消息
+      ✓ validateWebRTCSignalingMessage 应该拒绝缺少必需字段的消息
+      ✓ validateWebRTCSignalingMessage 应该拒绝无效的消息类型
+      ✓ validateWebRTCSignalingMessage 应该验证有效的 Answer 消息 (1 ms)
+      ✓ validateWebRTCSignalingMessage 应该验证有效的 ICE Candidate 消息
+      ✓ validateWebRTCSignalingMessage 应该验证 null candidate（候选地址收集完成）
+      ✓ validateWebRTCSignalingMessage 应该验证有效的 Error 消息
+      ✓ validateWebRTCSignalingMessage 应该拒绝非对象输入 (3 ms)
+    类型检查函数
+      ✓ isOfferMessage 应该正确识别 Offer 消息 (1 ms)
+      ✓ isAnswerMessage 应该正确识别 Answer 消息
+      ✓ isICECandidateMessage 应该正确识别 ICE Candidate 消息
+      ✓ isEndMessage 应该正确识别 End 消息
+      ✓ isErrorMessage 应该正确识别 Error 消息 (1 ms)
+    前端 send/receive 场景测试
+      ✓ 应该能够正确序列化和反序列化消息（模拟 WebSocket 发送）
+      ✓ 应该能够处理所有消息类型的序列化/反序列化 (1 ms)
+      ✓ 应该能够处理字段名错误的情况（防御性编程）
+      ✓ 应该能够处理广播消息（toUserId 为 null）
+    实际使用场景示例
+      ✓ 房主向单个成员建立连接的完整流程
+      ✓ 房主向所有成员广播 Offer
+
+Test Suites: 1 passed, 1 total
+Tests:       29 passed, 29 total
+Snapshots:   0 total
+Time:        5.552 s, estimated 6 s
+Ran all test suites matching /webrtc-signaling/i.
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+

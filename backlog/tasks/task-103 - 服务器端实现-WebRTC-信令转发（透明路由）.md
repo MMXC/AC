@@ -1,9 +1,10 @@
 ---
 id: TASK-103
 title: 服务器端实现 WebRTC 信令转发（透明路由）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:17'
+updated_date: '2026-01-31 18:44'
 labels: []
 dependencies: []
 ---
