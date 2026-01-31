@@ -1,14 +1,14 @@
 ---
-backlog_id: backlog-103
-task: 服务器端实现 WebRTC 信令转发（透明路由）
+backlog_id: backlog-105
+task: 房主端实现 offer 创建与 WEBRTC_OFFER 发送
 test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: 服务器端实现 WebRTC 信令转发（透明路由）
+# Task: 房主端实现 offer 创建与 WEBRTC_OFFER 发送
 
 ## Description
 
-在现有 WebSocket 服务中增加 WebRTC 信令路由：根据 roomId / toUserId 将 WEBRTC_OFFER / WEBRTC_ANSWER / WEBRTC_ICE_CANDIDATE 转发给目标连接，不解析 SDP/ICE 内容。
+在房主端点击「开始共享」时：1) 调用 getDisplayMedia 获取 MediaStream；2) 创建 RTCPeerConnection 并 addTrack；3) createOffer 生成 offer；4) 通过 WebSocket 向目标成员发送 WEBRTC_OFFER（含 roomId、fromUserId、toUserId、sdp）。
 
 **Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [x] #1 服务器能识别并转发 WebRTC 信令到正确的目标连接
-- [x] #2 不对 SDP/ICE 做任何修改，仅透明转发
-- [x] #3 目标用户不在线时，有合理警告日志而不会崩溃
-- [x] #4 WebRTC 信令不会干扰现有聊天/操作同步消息流
+- [x] #1 点击开始共享后能成功获取 getDisplayMedia 流
+- [x] #2 能正确创建 RTCPeerConnection 并将流轨道添加进去
+- [x] #3 createOffer 成功后能通过 WebSocket 发送格式正确的 WEBRTC_OFFER
+- [x] #4 WEBRTC_OFFER 包含 toUserId 和 sdp 字段
