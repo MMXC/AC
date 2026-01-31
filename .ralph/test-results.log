@@ -346,3 +346,26 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 01:30:30
+Command: docker compose up -d && cd watch-together-server && npm run test:api:url
+═══════════════════════════════════════════════════════════════════
+time="2026-02-01T01:30:30+08:00" level=warning msg="Found orphan containers ([watch-together-api]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container watch-together  Running
+ Container watch-together-postgres  Running
+ Container watch-together-redis  Running
+ Container watch-together-server  Running
+ Container watch-together-postgres  Waiting
+ Container watch-together-redis  Waiting
+ Container watch-together-redis  Healthy
+ Container watch-together-postgres  Healthy
+
+> watch-together-server@0.1.0 test:api:url
+> bash scripts/test-rooms-api.sh url
+
+OK
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
