@@ -14,7 +14,7 @@ test_command: "docker compose up -d && cd watch-together-server && npm run test:
 
 ## Success Criteria
 
-- [ ] #1 接口路径为 /api/v1/rooms/:roomId/join
-- [ ] #2 房主传入 userId 时正确关联已有房间
-- [ ] #3 新成员不传 userId 时服务端生成并返回
-- [ ] #4 返回的 room 含最新 members 列表
+- [x] #1 接口路径为 /api/v1/rooms/:roomId/join
+- [x] #2 房主传入 userId 时正确关联已有房间
+- [x] #3 新成员不传 userId 时服务端生成并返回
+- [x] #4 返回的 room 含最新 members 列表
