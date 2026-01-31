@@ -691,3 +691,64 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:04:57
+Command: skill:watch-together-webapp-testing TASK-106
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-106.py
+   包含 4 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-106.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-106.py
+
+============================================================
+测试 TASK-106
+============================================================
+
+启动浏览器（房主端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2omb120000nqba9ctd8qvl
+✅ 已保存房主端初始截图: backlog/test-results/task-106/initial.png
+
+测试场景 1: 能正确解析并处理 WebSocket 收到的 WEBRTC_OFFER
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: 能创建 RTCPeerConnection 并 setRemoteDescription(offer)
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: createAnswer 成功后能通过 WebSocket 发送 WEBRTC_ANSWER
+  ⚠️  场景 3 需要根据具体需求实现
+
+测试场景 4: WEBRTC_ANSWER 的 toUserId 指向房主
+  ⚠️  场景 4 需要根据具体需求实现
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+⚠️  场景 4: 需要手动实现
+
+总计: 0 通过, 0 失败, 4 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
