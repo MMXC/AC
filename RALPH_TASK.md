@@ -16,7 +16,7 @@ test_command: "docker compose up -d postgres watch-together-server && docker com
 
 ## Success Criteria
 
-- [ ] #1 prisma/migrations 目录存在且包含迁移文件
-- [ ] #2 npm run migrate:deploy 能成功执行
-- [ ] #3 package.json 中有 migrate:deploy、migrate:dev 等 scripts
-- [ ] #4 README 或 docs 说明迁移流程
+- [x] #1 prisma/migrations 目录存在且包含迁移文件
+- [x] #2 npm run migrate:deploy 能成功执行
+- [x] #3 package.json 中有 migrate:deploy、migrate:dev 等 scripts
+- [x] #4 README 或 docs 说明迁移流程
