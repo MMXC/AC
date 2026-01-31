@@ -26,18 +26,110 @@ function isValidHttpUrl(urlString) {
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const crypto = require('crypto');
 
-function buildRoomPayload(room, members) {
+function buildRoomPayload(room, members, includeCurrentUrl = false) {
     const memberList = (members || []).map((m) => ({
         id: m.id,
         userId: m.userId,
         nickname: m.nickname,
     }));
-    return {
+    const payload = {
         roomId: room.id,
         name: room.name,
         members: memberList,
     };
+    if (includeCurrentUrl) {
+        payload.currentUrl = room.currentUrl ?? null;
+    }
+    return payload;
 }
+
+app.get('/api/v1/rooms/:roomId', async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+        if (!roomId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'roomId is required' },
+            });
+        }
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+            include: { members: true },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Room not found' },
+            });
+        }
+        const members = await prisma.roomMember.findMany({
+            where: { roomId },
+            orderBy: { joinedAt: 'asc' },
+        });
+        return res.status(200).json({
+            success: true,
+            data: buildRoomPayload(room, members, true),
+        });
+    } catch (err) {
+        console.error('GET /api/v1/rooms/:roomId error:', err);
+        return res.status(500).json({
+            success: false,
+            error: { code: 'INTERNAL_ERROR', message: err.message || 'Internal server error' },
+        });
+    }
+});
+
+app.put('/api/v1/rooms/:roomId/url', async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+        const { url, userId } = req.body || {};
+        if (!roomId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'roomId is required' },
+            });
+        }
+        if (!url || typeof url !== 'string' || !url.trim() || !isValidHttpUrl(url.trim())) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'INVALID_URL', message: 'url is required and must be a valid http or https URL' },
+            });
+        }
+        if (!userId || typeof userId !== 'string') {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'userId is required' },
+            });
+        }
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Room not found' },
+            });
+        }
+        const hostUserId = room.id + '-host';
+        if (userId !== hostUserId) {
+            return res.status(403).json({
+                success: false,
+                error: { code: 'FORBIDDEN', message: 'Only the room host can update the URL' },
+            });
+        }
+        await prisma.room.update({
+            where: { id: roomId },
+            data: { currentUrl: url.trim() },
+        });
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        console.error('PUT /api/v1/rooms/:roomId/url error:', err);
+        return res.status(500).json({
+            success: false,
+            error: { code: 'INTERNAL_ERROR', message: err.message || 'Internal server error' },
+        });
+    }
+});
 
 app.post('/api/v1/rooms/:roomId/join', async (req, res) => {
     try {
@@ -134,6 +226,7 @@ app.post('/api/v1/rooms', async (req, res) => {
             data: {
                 name: roomName,
                 hostNickname: hostNick,
+                currentUrl: currentUrl,
             },
         });
         const hostMember = await prisma.roomMember.create({

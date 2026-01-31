@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 3
-- Current status: Task Complete - POST /api/v1/rooms/:roomId/join 加入房间接口
+- Iterations completed: 4
+- Current status: Task Complete - PUT /api/v1/rooms/:roomId/url 更新房间 URL 接口
 
 ## How This Works
 
@@ -16,6 +16,12 @@ This is how Ralph maintains continuity across iterations.
 ## Session History
 
 ### 2026-02-01 [Ralph Iteration 1]
+**Session 1 completed** - PUT /api/v1/rooms/:roomId/url 更新房间 URL 接口
+- 在 watch-together-server 中：Prisma schema 增加 Room.currentUrl；新增迁移 20260201000000_add_room_current_url；dist/app.js 实现 PUT /api/v1/rooms/:roomId/url（接收 { url, userId }，校验 userId 为房主 room.id + '-host'，校验 url 为合法 http/https，更新 room.currentUrl，返回 { success }；非房主返回 403）；实现 GET /api/v1/rooms/:roomId（返回 success、data 含 roomId、name、currentUrl、members）；POST /rooms 创建时写入 currentUrl；buildRoomPayload 支持 includeCurrentUrl
+- 测试命令通过：docker compose up -d && cd watch-together-server && npm run test:api:url；非房主 PUT url 手动验证返回 403
+- RALPH_TASK 四项成功标准已全部勾选
+
+### 2026-02-01 [Ralph Iteration 1] (previous)
 **Session 1 completed** - POST /api/v1/rooms/:roomId/join 加入房间接口
 - 在 watch-together-server/dist/app.js 中实现 POST /api/v1/rooms/:roomId/join：接收 { nickname, userId? }；房主传入 userId 时通过 roomId_userId 查找已有成员并返回 { success, data: { userId, nickname, room, isHost } }；新成员不传 userId 时用 crypto.randomUUID() 生成 userId 并创建 RoomMember，返回 isHost: false；返回的 room 含 roomId、name、members（最新列表）
 - 修复 test-rooms-api.sh 中 set -euo pipefail 在非 bash 下的兼容（改为 set -eu 与条件 set -o pipefail）
@@ -149,4 +155,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 2 started** (model: auto)
 
 ### 2026-02-01 01:20:01
+**Session 1 started** (model: auto)
+
+### 2026-02-01 01:26:16
 **Session 1 started** (model: auto)

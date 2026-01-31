@@ -14,6 +14,7 @@ model Room {
   id           String   @id @default(cuid())
   name         String
   hostNickname String?
+  currentUrl   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

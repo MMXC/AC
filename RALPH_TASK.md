@@ -14,7 +14,7 @@ test_command: "docker compose up -d && cd watch-together-server && npm run test:
 
 ## Success Criteria
 
-- [ ] #1 接口路径为 /api/v1/rooms/:roomId/url
-- [ ] #2 仅房主可更新，非房主返回 403
-- [ ] #3 更新后 GET 房间能拿到最新 currentUrl
-- [ ] #4 url 需为合法 http/https
+- [x] #1 接口路径为 /api/v1/rooms/:roomId/url
+- [x] #2 仅房主可更新，非房主返回 403
+- [x] #3 更新后 GET 房间能拿到最新 currentUrl
+- [x] #4 url 需为合法 http/https
