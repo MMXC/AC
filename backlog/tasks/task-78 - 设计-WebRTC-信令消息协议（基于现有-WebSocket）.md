@@ -1,9 +1,9 @@
 ---
-id: TASK-54
+id: TASK-78
 title: 设计 WebRTC 信令消息协议（基于现有 WebSocket）
 status: To Do
 assignee: []
-created_date: '2026-01-31 05:42'
+created_date: '2026-01-31 10:16'
 labels: []
 dependencies: []
 ---

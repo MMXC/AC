@@ -1,10 +1,9 @@
 ---
-id: TASK-43
+id: TASK-67
 title: Prisma 迁移脚本与 deploy 流程
-status: In Progress
+status: To Do
 assignee: []
-created_date: '2026-01-31 05:39'
-updated_date: '2026-01-31 08:57'
+created_date: '2026-01-31 10:12'
 labels: []
 dependencies: []
 ---
@@ -14,9 +13,9 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 在 watch-together-server 中建立 Prisma 迁移脚本流程：1) 创建 migrations 目录与初始迁移；2) 在 package.json 配置 migrate:deploy、migrate:dev；3) CI/启动前可执行 migrate deploy；4) 文档化迁移流程。
 
-**Test Command**: `cd watch-together-server && npm run migrate:deploy`
+**Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy`
 
-**Test Command**: `cd watch-together-server && npm run migrate:deploy`
+**Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

@@ -30,7 +30,7 @@
 
 - **ID**: api-db2
 - **描述**: 在 watch-together-server 中建立 Prisma 迁移脚本流程：1) 创建 migrations 目录与初始迁移；2) 在 package.json 配置 migrate:deploy、migrate:dev；3) CI/启动前可执行 migrate deploy；4) 文档化迁移流程。
-- **测试命令**: `cd watch-together-server && npm run migrate:deploy`
+- **测试命令**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy`
 - **成功标准**:
   1. [ ] prisma/migrations 目录存在且包含迁移文件
   2. [ ] npm run migrate:deploy 能成功执行
@@ -44,7 +44,7 @@
 
 - **ID**: api-db3
 - **描述**: 在 watch-together-server 中提供数据库种子脚本（prisma/seed.ts 或 scripts/seed.js），用于开发/测试环境初始化示例数据。配置 prisma seed 命令，支持 npx prisma db seed。
-- **测试命令**: `cd watch-together-server && npx prisma db seed`
+- **测试命令**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma db seed`
 - **成功标准**:
   1. [ ] prisma/seed.ts 或 scripts/seed.js 存在
   2. [ ] schema.prisma 中配置 generator 的 seed 指向
@@ -59,7 +59,7 @@
 
 - **ID**: api-a1
 - **描述**: 在 watch-together-server 中定义 Prisma 数据模型：Room（id、name、hostId、currentUrl、inviteLink、createdAt）、RoomMember（id、roomId、userId、nickname、isHost、joinedAt）、Message 等，并配置 DATABASE_URL，运行 prisma migrate deploy。
-- **测试命令**: `cd watch-together-server && npx prisma validate && npx prisma migrate deploy`
+- **测试命令**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server sh -c "npx prisma validate && npx prisma migrate deploy"`
 - **成功标准**:
   1. [ ] prisma/schema.prisma 定义 Room、RoomMember、Message 等模型
   2. [ ] 模型字段与前端期望的 roomId、hostId、currentUrl、members 等对应
@@ -73,7 +73,7 @@
 
 - **ID**: api-a2
 - **描述**: 在 watch-together-server 中实现 POST /api/v1/rooms，接收 { name?, hostNickname?, url }，创建 Room 与房主 RoomMember，返回 { success, data: { roomId, hostId, hostUserId, currentUrl, name, inviteLink, members } }，与 create-room.js 期望格式一致。
-- **测试命令**: `cd watch-together-server && npm run test:api:create`
+- **测试命令**: `docker compose up -d && cd watch-together-server && npm run test:api:create`
 - **成功标准**:
   1. [ ] 接口路径为 /api/v1/rooms，方法 POST
   2. [ ] 接收 name、hostNickname、url（url 必填且为合法 http/https）
@@ -87,7 +87,7 @@
 
 - **ID**: api-a3
 - **描述**: 实现 GET /api/v1/rooms/:roomId，根据 roomId 查询房间及成员，返回 { success, data: room }，供 room.js validateRoom 使用。
-- **测试命令**: `cd watch-together-server && npm run test:api:get`
+- **测试命令**: `docker compose up -d && cd watch-together-server && npm run test:api:get`
 - **成功标准**:
   1. [ ] 接口路径为 /api/v1/rooms/:roomId
   2. [ ] 房间存在时返回 200 与 room 数据（含 members、currentUrl、hostId）
@@ -101,7 +101,7 @@
 
 - **ID**: api-a4
 - **描述**: 实现 POST /api/v1/rooms/:roomId/join，接收 { nickname, userId? }，房主首次加入时传入 userId 以关联，新成员由服务端生成 userId。返回 { success, data: { userId, nickname, room, isHost } }。
-- **测试命令**: `cd watch-together-server && npm run test:api:join`
+- **测试命令**: `docker compose up -d && cd watch-together-server && npm run test:api:join`
 - **成功标准**:
   1. [ ] 接口路径为 /api/v1/rooms/:roomId/join
   2. [ ] 房主传入 userId 时正确关联已有房间
@@ -115,7 +115,7 @@
 
 - **ID**: api-a5
 - **描述**: 实现 PUT /api/v1/rooms/:roomId/url，接收 { url, userId }，校验 userId 为房主后更新 room.currentUrl，返回 { success }。
-- **测试命令**: `cd watch-together-server && npm run test:api:url`
+- **测试命令**: `docker compose up -d && cd watch-together-server && npm run test:api:url`
 - **成功标准**:
   1. [ ] 接口路径为 /api/v1/rooms/:roomId/url
   2. [ ] 仅房主可更新，非房主返回 403
@@ -129,7 +129,7 @@
 
 - **ID**: api-a6
 - **描述**: 实现 POST /api/v1/rooms/:roomId/leave，接收 { userId }，从 RoomMember 中移除该成员或标记离开，返回 { success }。
-- **测试命令**: `cd watch-together-server && npm run test:api:leave`
+- **测试命令**: `docker compose up -d && cd watch-together-server && npm run test:api:leave`
 - **成功标准**:
   1. [ ] 接口路径为 /api/v1/rooms/:roomId/leave
   2. [ ] 能从房间成员列表中移除或标记该用户
@@ -143,7 +143,7 @@
 
 - **ID**: api-a7
 - **描述**: 汇总 api-a1～api-a6，使 watch-together-server 提供完整 REST 房间接口。前端 create-room、room 等页面可正常调用 localhost:3000，创建房间、加入房间、获取房间、更新 URL、离开房间流程可端到端跑通。
-- **测试命令**: `cd watch-together-server && npm run test:api`
+- **测试命令**: `docker compose up -d && cd watch-together-server && npm run test:api`
 - **成功标准**:
   1. [ ] POST /api/v1/rooms 创建房间成功
   2. [ ] GET /api/v1/rooms/:roomId 获取房间成功

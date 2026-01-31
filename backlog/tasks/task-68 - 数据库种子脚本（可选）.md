@@ -1,9 +1,9 @@
 ---
-id: TASK-44
+id: TASK-68
 title: 数据库种子脚本（可选）
 status: To Do
 assignee: []
-created_date: '2026-01-31 05:39'
+created_date: '2026-01-31 10:13'
 labels: []
 dependencies: []
 ---
@@ -13,9 +13,9 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 在 watch-together-server 中提供数据库种子脚本（prisma/seed.ts 或 scripts/seed.js），用于开发/测试环境初始化示例数据。配置 prisma seed 命令，支持 npx prisma db seed。
 
-**Test Command**: `cd watch-together-server && npx prisma db seed`
+**Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma db seed`
 
-**Test Command**: `cd watch-together-server && npx prisma db seed`
+**Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma db seed`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

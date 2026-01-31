@@ -1,9 +1,9 @@
 ---
-id: TASK-49
+id: TASK-73
 title: 'PUT /api/v1/rooms/:roomId/url 更新房间 URL 接口'
 status: To Do
 assignee: []
-created_date: '2026-01-31 05:41'
+created_date: '2026-01-31 10:14'
 labels: []
 dependencies: []
 ---
@@ -13,9 +13,9 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 实现 PUT /api/v1/rooms/:roomId/url，接收 { url, userId }，校验 userId 为房主后更新 room.currentUrl，返回 { success }。
 
-**Test Command**: `cd watch-together-server && npm run test:api:url`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:url`
 
-**Test Command**: `cd watch-together-server && npm run test:api:url`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:url`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

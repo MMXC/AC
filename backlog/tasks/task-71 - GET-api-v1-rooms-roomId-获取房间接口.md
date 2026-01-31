@@ -1,9 +1,9 @@
 ---
-id: TASK-47
+id: TASK-71
 title: 'GET /api/v1/rooms/:roomId 获取房间接口'
 status: To Do
 assignee: []
-created_date: '2026-01-31 05:40'
+created_date: '2026-01-31 10:14'
 labels: []
 dependencies: []
 ---
@@ -13,9 +13,9 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 实现 GET /api/v1/rooms/:roomId，根据 roomId 查询房间及成员，返回 { success, data: room }，供 room.js validateRoom 使用。
 
-**Test Command**: `cd watch-together-server && npm run test:api:get`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:get`
 
-**Test Command**: `cd watch-together-server && npm run test:api:get`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:get`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

@@ -49,6 +49,7 @@ license: MIT
 - 每个子任务必须有明确的测试命令
 - 测试结果应该是二元的（通过/失败）
 - 测试应该可以自动化执行
+- **测试命令必须是自包含的**：包含所有必要的前置条件（如启动服务、设置环境变量）
 
 ## 输出格式
 
@@ -82,3 +83,40 @@ license: MIT
 2. **明确测试标准**：每个任务必须有可执行的测试命令
 3. **避免依赖**：尽量创建可并行执行的任务
 4. **粒度适中**：任务既不能太大（难以测试），也不能太小（过度拆分）
+5. **自包含测试命令**：测试命令应包含所有前置条件，避免依赖外部环境配置
+
+## 测试命令规范
+
+### 数据库相关任务
+
+对于需要数据库的任务，测试命令应：
+- 使用 `docker compose exec` 在容器内执行（容器已有完整环境变量）
+- 或使用 `docker compose up -d` 确保服务启动
+
+**示例**：
+```bash
+# ❌ 错误：依赖外部 DATABASE_URL
+cd watch-together-server && npx prisma db seed
+
+# ✅ 正确：在容器内执行（有环境变量）
+docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma db seed
+
+# ✅ 正确：内联环境变量
+DATABASE_URL=postgresql://user:pass@localhost:5432/db npx prisma db seed
+```
+
+### API 测试任务
+
+对于需要后端服务的任务：
+```bash
+# ✅ 确保服务启动后再测试
+docker compose up -d && cd watch-together-server && npm run test:api
+```
+
+### 前端 E2E 测试
+
+对于浏览器测试，使用技能占位符：
+```bash
+# ✅ 使用 ${TASK_ID} 占位符（运行时替换）
+skill:watch-together-webapp-testing ${TASK_ID}
+```

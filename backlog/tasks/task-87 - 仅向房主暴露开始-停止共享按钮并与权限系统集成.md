@@ -1,9 +1,9 @@
 ---
-id: TASK-63
+id: TASK-87
 title: 仅向房主暴露开始/停止共享按钮并与权限系统集成
 status: To Do
 assignee: []
-created_date: '2026-01-31 05:45'
+created_date: '2026-01-31 10:18'
 labels: []
 dependencies: []
 ---

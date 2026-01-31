@@ -1,9 +1,9 @@
 ---
-id: TASK-50
+id: TASK-74
 title: 'POST /api/v1/rooms/:roomId/leave 离开房间接口'
 status: To Do
 assignee: []
-created_date: '2026-01-31 05:41'
+created_date: '2026-01-31 10:15'
 labels: []
 dependencies: []
 ---
@@ -13,9 +13,9 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 实现 POST /api/v1/rooms/:roomId/leave，接收 { userId }，从 RoomMember 中移除该成员或标记离开，返回 { success }。
 
-**Test Command**: `cd watch-together-server && npm run test:api:leave`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:leave`
 
-**Test Command**: `cd watch-together-server && npm run test:api:leave`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:leave`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

@@ -1,9 +1,9 @@
 ---
-id: TASK-64
+id: TASK-88
 title: 成员端播放器 UI 集成与状态展示
 status: To Do
 assignee: []
-created_date: '2026-01-31 05:45'
+created_date: '2026-01-31 10:19'
 labels: []
 dependencies: []
 ---

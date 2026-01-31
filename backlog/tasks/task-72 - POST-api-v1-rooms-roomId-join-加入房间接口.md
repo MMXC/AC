@@ -1,9 +1,9 @@
 ---
-id: TASK-48
+id: TASK-72
 title: 'POST /api/v1/rooms/:roomId/join 加入房间接口'
 status: To Do
 assignee: []
-created_date: '2026-01-31 05:40'
+created_date: '2026-01-31 10:14'
 labels: []
 dependencies: []
 ---
@@ -13,9 +13,9 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 实现 POST /api/v1/rooms/:roomId/join，接收 { nickname, userId? }，房主首次加入时传入 userId 以关联，新成员由服务端生成 userId。返回 { success, data: { userId, nickname, room, isHost } }。
 
-**Test Command**: `cd watch-together-server && npm run test:api:join`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:join`
 
-**Test Command**: `cd watch-together-server && npm run test:api:join`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:join`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
