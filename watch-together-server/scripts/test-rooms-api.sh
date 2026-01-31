@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 房间 REST API 自动化测试（需 docker compose up 后 localhost:3000 可用）
 # 用法: ./scripts/test-rooms-api.sh [create|get|join|url|leave|all]
-set -euo pipefail
+set -eu
+[ -n "${BASH_VERSION:-}" ] && set -o pipefail
 BASE="${API_BASE:-http://localhost:3000}"
 MODE="${1:-all}"
 

@@ -24,6 +24,100 @@ function isValidHttpUrl(urlString) {
     }
 }
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const crypto = require('crypto');
+
+function buildRoomPayload(room, members) {
+    const memberList = (members || []).map((m) => ({
+        id: m.id,
+        userId: m.userId,
+        nickname: m.nickname,
+    }));
+    return {
+        roomId: room.id,
+        name: room.name,
+        members: memberList,
+    };
+}
+
+app.post('/api/v1/rooms/:roomId/join', async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+        const { nickname, userId: bodyUserId } = req.body || {};
+        if (!roomId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'roomId is required' },
+            });
+        }
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+            include: { members: true },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Room not found' },
+            });
+        }
+        const hostUserId = room.id + '-host';
+        if (bodyUserId != null && bodyUserId !== '') {
+            const existing = await prisma.roomMember.findUnique({
+                where: {
+                    roomId_userId: { roomId, userId: String(bodyUserId) },
+                },
+            });
+            if (!existing) {
+                return res.status(404).json({
+                    success: false,
+                    error: { code: 'NOT_FOUND', message: 'Member not found in this room' },
+                });
+            }
+            const isHost = existing.userId === hostUserId;
+            const members = await prisma.roomMember.findMany({
+                where: { roomId },
+                orderBy: { joinedAt: 'asc' },
+            });
+            return res.status(200).json({
+                success: true,
+                data: {
+                    userId: existing.userId,
+                    nickname: existing.nickname ?? nickname ?? null,
+                    room: buildRoomPayload(room, members),
+                    isHost,
+                },
+            });
+        }
+        const newUserId = crypto.randomUUID();
+        const nick = (nickname != null && String(nickname).trim()) ? String(nickname).trim() : null;
+        await prisma.roomMember.create({
+            data: {
+                roomId,
+                userId: newUserId,
+                nickname: nick,
+            },
+        });
+        const members = await prisma.roomMember.findMany({
+            where: { roomId },
+            orderBy: { joinedAt: 'asc' },
+        });
+        return res.status(200).json({
+            success: true,
+            data: {
+                userId: newUserId,
+                nickname: nick,
+                room: buildRoomPayload(room, members),
+                isHost: false,
+            },
+        });
+    } catch (err) {
+        console.error('POST /api/v1/rooms/:roomId/join error:', err);
+        return res.status(500).json({
+            success: false,
+            error: { code: 'INTERNAL_ERROR', message: err.message || 'Internal server error' },
+        });
+    }
+});
+
 app.post('/api/v1/rooms', async (req, res) => {
     try {
         const { name, hostNickname, url } = req.body || {};

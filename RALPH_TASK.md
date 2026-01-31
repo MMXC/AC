@@ -1,20 +1,20 @@
 ---
-backlog_id: backlog-94
-task: POST /api/v1/rooms 创建房间接口
-test_command: "docker compose up -d && cd watch-together-server && npm run test:api:create"
+backlog_id: backlog-96
+task: POST /api/v1/rooms/:roomId/join 加入房间接口
+test_command: "docker compose up -d && cd watch-together-server && npm run test:api:join"
 ---
 
-# Task: POST /api/v1/rooms 创建房间接口
+# Task: POST /api/v1/rooms/:roomId/join 加入房间接口
 
 ## Description
 
-在 watch-together-server 中实现 POST /api/v1/rooms，接收 { name?, hostNickname?, url }，创建 Room 与房主 RoomMember，返回 { success, data: { roomId, hostId, hostUserId, currentUrl, name, inviteLink, members } }，与 create-room.js 期望格式一致。
+实现 POST /api/v1/rooms/:roomId/join，接收 { nickname, userId? }，房主首次加入时传入 userId 以关联，新成员由服务端生成 userId。返回 { success, data: { userId, nickname, room, isHost } }。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`（脚本会先轮询 /health 等待 API 就绪。）
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:join`（脚本会先轮询 /health 等待 API 就绪。）
 
 ## Success Criteria
 
-- [x] #1 接口路径为 /api/v1/rooms，方法 POST
-- [x] #2 接收 name、hostNickname、url（url 必填且为合法 http/https）
-- [x] #3 返回 201 与 JSON，含 success、data.roomId、data.hostUserId、data.currentUrl 等
-- [x] #4 数据库正确插入 Room 和 RoomMember 记录
+- [x] #1 接口路径为 /api/v1/rooms/:roomId/join
+- [x] #2 房主传入 userId 时正确关联已有房间
+- [x] #3 新成员不传 userId 时服务端生成并返回
+- [x] #4 返回的 room 含最新 members 列表

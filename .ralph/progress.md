@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 2
-- Current status: Task Complete - POST /api/v1/rooms 创建房间接口
+- Iterations completed: 3
+- Current status: Task Complete - POST /api/v1/rooms/:roomId/join 加入房间接口
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session 1 completed** - POST /api/v1/rooms/:roomId/join 加入房间接口
+- 在 watch-together-server/dist/app.js 中实现 POST /api/v1/rooms/:roomId/join：接收 { nickname, userId? }；房主传入 userId 时通过 roomId_userId 查找已有成员并返回 { success, data: { userId, nickname, room, isHost } }；新成员不传 userId 时用 crypto.randomUUID() 生成 userId 并创建 RoomMember，返回 isHost: false；返回的 room 含 roomId、name、members（最新列表）
+- 修复 test-rooms-api.sh 中 set -euo pipefail 在非 bash 下的兼容（改为 set -eu 与条件 set -o pipefail）
+- 测试命令通过：docker compose up -d && cd watch-together-server && npm run test:api:join
+- RALPH_TASK 四项成功标准已全部勾选
 
 ### 2026-01-31 [Ralph Iteration 2]
 **Session 2 completed** - POST /api/v1/rooms 创建房间接口
@@ -140,3 +147,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-01-31 19:54:54
 **Session 2 started** (model: auto)
+
+### 2026-02-01 01:20:01
+**Session 1 started** (model: auto)
