@@ -1,5 +1,5 @@
 ---
-backlog_id: backlog-42
+backlog_id: backlog-66
 task: PostgreSQL 容器与初始化脚本
 test_command: "docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether"
 ---
@@ -16,7 +16,7 @@ test_command: "docker compose up -d postgres && docker compose exec postgres pg_
 
 ## Success Criteria
 
-- [x] #1 docker compose up postgres 能成功启动
-- [x] #2 健康检查通过，pg_isready 返回 0
-- [x] #3 可通过 DATABASE_URL=postgresql://watchtogether:watchtogether123@localhost:5432/watchtogether 连接
-- [x] #4 重启容器后数据持久化（volumes 配置正确）
+- [ ] #1 docker compose up postgres 能成功启动
+- [ ] #2 健康检查通过，pg_isready 返回 0
+- [ ] #3 可通过 DATABASE_URL=postgresql://watchtogether:watchtogether123@localhost:5432/watchtogether 连接
+- [ ] #4 重启容器后数据持久化（volumes 配置正确）
