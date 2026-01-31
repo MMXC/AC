@@ -14,7 +14,7 @@ test_command: "docker compose up -d && cd watch-together-server && npm run test:
 
 ## Success Criteria
 
-- [ ] #1 POST /api/v1/rooms 创建房间成功
-- [ ] #2 GET /api/v1/rooms/:roomId 获取房间成功
-- [ ] #3 POST join、PUT url、POST leave 均能正常执行
-- [ ] #4 前端创建房间后能跳转到 /room/:roomId 并加载房间内容
+- [x] #1 POST /api/v1/rooms 创建房间成功
+- [x] #2 GET /api/v1/rooms/:roomId 获取房间成功
+- [x] #3 POST join、PUT url、POST leave 均能正常执行
+- [x] #4 前端创建房间后能跳转到 /room/:roomId 并加载房间内容

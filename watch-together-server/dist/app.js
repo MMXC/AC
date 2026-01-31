@@ -35,9 +35,42 @@ function buildRoomPayload(room, members) {
     return {
         roomId: room.id,
         name: room.name,
+        currentUrl: room.currentUrl ?? null,
         members: memberList,
     };
 }
+
+app.get('/api/v1/rooms/:roomId', async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+        if (!roomId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'roomId is required' },
+            });
+        }
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+            include: { members: { orderBy: { joinedAt: 'asc' } } },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Room not found' },
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            data: buildRoomPayload(room, room.members),
+        });
+    } catch (err) {
+        console.error('GET /api/v1/rooms/:roomId error:', err);
+        return res.status(500).json({
+            success: false,
+            error: { code: 'INTERNAL_ERROR', message: err.message || 'Internal server error' },
+        });
+    }
+});
 
 app.post('/api/v1/rooms/:roomId/join', async (req, res) => {
     try {
@@ -134,6 +167,7 @@ app.post('/api/v1/rooms', async (req, res) => {
             data: {
                 name: roomName,
                 hostNickname: hostNick,
+                currentUrl,
             },
         });
         const hostMember = await prisma.roomMember.create({
@@ -168,4 +202,115 @@ app.post('/api/v1/rooms', async (req, res) => {
         });
     }
 });
+
+app.put('/api/v1/rooms/:roomId/url', async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+        const { url, userId } = req.body || {};
+        if (!roomId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'roomId is required' },
+            });
+        }
+        if (!url || typeof url !== 'string' || !url.trim() || !isValidHttpUrl(url.trim())) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'INVALID_URL', message: 'url is required and must be a valid http or https URL' },
+            });
+        }
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'userId is required' },
+            });
+        }
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+            include: { members: true },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Room not found' },
+            });
+        }
+        const member = await prisma.roomMember.findUnique({
+            where: { roomId_userId: { roomId, userId: String(userId) } },
+        });
+        if (!member) {
+            return res.status(403).json({
+                success: false,
+                error: { code: 'FORBIDDEN', message: 'User is not a member of this room' },
+            });
+        }
+        await prisma.room.update({
+            where: { id: roomId },
+            data: { currentUrl: url.trim() },
+        });
+        const updated = await prisma.room.findUnique({
+            where: { id: roomId },
+            include: { members: { orderBy: { joinedAt: 'asc' } } },
+        });
+        return res.status(200).json({
+            success: true,
+            data: buildRoomPayload(updated, updated.members),
+        });
+    } catch (err) {
+        console.error('PUT /api/v1/rooms/:roomId/url error:', err);
+        return res.status(500).json({
+            success: false,
+            error: { code: 'INTERNAL_ERROR', message: err.message || 'Internal server error' },
+        });
+    }
+});
+
+app.post('/api/v1/rooms/:roomId/leave', async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+        const { userId } = req.body || {};
+        if (!roomId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'roomId is required' },
+            });
+        }
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'userId is required' },
+            });
+        }
+        const room = await prisma.room.findUnique({ where: { id: roomId } });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Room not found' },
+            });
+        }
+        const member = await prisma.roomMember.findUnique({
+            where: { roomId_userId: { roomId, userId: String(userId) } },
+        });
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Member not found in this room' },
+            });
+        }
+        await prisma.roomMember.delete({
+            where: { roomId_userId: { roomId, userId: String(userId) } },
+        });
+        return res.status(200).json({
+            success: true,
+            data: { left: true },
+        });
+    } catch (err) {
+        console.error('POST /api/v1/rooms/:roomId/leave error:', err);
+        return res.status(500).json({
+            success: false,
+            error: { code: 'INTERNAL_ERROR', message: err.message || 'Internal server error' },
+        });
+    }
+});
+
 exports.default = app;

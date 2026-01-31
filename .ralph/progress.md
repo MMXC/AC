@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 3
-- Current status: Task Complete - POST /api/v1/rooms/:roomId/join 加入房间接口
+- Iterations completed: 4
+- Current status: Task Complete - watch-together-server 后端接口汇总（E2E）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session 2 completed** - watch-together-server 后端接口汇总（E2E）
+- Room 模型增加 currentUrl 字段，新增迁移 20260201000000_add_room_current_url
+- 实现 GET /api/v1/rooms/:roomId、PUT /api/v1/rooms/:roomId/url、POST /api/v1/rooms/:roomId/leave
+- POST /api/v1/rooms 创建房间时持久化 currentUrl；buildRoomPayload 返回 currentUrl
+- 测试命令通过：docker compose up -d && cd watch-together-server && npm run test:api（create/get/join/url/leave 全部 OK）
+- RALPH_TASK 四项成功标准已全部勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session 1 completed** - POST /api/v1/rooms/:roomId/join 加入房间接口
@@ -149,4 +157,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 2 started** (model: auto)
 
 ### 2026-02-01 01:20:01
+**Session 1 started** (model: auto)
+
+### 2026-02-01 01:37:28
 **Session 1 started** (model: auto)
