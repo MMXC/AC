@@ -1,20 +1,20 @@
 ---
-backlog_id: backlog-96
-task: POST /api/v1/rooms/:roomId/join 加入房间接口
-test_command: "docker compose up -d && cd watch-together-server && npm run test:api:join"
+backlog_id: backlog-98
+task: POST /api/v1/rooms/:roomId/leave 离开房间接口
+test_command: "docker compose up -d && cd watch-together-server && npm run test:api:leave"
 ---
 
-# Task: POST /api/v1/rooms/:roomId/join 加入房间接口
+# Task: POST /api/v1/rooms/:roomId/leave 离开房间接口
 
 ## Description
 
-实现 POST /api/v1/rooms/:roomId/join，接收 { nickname, userId? }，房主首次加入时传入 userId 以关联，新成员由服务端生成 userId。返回 { success, data: { userId, nickname, room, isHost } }。
+实现 POST /api/v1/rooms/:roomId/leave，接收 { userId }，从 RoomMember 中移除该成员或标记离开，返回 { success }。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:join`（脚本会先轮询 /health 等待 API 就绪。）
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:leave`（脚本会先轮询 /health 等待 API 就绪。）
 
 ## Success Criteria
 
-- [x] #1 接口路径为 /api/v1/rooms/:roomId/join
-- [x] #2 房主传入 userId 时正确关联已有房间
-- [x] #3 新成员不传 userId 时服务端生成并返回
-- [x] #4 返回的 room 含最新 members 列表
+- [ ] #1 接口路径为 /api/v1/rooms/:roomId/leave
+- [ ] #2 能从房间成员列表中移除或标记该用户
+- [ ] #3 返回 200 与 success
+- [ ] #4 房间无成员时可选择保留或清理房间
