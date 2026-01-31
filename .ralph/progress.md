@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 7
-- Current status: Task Complete - 服务器端实现 WebRTC 信令转发（透明路由）backlog-103
+- Iterations completed: 8
+- Current status: Task Complete - 房主端实现 offer 创建与 WEBRTC_OFFER 发送（backlog-105）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 房主端实现 offer 创建与 WEBRTC_OFFER 发送（backlog-105）
+- 验证 watch-together/js/screen-streaming.js 与 webrtc-signaling.js 已实现完整流程：房主点击「开始共享」→ getDisplayMedia 获取 MediaStream → startWebRTCPeerConnectionAsHost → 为每个成员 addPeerConnectionForMember（创建 RTCPeerConnection、addTrack、createOffer、createOfferMessage 含 roomId/fromUserId/toUserId/sdp）→ WebSocket 发送 WEBRTC_OFFER
+- 四项成功标准均已满足：#1 getDisplayMedia 流获取；#2 RTCPeerConnection + addTrack；#3 createOffer 后发送格式正确的 WEBRTC_OFFER；#4 消息含 toUserId 和 sdp
+- 运行 watch-together 单元测试：webrtc-signaling + screen-streaming 共 73 个用例通过
+- RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 服务器端实现 WebRTC 信令转发（backlog-103）
@@ -206,4 +213,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 02:45:27
+**Session 1 started** (model: auto)
+
+### 2026-02-01 02:57:43
 **Session 1 started** (model: auto)

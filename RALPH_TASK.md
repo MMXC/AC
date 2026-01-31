@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 点击开始共享后能成功获取 getDisplayMedia 流
-- [ ] #2 能正确创建 RTCPeerConnection 并将流轨道添加进去
-- [ ] #3 createOffer 成功后能通过 WebSocket 发送格式正确的 WEBRTC_OFFER
-- [ ] #4 WEBRTC_OFFER 包含 toUserId 和 sdp 字段
+- [x] #1 点击开始共享后能成功获取 getDisplayMedia 流
+- [x] #2 能正确创建 RTCPeerConnection 并将流轨道添加进去
+- [x] #3 createOffer 成功后能通过 WebSocket 发送格式正确的 WEBRTC_OFFER
+- [x] #4 WEBRTC_OFFER 包含 toUserId 和 sdp 字段
