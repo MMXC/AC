@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 9
-- Current status: Task Complete - 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate（backlog-107）
+- Iterations completed: 10
+- Current status: Task Complete - 成员端实现 ontrack 回调并将远端 MediaStream 传给 VideoPlayer（backlog-108）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 成员端实现 ontrack 回调并将远端 MediaStream 传给 VideoPlayer（backlog-108）
+- 成员端 handleWebRTCOffer 中已有 pc.ontrack：从 event.streams[0] 获取远端流，无时用 new MediaStream([event.track]) 兜底（#1）
+- 收到远端流后调用 VideoPlayer.attachStream(stream)，成员端 <video> 实时播放房主共享画面（#2 #3）
+- 房主停止共享时 stopWebRTCPeerConnection 内调用 VideoPlayer.detachStream()，成员端分支再调用 updateVideoPlaceholder('画面流已停止','房主已停止共享') 更新 UI（#4）
+- 运行 watch-together 单元测试：webrtc-signaling + screen-streaming 共 73 个用例通过；RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate（backlog-107）
@@ -229,4 +236,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 03:07:43
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:14:12
 **Session 1 started** (model: auto)

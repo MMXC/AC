@@ -744,6 +744,10 @@ function stopWebRTCPeerConnection(notifyPeer) {
         if (typeof window !== 'undefined' && window.VideoPlayer && typeof window.VideoPlayer.detachStream === 'function') {
             window.VideoPlayer.detachStream();
         }
+        // 成员端：房主停止共享时正确 detachStream 并更新 UI 为「房主已停止共享」（#4）
+        if (typeof window !== 'undefined' && !window.isHost && typeof updateVideoPlaceholder === 'function') {
+            updateVideoPlaceholder('画面流已停止', '房主已停止共享');
+        }
     }
 
     webrtcState.peerConnection = null;
@@ -1008,11 +1012,11 @@ async function handleWebRTCOffer(message) {
 
     pc.ontrack = (event) => {
         console.log('成员端收到 WebRTC 远端 track');
-        // WebRTC 会自动将接收到的 tracks 添加到 event.streams[0]
-        const remoteStream = event.streams[0];
+        // 正确获取 event.streams[0]；若无则用 event.track 构造 MediaStream（#1）
+        const remoteStream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
         webrtcState.remoteStream = remoteStream;
 
-        // 优先使用 VideoPlayer 组件接收远端流并播放（满足成功标准 #4）
+        // 调用 VideoPlayer.attachStream(stream) 将远端流传入，成员端 <video> 实时播放房主共享画面（#2 #3）
         if (typeof window !== 'undefined' && window.VideoPlayer && typeof window.VideoPlayer.attachStream === 'function') {
             window.VideoPlayer.attachStream(remoteStream);
         } else if (videoElement) {

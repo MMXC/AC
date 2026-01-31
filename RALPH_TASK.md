@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 ontrack 回调能正确触发并获取 event.streams[0]
-- [ ] #2 能调用 VideoPlayer.attachStream(stream) 将远端流传入
-- [ ] #3 成员端 <video> 能实时播放房主共享画面
-- [ ] #4 房主停止共享时，成员端能正确 detachStream 并更新 UI
+- [x] #1 ontrack 回调能正确触发并获取 event.streams[0]
+- [x] #2 能调用 VideoPlayer.attachStream(stream) 将远端流传入
+- [x] #3 成员端 <video> 能实时播放房主共享画面
+- [x] #4 房主停止共享时，成员端能正确 detachStream 并更新 UI
