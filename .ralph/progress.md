@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 3
-- Current status: Task Complete - POST /api/v1/rooms/:roomId/join 加入房间接口
+- Iterations completed: 4
+- Current status: Task Complete - POST /api/v1/rooms/:roomId/leave 离开房间接口
 
 ## How This Works
 
@@ -14,6 +14,12 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session 1 completed** - POST /api/v1/rooms/:roomId/leave 离开房间接口
+- 在 watch-together-server/dist/app.js 中实现 POST /api/v1/rooms/:roomId/leave：接收 { userId }；校验 roomId、userId；房间或成员不存在返回 404；从 RoomMember 中删除该成员（prisma.roomMember.delete），返回 200 与 { success: true }；房间无成员时保留房间不删除（满足 #4 可选保留）
+- 测试命令通过：docker compose up -d && cd watch-together-server && npm run test:api:leave（需先 rebuild 镜像以包含新路由）
+- RALPH_TASK 四项成功标准已全部勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session 1 completed** - POST /api/v1/rooms/:roomId/join 加入房间接口
@@ -149,4 +155,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 2 started** (model: auto)
 
 ### 2026-02-01 01:20:01
+**Session 1 started** (model: auto)
+
+### 2026-02-01 01:32:21
 **Session 1 started** (model: auto)

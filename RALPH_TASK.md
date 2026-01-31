@@ -14,7 +14,7 @@ test_command: "docker compose up -d && cd watch-together-server && npm run test:
 
 ## Success Criteria
 
-- [ ] #1 接口路径为 /api/v1/rooms/:roomId/leave
-- [ ] #2 能从房间成员列表中移除或标记该用户
-- [ ] #3 返回 200 与 success
-- [ ] #4 房间无成员时可选择保留或清理房间
+- [x] #1 接口路径为 /api/v1/rooms/:roomId/leave
+- [x] #2 能从房间成员列表中移除或标记该用户
+- [x] #3 返回 200 与 success
+- [x] #4 房间无成员时可选择保留或清理房间
