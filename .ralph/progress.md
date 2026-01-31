@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 1
-- Current status: Task Complete - PostgreSQL 容器与初始化脚本
+- Current status: Task Complete - Prisma 迁移脚本与 deploy 流程
 
 ## How This Works
 
@@ -14,6 +14,16 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-01-31 [current time]
+**Session 1 completed** - Prisma 迁移脚本与 deploy 流程
+- 创建 `watch-together-server/prisma/schema.prisma`（Room、RoomMember、Message、RoomEvent 模型）
+- 创建 `prisma/migrations/20260131000000_init/migration.sql` 初始迁移（用 `prisma migrate diff` 生成）
+- package.json 已有 `migrate:deploy`、`migrate:dev`，改为 `npx prisma` 并保留；将 prisma 加入 dependencies 以便镜像内执行 deploy
+- Dockerfile：安装 openssl（Prisma 引擎需要）、COPY prisma/ 以便容器内运行 migrate:deploy
+- 测试命令通过：`docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy`
+- 新增 `watch-together-server/docs/migrations.md` 说明迁移流程（migrate:dev / migrate:deploy、CI/启动前执行方式）
+- RALPH_TASK 四项成功标准已全部勾选
 
 ### 2026-01-28 [current time]
 **Session 1 completed** - 优化创建房间页面设计（字体与视觉风格）
@@ -104,3 +114,6 @@ This is how Ralph maintains continuity across iterations.
 - 验证 DATABASE_URL 连接：`docker compose exec postgres psql -U watchtogether -d watchtogether -t -c "SELECT 1"` 返回成功
 - volumes 配置正确（postgres_data:/var/lib/postgresql/data），重启后数据持久化
 - RALPH_TASK 四项成功标准已全部勾选
+
+### 2026-01-31 18:31:24
+**Session 1 started** (model: auto)
