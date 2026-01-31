@@ -1,9 +1,10 @@
 ---
 id: TASK-68
 title: 数据库种子脚本（可选）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 10:13'
+updated_date: '2026-01-31 10:39'
 labels: []
 dependencies: []
 ---

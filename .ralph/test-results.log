@@ -222,3 +222,31 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-01-31 18:38:36
+Command: docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npm run migrate:deploy
+═══════════════════════════════════════════════════════════════════
+time="2026-01-31T18:38:37+08:00" level=warning msg="Found orphan containers ([watch-together-api]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container watch-together-redis  Running
+ Container watch-together-postgres  Running
+ Container watch-together-server  Running
+ Container watch-together-redis  Waiting
+ Container watch-together-postgres  Waiting
+ Container watch-together-postgres  Healthy
+ Container watch-together-redis  Healthy
+
+> watch-together-server@0.1.0 migrate:deploy
+> npx prisma migrate deploy
+
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "watchtogether", schema "public" at "postgres:5432"
+
+1 migration found in prisma/migrations
+
+
+No pending migrations to apply.
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
