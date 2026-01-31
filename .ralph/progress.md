@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 6
-- Current status: Task Complete - 设计 WebRTC 信令消息协议（基于现有 WebSocket）
+- Iterations completed: 7
+- Current status: Task Complete - 服务器端实现 WebRTC 信令转发（透明路由）backlog-103
 
 ## How This Works
 
@@ -14,6 +14,15 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 服务器端实现 WebRTC 信令转发（backlog-103）
+- 在 watch-together-server 中增加 WebSocket：使用 http.createServer(app) + WebSocketServer 挂载到同一端口 3000，与 docker-compose 中 WS_BASE_URL=ws://localhost:3000 一致
+- 维护 wsByRoomUser（roomId:userId -> ws）与 wsConnections（房间内连接集合）；连接时从 URL 查询参数取 roomId、userId
+- 识别 WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR，按 message.roomId 与 message.toUserId 点对点转发；toUserId 为 null 时向房间内其他连接广播；整条消息原样 JSON 转发，不解析或修改 SDP/ICE
+- 目标用户不在线时 sendToUser 内 console.warn，不抛错不崩溃
+- 仅 WebRTC 信令类型进入转发分支，其他消息类型不处理，信令与聊天/操作同步流分离
+- package.json 增加 ws 依赖；dist/server.js 实现完整；npm run test:api 通过；RALPH_TASK 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session 1 completed** - 设计 WebRTC 信令消息协议（backlog-102）
@@ -194,4 +203,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 2 started** (model: auto)
 
 ### 2026-02-01 02:39:15
+**Session 1 started** (model: auto)
+
+### 2026-02-01 02:45:27
 **Session 1 started** (model: auto)

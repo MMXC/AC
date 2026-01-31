@@ -16,7 +16,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 服务器能识别并转发 WebRTC 信令到正确的目标连接
-- [ ] #2 不对 SDP/ICE 做任何修改，仅透明转发
-- [ ] #3 目标用户不在线时，有合理警告日志而不会崩溃
-- [ ] #4 WebRTC 信令不会干扰现有聊天/操作同步消息流
+- [x] #1 服务器能识别并转发 WebRTC 信令到正确的目标连接
+- [x] #2 不对 SDP/ICE 做任何修改，仅透明转发
+- [x] #3 目标用户不在线时，有合理警告日志而不会崩溃
+- [x] #4 WebRTC 信令不会干扰现有聊天/操作同步消息流
