@@ -59,7 +59,7 @@
 
 - **ID**: api-a1
 - **描述**: 在 watch-together-server 中定义 Prisma 数据模型：Room（id、name、hostId、currentUrl、inviteLink、createdAt）、RoomMember（id、roomId、userId、nickname、isHost、joinedAt）、Message 等，并配置 DATABASE_URL，运行 prisma migrate deploy。
-- **测试命令**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server sh -c "npx prisma validate && npx prisma migrate deploy"`
+- **测试命令**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma validate && docker compose exec watch-together-server npx prisma migrate deploy`
 - **成功标准**:
   1. [ ] prisma/schema.prisma 定义 Room、RoomMember、Message 等模型
   2. [ ] 模型字段与前端期望的 roomId、hostId、currentUrl、members 等对应
