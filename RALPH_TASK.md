@@ -1,5 +1,5 @@
 ---
-backlog_id: backlog-42
+backlog_id: backlog-66
 task: PostgreSQL 容器与初始化脚本
 test_command: "docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether"
 ---
