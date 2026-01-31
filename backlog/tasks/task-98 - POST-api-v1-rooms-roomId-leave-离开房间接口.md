@@ -13,9 +13,7 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 实现 POST /api/v1/rooms/:roomId/leave，接收 { userId }，从 RoomMember 中移除该成员或标记离开，返回 { success }。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:leave`
-
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:leave`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:leave`（脚本会先轮询 /health 等待 API 就绪。）
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

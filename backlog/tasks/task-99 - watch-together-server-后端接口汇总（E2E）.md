@@ -13,9 +13,7 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 汇总 api-a1～api-a6，使 watch-together-server 提供完整 REST 房间接口。前端 create-room、room 等页面可正常调用 localhost:3000，创建房间、加入房间、获取房间、更新 URL、离开房间流程可端到端跑通。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api`
-
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api`（脚本会先轮询 /health 等待 API 就绪。）
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

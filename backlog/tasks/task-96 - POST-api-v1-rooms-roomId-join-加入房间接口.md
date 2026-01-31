@@ -13,9 +13,7 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 实现 POST /api/v1/rooms/:roomId/join，接收 { nickname, userId? }，房主首次加入时传入 userId 以关联，新成员由服务端生成 userId。返回 { success, data: { userId, nickname, room, isHost } }。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:join`
-
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:join`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:join`（脚本会先轮询 /health 等待 API 就绪。）
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
