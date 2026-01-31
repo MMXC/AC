@@ -1,10 +1,10 @@
 ---
 id: TASK-112
 title: 成员端播放器 UI 集成与状态展示
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-31 11:19'
-updated_date: '2026-01-31 19:37'
+updated_date: '2026-01-31 19:43'
 labels: []
 dependencies: []
 ---

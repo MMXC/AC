@@ -290,6 +290,20 @@
             line-height: 1.6;
         }
 
+        .video-status {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 14px;
+            background: rgba(0, 0, 0, 0.65);
+            color: #aaa;
+            font-size: 0.85em;
+            border-radius: 6px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
         .url-control-container {
             position: absolute;
             top: 20px;
@@ -494,6 +508,7 @@
                 </div>
                 <iframe id="browserFrame" style="display: none;"></iframe>
                 <div class="video-container" id="videoContainer">
+                    <div class="video-status" id="videoStatusLabel" style="display: none;">正在播放房主画面</div>
                     <video id="videoStream" style="display: none;"></video>
                     <canvas id="canvasStream" style="display: none;"></canvas>
                     <div class="video-placeholder" id="videoPlaceholder">

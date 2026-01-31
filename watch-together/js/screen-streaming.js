@@ -62,6 +62,7 @@ function initScreenStreaming() {
         window.addEventListener('userJoinedRoom', handleUserJoinedRoom);
         window.addEventListener('memberJoinedRoom', handleMemberJoinedRoom);
         window.addEventListener('memberLeftRoom', handleMemberLeftRoom);
+        window.addEventListener('videoPlayerStreamEnded', handleVideoPlayerStreamEnded);
     }
     
     // 监听 WebSocket 连接事件（从 chat.js）
@@ -69,6 +70,27 @@ function initScreenStreaming() {
         window.addEventListener('websocketConnected', handleWebSocketConnected);
         window.addEventListener('websocketDisconnected', handleWebSocketDisconnected);
     }
+}
+
+/**
+ * 成员端：显示「正在播放房主画面」状态标签
+ */
+function showMemberViewingStatusLabel() {
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById('videoStatusLabel');
+    if (el) {
+        el.textContent = '正在播放房主画面';
+        el.style.display = 'block';
+    }
+}
+
+/**
+ * 成员端：隐藏观看状态标签
+ */
+function hideMemberViewingStatusLabel() {
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById('videoStatusLabel');
+    if (el) el.style.display = 'none';
 }
 
 /**
@@ -86,6 +108,15 @@ function updateCanvasSize() {
 }
 
 /**
+ * 成员端：VideoPlayer 因远端流结束而 detach 时，统一显示「房主已停止共享」
+ */
+function handleVideoPlayerStreamEnded() {
+    if (typeof window !== 'undefined' && window.isHost) return;
+    hideMemberViewingStatusLabel();
+    updateVideoPlaceholder('房主已停止共享', '');
+}
+
+/**
  * 处理用户加入房间事件
  */
 function handleUserJoinedRoom(event) {
@@ -98,9 +129,10 @@ function handleUserJoinedRoom(event) {
         // 房主端：显示开始共享按钮
         showStartSharingButton();
     } else {
-        // 普通成员端：隐藏开始共享按钮，等待接收画面
+        // 普通成员端：隐藏开始共享按钮，显示等待房主开始共享
         hideStartSharingButton();
-        updateVideoPlaceholder('等待画面流', '房主开始共享后，画面将在这里显示');
+        updateVideoPlaceholder('等待房主开始共享...', '');
+        hideMemberViewingStatusLabel();
     }
 }
 
@@ -150,6 +182,7 @@ function handleWebSocketDisconnected(event) {
     
     // 通知成员端连接中断
     if (!window.isHost) {
+        hideMemberViewingStatusLabel();
         updateVideoPlaceholder('连接中断', '信令连接已断开，请刷新页面重试');
     }
 }
@@ -1027,6 +1060,8 @@ async function handleWebRTCOffer(message) {
                 console.error('播放视频失败:', err);
             });
         }
+        // 成员端：显示「正在播放房主画面」状态文案
+        showMemberViewingStatusLabel();
     };
 
     pc.onicecandidate = (event) => {
@@ -1049,6 +1084,17 @@ async function handleWebRTCOffer(message) {
 
     pc.onconnectionstatechange = () => {
         console.log('WebRTC 连接状态（成员端）:', pc.connectionState);
+        // 房主停止共享或连接断开时，停止播放并更新状态文案
+        if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+            if (typeof window !== 'undefined' && window.VideoPlayer && typeof window.VideoPlayer.detachStream === 'function') {
+                window.VideoPlayer.detachStream();
+            }
+            hideMemberViewingStatusLabel();
+            updateVideoPlaceholder(
+                pc.connectionState === 'failed' ? '连接出错' : '房主已停止共享',
+                pc.connectionState === 'failed' ? '连接失败，请刷新重试' : ''
+            );
+        }
     };
 
     await pc.setRemoteDescription(new RTCSessionDescription({
@@ -1175,10 +1221,21 @@ function handleWebRTCEnd(message) {
     }
     console.log('收到 WebRTC 结束消息，关闭本地连接');
     stopWebRTCPeerConnection(false);
+    // 成员端：停止播放并显示「房主已停止共享」
+    if (!window.isHost) {
+        hideMemberViewingStatusLabel();
+        updateVideoPlaceholder('房主已停止共享', '');
+    }
 }
 
 function handleWebRTCError(message) {
     console.error('收到 WebRTC 错误消息:', message);
+    // 成员端：显示错误提示
+    if (typeof window !== 'undefined' && !window.isHost) {
+        hideMemberViewingStatusLabel();
+        const errorMessage = message?.message || message?.reason || '连接出错，请刷新重试';
+        updateVideoPlaceholder('连接出错', errorMessage);
+    }
 }
 
 // 将 WebRTC 信令处理函数暴露到全局，供 chat.js 调用；类型统一使用 webrtc-signaling.js 的 WebRTCSignalingType
