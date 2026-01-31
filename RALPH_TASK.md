@@ -1,20 +1,22 @@
 ---
-backlog_id: backlog-99
-task: watch-together-server 后端接口汇总（E2E）
-test_command: "docker compose up -d && cd watch-together-server && npm run test:api"
+backlog_id: backlog-101
+task: 成员端实现可附加 MediaStream 的视频播放器组件
+test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: watch-together-server 后端接口汇总（E2E）
+# Task: 成员端实现可附加 MediaStream 的视频播放器组件
 
 ## Description
 
-汇总 api-a1～api-a6，使 watch-together-server 提供完整 REST 房间接口。前端 create-room、room 等页面可正常调用 localhost:3000，创建房间、加入房间、获取房间、更新 URL、离开房间流程可端到端跑通。
+在成员房间页面实现 VideoPlayer 组件，对外暴露 attachStream(MediaStream) 和 detachStream()，用于播放远端 MediaStream（先用 getUserMedia 模拟）。组件不关心 WebRTC 细节，只关心 MediaStream。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api`（脚本会先轮询 /health 等待 API 就绪。）
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
+
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
 ## Success Criteria
 
-- [x] #1 POST /api/v1/rooms 创建房间成功
-- [x] #2 GET /api/v1/rooms/:roomId 获取房间成功
-- [x] #3 POST join、PUT url、POST leave 均能正常执行
-- [x] #4 前端创建房间后能跳转到 /room/:roomId 并加载房间内容
+- [x] #1 VideoPlayer 可多次 attachStream / detachStream 而无内存泄漏或挂死
+- [x] #2 附加合法 MediaStream 时，成员端 <video> 能正常播放画面和（可选）音频
+- [x] #3 detachStream 后，视频区域清空或显示「等待流」状态
+- [x] #4 组件不依赖 WebRTC 细节，只关心 MediaStream 对象
