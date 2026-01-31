@@ -28,6 +28,10 @@ let webrtcState = {
     peerConnection: null,
     remoteStream: null,
     targetUserId: null,
+    /** 房主端：在 setRemoteDescription 之前收到的 ICE 候选队列，key 为成员 userId */
+    pendingIceCandidatesByMember: new Map(),
+    /** 成员端：在 setRemoteDescription 之前收到的房主 ICE 候选队列 */
+    pendingIceCandidates: [],
 };
 
 /**
@@ -639,6 +643,7 @@ async function addPeerConnectionForMember(targetUserId, stream) {
  * 房主端：关闭对指定成员的 PeerConnection 并释放资源
  */
 function closePeerConnectionForMember(targetUserId) {
+    webrtcState.pendingIceCandidatesByMember.delete(targetUserId);
     const pc = webrtcState.peerConnections.get(targetUserId);
     if (pc) {
         try {
@@ -744,6 +749,8 @@ function stopWebRTCPeerConnection(notifyPeer) {
     webrtcState.peerConnection = null;
     webrtcState.localStream = null;
     webrtcState.remoteStream = null;
+    webrtcState.pendingIceCandidates = [];
+    webrtcState.pendingIceCandidatesByMember.clear();
 
     if (notifyPeer && typeof createEndMessage === 'function' && screenStreamState.ws && screenStreamState.ws.readyState === WebSocket.OPEN) {
         try {
@@ -1044,6 +1051,11 @@ async function handleWebRTCOffer(message) {
         sdp: message.sdp,
     }));
 
+    const queue = webrtcState.pendingIceCandidates;
+    if (queue && queue.length > 0) {
+        await drainPendingIceCandidates(pc, queue);
+    }
+
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
@@ -1078,6 +1090,34 @@ async function handleWebRTCAnswer(message) {
         sdp: message.sdp,
     }));
     console.log('房主端已应用 WebRTC Answer，来自成员:', fromUserId);
+
+    const queue = webrtcState.pendingIceCandidatesByMember.get(fromUserId);
+    if (queue && queue.length > 0) {
+        await drainPendingIceCandidates(pc, queue);
+        webrtcState.pendingIceCandidatesByMember.delete(fromUserId);
+    }
+}
+
+async function applyIceCandidateToPc(pc, message) {
+    if (!pc) return;
+    try {
+        if (!message.candidate) {
+            await pc.addIceCandidate(null);
+        } else {
+            const candidate = new RTCIceCandidate(message.candidate);
+            await pc.addIceCandidate(candidate);
+        }
+    } catch (e) {
+        console.error('应用 WebRTC ICE 候选时出错:', e);
+    }
+}
+
+async function drainPendingIceCandidates(pc, queue) {
+    if (!pc || !queue || queue.length === 0) return;
+    for (const msg of queue) {
+        await applyIceCandidateToPc(pc, msg);
+    }
+    queue.length = 0;
 }
 
 async function handleWebRTCIceCandidate(message) {
@@ -1091,21 +1131,26 @@ async function handleWebRTCIceCandidate(message) {
     const pc = window.isHost
         ? (webrtcState.peerConnections && webrtcState.peerConnections.get(message.fromUserId))
         : webrtcState.peerConnection;
-    if (!pc) {
-        console.warn('收到 WebRTC ICE 候选时本地没有对应 PeerConnection:', message.fromUserId);
-        return;
+
+    const canApply = pc && pc.remoteDescription;
+    if (window.isHost) {
+        if (!canApply) {
+            let queue = webrtcState.pendingIceCandidatesByMember.get(message.fromUserId);
+            if (!queue) {
+                queue = [];
+                webrtcState.pendingIceCandidatesByMember.set(message.fromUserId, queue);
+            }
+            queue.push(message);
+            return;
+        }
+    } else {
+        if (!canApply) {
+            webrtcState.pendingIceCandidates.push(message);
+            return;
+        }
     }
 
-    try {
-        if (!message.candidate) {
-            await pc.addIceCandidate(null);
-        } else {
-            const candidate = new RTCIceCandidate(message.candidate);
-            await pc.addIceCandidate(candidate);
-        }
-    } catch (e) {
-        console.error('应用 WebRTC ICE 候选时出错:', e);
-    }
+    await applyIceCandidateToPc(pc, message);
 }
 
 function handleWebRTCEnd(message) {
