@@ -1,20 +1,22 @@
 ---
-backlog_id: backlog-94
-task: POST /api/v1/rooms 创建房间接口
-test_command: "docker compose up -d && cd watch-together-server && npm run test:api:create"
+backlog_id: backlog-93
+task: watch-together-server 数据模型与 Prisma Schema
+test_command: "docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma validate && docker compose exec watch-together-server npx prisma migrate deploy"
 ---
 
-# Task: POST /api/v1/rooms 创建房间接口
+# Task: watch-together-server 数据模型与 Prisma Schema
 
 ## Description
 
-在 watch-together-server 中实现 POST /api/v1/rooms，接收 { name?, hostNickname?, url }，创建 Room 与房主 RoomMember，返回 { success, data: { roomId, hostId, hostUserId, currentUrl, name, inviteLink, members } }，与 create-room.js 期望格式一致。
+在 watch-together-server 中定义 Prisma 数据模型：Room（id、name、hostId、currentUrl、inviteLink、createdAt）、RoomMember（id、roomId、userId、nickname、isHost、joinedAt）、Message 等，并配置 DATABASE_URL，运行 prisma migrate deploy。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`（脚本会先轮询 /health 等待 API 就绪。）
+**Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma validate && docker compose exec watch-together-server npx prisma migrate deploy`
+
+**Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma validate && docker compose exec watch-together-server npx prisma migrate deploy`
 
 ## Success Criteria
 
-- [x] #1 接口路径为 /api/v1/rooms，方法 POST
-- [x] #2 接收 name、hostNickname、url（url 必填且为合法 http/https）
-- [x] #3 返回 201 与 JSON，含 success、data.roomId、data.hostUserId、data.currentUrl 等
-- [x] #4 数据库正确插入 Room 和 RoomMember 记录
+- [ ] #1 prisma/schema.prisma 定义 Room、RoomMember、Message 等模型
+- [ ] #2 模型字段与前端期望的 roomId、hostId、currentUrl、members 等对应
+- [ ] #3 prisma migrate deploy 能成功执行
+- [ ] #4 prisma generate 能生成 Prisma Client
