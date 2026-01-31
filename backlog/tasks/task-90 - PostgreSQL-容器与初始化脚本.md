@@ -1,9 +1,10 @@
 ---
 id: TASK-90
 title: PostgreSQL 容器与初始化脚本
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:13'
+updated_date: '2026-01-31 11:27'
 labels: []
 dependencies: []
 ---
