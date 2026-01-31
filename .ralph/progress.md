@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 1
-- Current status: Task Complete - 房主向所有成员建立 WebRTC 连接（多成员独立 PC）
+- Current status: Task Complete - PostgreSQL 容器与初始化脚本
 
 ## How This Works
 
@@ -82,3 +82,14 @@ This is how Ralph maintains continuity across iterations.
 - 信令层（mock-server 已有）：按 toUserId 点对点转发，无需改动。
 - chat.js：MEMBER_JOINED / MEMBER_LEFT 时派发 memberJoinedRoom / memberLeftRoom 供 screen-streaming 使用。
 - RALPH_TASK 四项成功标准已全部勾选；screen-streaming 与 webrtc-signaling 相关测试通过。
+
+### 2026-01-31 16:51:11
+**Session 1 started** (model: auto)
+
+### 2026-01-31 [current time]
+**Session 1 completed** - PostgreSQL 容器与初始化脚本
+- 确认 `docker-compose.yml` 中 postgres 服务已配置：Dockerfile.postgres（postgres:15-alpine）、POSTGRES_USER/PASSWORD/DB、健康检查 pg_isready、volumes 持久化
+- 运行测试命令通过：`docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether`
+- 验证 DATABASE_URL 连接（psql 查询）与重启后数据持久化（_ralph_check 表）
+- 移除 compose 中已废弃的 `version` 以消除警告
+- RALPH_TASK 四项成功标准已全部勾选

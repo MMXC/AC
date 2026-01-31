@@ -1,28 +1,22 @@
 ---
-backlog_id: backlog-38
-task: 支持一个房主向所有成员建立 WebRTC 连接
-test_command: "手动：1 房主 + 2 成员加入同一房间，房主开始共享，确认两个成员都能看到房主画面"
+backlog_id: backlog-42
+task: PostgreSQL 容器与初始化脚本
+test_command: "docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether"
 ---
 
-# Task: 支持一个房主向所有成员建立 WebRTC 连接
+# Task: PostgreSQL 容器与初始化脚本
 
 ## Description
 
-在房主端为房间内每个非房主用户维护一个独立的 RTCPeerConnection，并通过 WebSocket 信令为每个成员建立 WebRTC 媒体通路，让所有在线成员都能看到房主视频流。
+确保 watch-together 的 PostgreSQL 容器（docker-compose postgres 服务）可正确启动，包含：1) Dockerfile.postgres 或使用 postgres 官方镜像；2) 环境变量 POSTGRES_USER、POSTGRES_PASSWORD、POSTGRES_DB 配置；3) 可选 init SQL 脚本；4) 健康检查 pg_isready。
 
-**Test Command**: `手动：1 房主 + 2 成员加入同一房间，房主开始共享，确认两个成员都能看到房主画面`
+**Test Command**: `docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether`
 
-**测试用例**:
-
-**测试场景**:
-1. 在房主在线时陆续加入多个成员，所有人都能收到房主流
-2. 某成员离开房间后，其余成员连接不受影响
-
-**Test Command**: `手动：1 房主 + 2 成员加入同一房间，房主开始共享，确认两个成员都能看到房主画面`
+**Test Command**: `docker compose up -d postgres && docker compose exec postgres pg_isready -U watchtogether`
 
 ## Success Criteria
 
-- [x] #1 房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）
-- [x] #2 信令层能为每个成员正确路由对应的 WebRTC 信令
-- [x] #3 新成员加入房间时可以增量建立连接，不影响已有连接
-- [x] #4 成员离开房间时，房主端能关闭对应 PeerConnection 并释放资源
+- [x] #1 docker compose up postgres 能成功启动
+- [x] #2 健康检查通过，pg_isready 返回 0
+- [x] #3 可通过 DATABASE_URL=postgresql://watchtogether:watchtogether123@localhost:5432/watchtogether 连接
+- [x] #4 重启容器后数据持久化（volumes 配置正确）
