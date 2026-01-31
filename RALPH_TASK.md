@@ -16,7 +16,7 @@ test_command: "docker compose up -d && cd watch-together-server && npm run test:
 
 ## Success Criteria
 
-- [ ] #1 接口路径为 /api/v1/rooms，方法 POST
-- [ ] #2 接收 name、hostNickname、url（url 必填且为合法 http/https）
-- [ ] #3 返回 201 与 JSON，含 success、data.roomId、data.hostUserId、data.currentUrl 等
-- [ ] #4 数据库正确插入 Room 和 RoomMember 记录
+- [x] #1 接口路径为 /api/v1/rooms，方法 POST
+- [x] #2 接收 name、hostNickname、url（url 必填且为合法 http/https）
+- [x] #3 返回 201 与 JSON，含 success、data.roomId、data.hostUserId、data.currentUrl 等
+- [x] #4 数据库正确插入 Room 和 RoomMember 记录

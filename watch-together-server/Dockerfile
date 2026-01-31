@@ -15,6 +15,9 @@ RUN npm install --omit=dev
 # 复制 Prisma schema 与迁移（供 migrate deploy 使用）
 COPY prisma/ prisma/
 
+# 生成 Prisma Client（运行时需要）
+RUN npx prisma generate
+
 # 复制构建产物
 COPY dist/ dist/
 
