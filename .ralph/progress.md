@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 10
-- Current status: Task Complete - 通过 WebSocket 信令在房主与单成员间建立 WebRTC 连接（汇总 backlog-109）
+- Iterations completed: 11
+- Current status: Task Complete - 房主向所有成员建立 WebRTC 连接（backlog-110）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 房主向所有成员建立 WebRTC 连接（backlog-110）
+- 验证 watch-together/js/screen-streaming.js 已实现四项标准：#1 peerConnections Map(userId -> RTCPeerConnection)、addPeerConnectionForMember；#2 信令带 toUserId，服务器按 toUserId 点对点转发；#3 handleMemberJoinedRoom 在房主正在共享时为新成员 addPeerConnectionForMember；#4 handleMemberLeftRoom / handleWebRTCEnd 调用 closePeerConnectionForMember 关闭对应 PC
+- chat.js 已派发 memberJoinedRoom / memberLeftRoom，room.js 提供 getMembersList()
+- 新增 screen-streaming-basic.test.js 中「房主向所有成员建立 WebRTC 连接 (backlog-110)」4 条用例，webrtc-signaling + screen-streaming 共 77 个用例通过
+- RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 通过 WebSocket 信令在房主与单成员间建立 WebRTC 连接（汇总 backlog-109）
@@ -238,4 +245,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 03:20:01
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:25:38
 **Session 1 started** (model: auto)
