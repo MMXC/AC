@@ -113,6 +113,11 @@ DATABASE_URL=postgresql://user:pass@localhost:5432/db npx prisma db seed
 docker compose up -d && cd watch-together-server && npm run test:api
 ```
 
+**生成或编写 API 测试脚本时**（如 bash 脚本里对 `localhost:3000` 发 curl）：
+- 脚本**必须先等待 API 就绪**再发请求。`docker compose up -d` 只保证容器已启动，不等待应用监听端口，若立即请求会因连接被拒而失败。
+- 实现方式：在脚本开头轮询健康端点（如 `$BASE/health`），每隔 2s 重试、最多约 30s，成功后再执行实际测试。
+- 参考实现：`watch-together-server/scripts/test-rooms-api.sh` 中的 `wait_for_api()`。
+
 ### 前端 E2E 测试
 
 对于浏览器测试，使用技能占位符：

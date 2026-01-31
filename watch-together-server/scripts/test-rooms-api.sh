@@ -5,6 +5,21 @@ set -euo pipefail
 BASE="${API_BASE:-http://localhost:3000}"
 MODE="${1:-all}"
 
+# 等待 API 就绪（docker compose up -d 后服务可能尚未监听）
+wait_for_api() {
+  local max=15 interval=2
+  while [ "$max" -gt 0 ]; do
+    if curl -sf "$BASE/health" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep "$interval"
+    max=$(( max - 1 ))
+  done
+  echo "Timeout waiting for API at $BASE" >&2
+  return 1
+}
+wait_for_api
+
 # 创建房间，返回 roomId 和 hostUserId
 do_create() {
     local r

@@ -2,13 +2,13 @@
 
 目标：把「房主 iframe 内容 → 其他成员看到」升级为基于 WebRTC 的实时视频流，由房主共享屏幕/标签页，房间内其他成员实时观看。
 
-**前置条件**：API 测试需 `docker compose up -d` 后运行；E2E 测试由 `skill:watch-together-webapp-testing ${TASK_ID}` 执行（`${TASK_ID}` 在运行时替换为 backlog 分配的任务 ID，避免写死）。
+**前置条件**：API 测试需 `docker compose up -d` 后运行；测试脚本（如 `test-rooms-api.sh`）会先轮询 `$BASE/health` 等待 API 就绪再发请求，无需在命令中额外等待。E2E 测试由 `skill:watch-together-webapp-testing ${TASK_ID}` 执行（`${TASK_ID}` 在运行时替换为 backlog 分配的任务 ID，避免写死）。
 
 ---
 
 ## 一、后端接口（watch-together-server）
 
-前端 create-room.js、room.js 依赖 watch-together-server 的 REST API（端口 3000）。当前仅 /health 可用，需实现完整房间接口。
+前端 create-room.js、room.js 依赖 watch-together-server 的 REST API（端口 3000）。当前仅 /health 可用，需实现完整房间接口。以下 API 任务（api-a2～api-a7）的测试脚本（test-rooms-api.sh）会先轮询 `$BASE/health` 等待 API 就绪再发请求。
 
 ---
 

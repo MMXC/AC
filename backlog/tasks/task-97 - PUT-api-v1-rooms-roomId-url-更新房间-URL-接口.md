@@ -13,9 +13,7 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 实现 PUT /api/v1/rooms/:roomId/url，接收 { url, userId }，校验 userId 为房主后更新 room.currentUrl，返回 { success }。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:url`
-
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:url`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:url`（脚本会先轮询 /health 等待 API 就绪。）
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

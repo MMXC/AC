@@ -14,9 +14,7 @@ dependencies: []
 <!-- SECTION:DESCRIPTION:BEGIN -->
 在 watch-together-server 中实现 POST /api/v1/rooms，接收 { name?, hostNickname?, url }，创建 Room 与房主 RoomMember，返回 { success, data: { roomId, hostId, hostUserId, currentUrl, name, inviteLink, members } }，与 create-room.js 期望格式一致。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`
-
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`（脚本会先轮询 /health 等待 API 就绪。）
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -49,9 +47,7 @@ test_command: "docker compose up -d && cd watch-together-server && npm run test:
 
 在 watch-together-server 中实现 POST /api/v1/rooms，接收 { name?, hostNickname?, url }，创建 Room 与房主 RoomMember，返回 { success, data: { roomId, hostId, hostUserId, currentUrl, name, inviteLink, members } }，与 create-room.js 期望格式一致。
 
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`
-
-**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`
+**Test Command**: `docker compose up -d && cd watch-together-server && npm run test:api:create`（脚本会先轮询 /health 等待 API 就绪。）
 
 ## Success Criteria
 

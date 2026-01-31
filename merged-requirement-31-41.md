@@ -33,7 +33,7 @@
 | - | **PUT /api/v1/rooms/:roomId/url**：房主更新 currentUrl |
 | - | **POST /api/v1/rooms/:roomId/leave**：离开房间 |
 
-**测试**：`cd watch-together-server && npm run test:api`（或 test:api:create/get/join/url/leave）
+**测试**：`docker compose up -d && cd watch-together-server && npm run test:api`（或 test:api:create/get/join/url/leave）；脚本会先轮询 `$BASE/health` 等待 API 就绪。
 
 ---
 
@@ -100,7 +100,7 @@
 | docker-compose | 已有 watch-together-server、postgres、redis、watch-together |
 | watch-together-server | 仅有 /health，无 Prisma、无房间 REST API |
 | watch-together 前端 | 有 create-room.js、room.js、screen-streaming.js、video-player.js、webrtc-manager.js、webrtc-signaling.js、webrtc-loopback-demo.html（代码存在但可能因 git reset 不完整） |
-| 测试脚本 | watch-together-server/scripts/test-rooms-api.sh、skill:watch-together-webapp-testing |
+| 测试脚本 | watch-together-server/scripts/test-rooms-api.sh（会先轮询 /health 等待 API 就绪）、skill:watch-together-webapp-testing |
 
 ---
 
