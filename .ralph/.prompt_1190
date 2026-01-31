@@ -1,4 +1,4 @@
-# Ralph Iteration 5
+# Ralph Iteration 7
 
 You are an autonomous development agent using the Ralph methodology.
 
@@ -76,7 +76,7 @@ When something fails:
 ### Sign: [Descriptive Name]
 - **Trigger**: When this situation occurs
 - **Instruction**: What to do instead
-- **Added after**: Iteration 5 - what happened
+- **Added after**: Iteration 7 - what happened
 ```
 
 ## Context Rotation Warning
