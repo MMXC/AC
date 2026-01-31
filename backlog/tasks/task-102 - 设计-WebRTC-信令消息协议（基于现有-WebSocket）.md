@@ -1,9 +1,10 @@
 ---
 id: TASK-102
 title: 设计 WebRTC 信令消息协议（基于现有 WebSocket）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:16'
+updated_date: '2026-01-31 18:38'
 labels: []
 dependencies: []
 ---
