@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const { PrismaClient } = require("@prisma/client");
+const ws_room_broadcast_1 = require("./ws-room-broadcast");
 const app = (0, express_1.default)();
 const prisma = new PrismaClient();
 app.use((0, cors_1.default)());
@@ -195,6 +196,14 @@ app.post('/api/v1/rooms/:roomId/join', async (req, res) => {
             where: { roomId },
             orderBy: { joinedAt: 'asc' },
         });
+        const broadcast = ws_room_broadcast_1.getBroadcastToRoom();
+        if (typeof broadcast === 'function') {
+            broadcast(roomId, newUserId, { type: 'MEMBER_JOINED', data: { userId: newUserId, nickname: nick } });
+        }
+        const broadcastSync = ws_room_broadcast_1.getBroadcastSyncStateToRoom();
+        if (typeof broadcastSync === 'function') {
+            broadcastSync(roomId);
+        }
         return res.status(200).json({
             success: true,
             data: {
@@ -252,6 +261,10 @@ app.post('/api/v1/rooms/:roomId/leave', async (req, res) => {
         await prisma.roomMember.delete({
             where: { id: member.id },
         });
+        const broadcast = ws_room_broadcast_1.getBroadcastToRoom();
+        if (typeof broadcast === 'function') {
+            broadcast(roomId, String(userId), { type: 'MEMBER_LEFT', data: { userId: String(userId) } });
+        }
         return res.status(200).json({ success: true });
     } catch (err) {
         console.error('POST /api/v1/rooms/:roomId/leave error:', err);
@@ -424,4 +437,12 @@ app.post('/api/v1/rooms/:roomId/leave', async (req, res) => {
     }
 });
 
+/** 供 WebSocket 连接时发送 SYNC_STATE 用：返回房间当前成员列表 */
+exports.getRoomMembersForSync = async function (roomId) {
+    const members = await prisma.roomMember.findMany({
+        where: { roomId },
+        orderBy: { joinedAt: 'asc' },
+    });
+    return members.map((m) => ({ userId: m.userId, nickname: m.nickname }));
+};
 exports.default = app;

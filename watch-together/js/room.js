@@ -58,6 +58,19 @@ function removeMember(memberId) {
 }
 
 /**
+ * 设置完整成员列表（用于加入房间时从 API 返回的 room.members 初始化）
+ * @param {Array<{id: string, name: string}>} members - 成员数组，id 为 userId，name 为昵称
+ */
+function setMembersList(members) {
+    if (!Array.isArray(members)) return;
+    membersList = members.map(m => ({
+        id: m.id,
+        name: m.name || `成员${(m.id || '').substring(0, 8)}`
+    }));
+    updateMembersDisplay();
+}
+
+/**
  * 更新成员列表显示
  */
 function updateMembersDisplay() {
@@ -454,8 +467,16 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
             joinDataFull: joinData
         });
         
-        // 添加当前用户到成员列表
-        addMember(serverUserId, serverNickname);
+        // 使用 API 返回的 room.members 初始化完整成员列表（含自己及其他在线成员）
+        const roomMembers = roomData.members;
+        if (roomMembers && Array.isArray(roomMembers) && roomMembers.length > 0) {
+            setMembersList(roomMembers.map(m => ({
+                id: m.userId,
+                name: m.nickname || `成员${(m.userId || '').substring(0, 8)}`
+            })));
+        } else {
+            addMember(serverUserId, serverNickname);
+        }
         
         // 将 userId 设置为全局变量，供其他脚本使用
         if (typeof window !== 'undefined') {
@@ -1071,6 +1092,7 @@ if (typeof window !== 'undefined') {
     window.addMember = addMember;
     window.removeMember = removeMember;
     window.getMembersList = getMembersList;
+    window.setMembersList = setMembersList;
     window.updateMembersDisplay = updateMembersDisplay;
 }
 
@@ -1084,6 +1106,7 @@ if (typeof module !== 'undefined' && module.exports) {
         updateRoomInfo,
         addMember,
         removeMember,
+        setMembersList,
         updateMembersDisplay,
         getMemberInitial,
         getMembersList,

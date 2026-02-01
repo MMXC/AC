@@ -34,6 +34,36 @@ function sendToUser(roomId, toUserId, message) {
         );
     }
 }
+/** 向房间内除 excludeUserId 外的所有连接广播消息（用于 MEMBER_JOINED / MEMBER_LEFT） */
+function broadcastToRoom(roomId, excludeUserId, message) {
+    const connections = wsConnections.get(roomId);
+    if (!connections) return;
+    const payload = typeof message === "string" ? message : JSON.stringify(message);
+    const skipWs = excludeUserId ? wsByRoomUser.get(`${roomId}:${excludeUserId}`) : null;
+    connections.forEach((sock) => {
+        if (sock === skipWs) return;
+        if (sock.readyState === 1) sock.send(payload);
+    });
+}
+const ws_room_broadcast_1 = require("./ws-room-broadcast");
+const appModule = require("./app");
+ws_room_broadcast_1.setBroadcastToRoom(broadcastToRoom);
+function broadcastSyncStateToRoom(roomId) {
+    const getRoomMembersForSync = appModule.getRoomMembersForSync;
+    if (typeof getRoomMembersForSync !== "function") return;
+    getRoomMembersForSync(roomId)
+        .then((members) => {
+        if (!members || members.length === 0) return;
+        const payload = JSON.stringify({ type: "SYNC_STATE", data: { members } });
+        const connections = wsConnections.get(roomId);
+        if (!connections) return;
+        connections.forEach((ws) => {
+            if (ws.readyState === 1) ws.send(payload);
+        });
+    })
+        .catch((err) => console.error("[WebSocket] broadcastSyncStateToRoom error:", err));
+}
+ws_room_broadcast_1.setBroadcastSyncStateToRoom(broadcastSyncStateToRoom);
 wss.on("connection", (ws, req) => {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
     const roomId = url.searchParams.get("roomId");
