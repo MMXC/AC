@@ -280,4 +280,36 @@ describe('画面流/屏幕投影通路设计与最小实现', () => {
             expect(js).toContain('videoPlaceholder');
         });
     });
+
+    describe('房主向所有成员建立 WebRTC 连接 (backlog-110)', () => {
+        test('房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）', () => {
+            const js = fs.readFileSync(screenStreamingJsPath, 'utf-8');
+            expect(js).toContain('peerConnections');
+            expect(js).toMatch(/peerConnections\.(set|get|has|delete)/);
+            expect(js).toContain('addPeerConnectionForMember');
+        });
+
+        test('信令层能为每个成员正确路由（toUserId 在 offer/answer/ice 中）', () => {
+            const js = fs.readFileSync(screenStreamingJsPath, 'utf-8');
+            expect(js).toContain('toUserId');
+            expect(js).toContain('createOfferMessage');
+            expect(js).toContain('createAnswerMessage');
+            expect(js).toContain('createICECandidateMessage');
+        });
+
+        test('新成员加入时可增量建立连接（memberJoinedRoom 触发 addPeerConnectionForMember）', () => {
+            const js = fs.readFileSync(screenStreamingJsPath, 'utf-8');
+            expect(js).toContain('memberJoinedRoom');
+            expect(js).toContain('handleMemberJoinedRoom');
+            expect(js).toContain('addPeerConnectionForMember');
+        });
+
+        test('成员离开时房主端能关闭对应 PeerConnection 并释放资源', () => {
+            const js = fs.readFileSync(screenStreamingJsPath, 'utf-8');
+            expect(js).toContain('memberLeftRoom');
+            expect(js).toContain('handleMemberLeftRoom');
+            expect(js).toContain('closePeerConnectionForMember');
+            expect(js).toContain('pc.close()');
+        });
+    });
 });

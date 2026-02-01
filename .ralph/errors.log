@@ -2,3 +2,6 @@
 
 > Failures detected by stream-parser. Use to update guardrails.
 
+## 2026-02-01 (Ralph Iteration 2)
+- test-results.log: skill:watch-together-webapp-testing TASK-101 失败 — generate-test.py 第 90 行 `os.path.join` 使用 `os` 未导入，NameError。已修复：在文件顶部添加 `import os`。
+

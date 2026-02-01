@@ -95,6 +95,9 @@ function attachStream(stream) {
             if (videoPlayerState.currentStream === stream) {
                 console.log('VideoPlayer: 流已结束');
                 detachStream();
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('videoPlayerStreamEnded'));
+                }
             }
         };
         
