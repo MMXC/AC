@@ -1,9 +1,10 @@
 ---
 id: TASK-119
 title: 修复房主端与成员端左侧成员列表只显示自己的问题
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-01 07:18'
+updated_date: '2026-02-01 07:30'
 labels: []
 dependencies: []
 ---

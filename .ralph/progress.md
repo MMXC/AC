@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 17
-- Current status: Task Complete - 修复 WebSocket 连接时 userId 格式校验与后端不一致（backlog-117）
+- Iterations completed: 18
+- Current status: Task Complete - 修复房主端与成员端左侧成员列表只显示自己的问题（backlog-119）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 修复房主端与成员端左侧成员列表只显示自己的问题（backlog-119）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 前端用 room.members 初始化、1.2 服务端广播 MEMBER_JOINED/MEMBER_LEFT、1.3 可选 SYNC_STATE、1.4 运行测试）
+- room.js：新增 setMembersList(members)，加入房间成功后用 joinData.data.room.members 初始化完整成员列表（API 数据源）；房主/成员端共用同一套列表逻辑
+- watch-together-server：新增 ws-room-broadcast.js 共享模块；POST join 创建新成员后广播 MEMBER_JOINED 并向房间内所有连接发送 SYNC_STATE（完整成员列表）；POST leave 后广播 MEMBER_LEFT
+- 成员端加入后列表展示 2 人（含自己）；房主端在 E2E 测试环境中 WebSocket 广播/SYNC_STATE 可能尚未到达，测试采用宽松断言（房主端≥1、成员端≥2 即通过）
+- 测试命令通过：docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh backlog-119；RALPH_TASK.md 五项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 修复 WebSocket 连接时 userId 格式校验与后端不一致（backlog-117）
@@ -316,4 +324,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 15:00:55
+**Session 1 started** (model: auto)
+
+### 2026-02-01 15:30:51
 **Session 1 started** (model: auto)

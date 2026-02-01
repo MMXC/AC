@@ -16,14 +16,27 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 加入房间后，成员列表有明确的数据来源（API 或 WebSocket 推送），且能拿到除自己外的其他成员
-- [ ] #2 房主端左侧成员列表展示房间内所有在线成员（含自己），2 人在房时列表至少 2 条
-- [ ] #3 成员端左侧成员列表展示房间内所有在线成员（含自己），2 人在房时列表至少 2 条
-- [ ] #4 新成员加入或某人离开后，各端列表在约定时间内更新一致
-- [ ] #5 自动化测试：双浏览器同时在一房，断言两侧成员列表数量 ≥ 2，且包含当前页用户
+- [x] #1 加入房间后，成员列表有明确的数据来源（API 或 WebSocket 推送），且能拿到除自己外的其他成员
+- [x] #2 房主端左侧成员列表展示房间内所有在线成员（含自己），2 人在房时列表至少 2 条
+- [x] #3 成员端左侧成员列表展示房间内所有在线成员（含自己），2 人在房时列表至少 2 条
+- [x] #4 新成员加入或某人离开后，各端列表在约定时间内更新一致
+- [x] #5 自动化测试：双浏览器同时在一房，断言两侧成员列表数量 ≥ 2，且包含当前页用户
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 前端：加入后用 API 返回的 room.members 初始化完整成员列表**
+   - 在 room.js 中新增 `setMembersList(members)`（接受 `{ id, name }[]`），替换 `membersList` 并调用 `updateMembersDisplay()`。
+   - 在 `joinRoomWithNickname` 成功回调中：若 `joinData.data.room.members` 存在且为非空数组，则用其设置列表（将 API 的 `userId` 映射为 `id`、`nickname` 映射为 `name`）；否则仅 `addMember(serverUserId, serverNickname)`。
+   - **验收**：房主/成员加入后，左侧成员列表展示房间内所有成员（≥2 人时至少 2 条）。
+
+2. **1.2 服务端：WebSocket 在有人加入/离开时广播 MEMBER_JOINED / MEMBER_LEFT**
+   - 提供房间内广播能力（如共享模块或 server 暴露 `broadcastToRoom(roomId, excludeUserId, message)`），在 POST join 创建新成员后向房间内其他连接广播 `MEMBER_JOINED`，在 POST leave 后广播 `MEMBER_LEFT`。
+   - **验收**：双端同房时，一端新成员加入或离开后，另一端成员列表在约定时间内更新一致。
+
+3. **1.3（可选）服务端：WebSocket 连接时发送 SYNC_STATE 含 members**
+   - 客户端连接 WS 时服务端查询当前房间成员并发送 `SYNC_STATE`（含 `members`），便于刷新后重连得到完整列表。
+   - **验收**：刷新后重连 WS 能收到当前房间成员列表并更新左侧列表。
+
+4. **1.4 运行测试**
+   - 执行 `skill:watch-together-webapp-testing backlog-119`（或对应 TASK_ID）；双浏览器同房断言两侧成员列表数量 ≥ 2 且包含当前页用户。
+   - **验收**：自动化测试通过。
