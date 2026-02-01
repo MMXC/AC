@@ -1,28 +1,29 @@
 ---
-backlog_id: backlog-117
-task: 修复 WebSocket 连接时 userId 格式校验与后端不一致
-test_command: "docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend"
+backlog_id: backlog-119
+task: 修复房主端与成员端左侧成员列表只显示自己的问题
+test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: 修复 WebSocket 连接时 userId 格式校验与后端不一致
+# Task: 修复房主端与成员端左侧成员列表只显示自己的问题
 
 ## Description
 
-加入房间后，后端返回 UUID 格式的 userId（如 `8f0bb8e5-9711-419b-8481-accbdf28ace2`），但 chat.js 与 sync.js 中 WebSocket 连接前校验 userId 为正则 `/^user-[a-z0-9]{8}$/`，导致「userId 格式不正确」而无法连接。需将校验规则更新为同时支持 UUID 格式（或与后端约定一致），使新成员能正常连接聊天与操作同步 WebSocket。
+房主页与成员页左侧成员列表仅显示当前用户自己，其他在线用户不出现。需修复成员列表的数据源与同步：确保加入房间后从服务端或 WebSocket 拉取/订阅房间成员列表，并在成员进入/离开时更新列表；房主端与成员端共用同一套成员列表逻辑，列表渲染所有当前房间在线用户（含自己）。
 
-**Test Command**: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend`
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
-**Test Command**: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend`
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
 ## Success Criteria
 
-- [x] #1 chat.js 中 userId 格式校验接受后端返回的 UUID 格式
-- [x] #2 sync.js 中 userId 格式校验接受后端返回的 UUID 格式
-- [x] #3 新成员加入房间后，能成功连接聊天 WebSocket 与操作同步 WebSocket
-- [x] #4 控制台无「userId 格式不正确」相关错误
+- [ ] #1 加入房间后，成员列表有明确的数据来源（API 或 WebSocket 推送），且能拿到除自己外的其他成员
+- [ ] #2 房主端左侧成员列表展示房间内所有在线成员（含自己），2 人在房时列表至少 2 条
+- [ ] #3 成员端左侧成员列表展示房间内所有在线成员（含自己），2 人在房时列表至少 2 条
+- [ ] #4 新成员加入或某人离开后，各端列表在约定时间内更新一致
+- [ ] #5 自动化测试：双浏览器同时在一房，断言两侧成员列表数量 ≥ 2，且包含当前页用户
 
 ## Implementation Steps
 
-1. **1.1 chat.js 中 userId 校验** — done when: 校验规则接受后端返回的 UUID（如 `8f0bb8e5-9711-419b-8481-accbdf28ace2`），不再仅限 `/^user-[a-z0-9]{8}$/`。
-2. **1.2 sync.js 中 userId 校验** — done when: 与 chat.js 一致，接受 UUID 格式。
-3. **1.3 运行验收** — done when: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend` 通过，控制台无「userId 格式不正确」。
+<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
+<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
+<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
