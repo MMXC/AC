@@ -145,3 +145,9 @@ w: Connection stalled
 w: Connection stalled
 [22:53:29] cursor-agent exited with code: 1
 [23:10:42] cursor-agent exited with code: 1
+w: Connection stalled
+[03:04:32] cursor-agent exited with code: 1
+w: Connection stalled
+[03:41:58] cursor-agent exited with code: 1
+w: WritableIterable is closed
+[03:50:01] cursor-agent exited with code: 1

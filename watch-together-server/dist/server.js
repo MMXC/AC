@@ -51,8 +51,19 @@ wss.on("connection", (ws, req) => {
             if (WEBRTC_SIGNAL_TYPES.includes(type)) {
                 const msgRoomId = message.roomId;
                 const toUserId = message.toUserId;
+                const fromUserId = message.fromUserId;
                 if (!msgRoomId) return;
                 if (roomId && msgRoomId !== roomId) return;
+                // 仅允许房主发起共享：WEBRTC_OFFER 的 fromUserId 必须为房间房主 (roomId + '-host')
+                if (type === "WEBRTC_OFFER") {
+                    const roomHostUserId = msgRoomId + "-host";
+                    if (fromUserId !== roomHostUserId) {
+                        console.warn(
+                            "[WebRTC] 拒绝非房主的共享请求: roomId=" + msgRoomId + ", fromUserId=" + fromUserId
+                        );
+                        return;
+                    }
+                }
                 if (toUserId != null && toUserId !== "") {
                     sendToUser(msgRoomId, toUserId, message);
                 }
