@@ -117,21 +117,18 @@ git -C "$WORKSPACE" add RALPH_TASK.md
 git -C "$WORKSPACE" commit -m "ralph: TASK-$TASK_ID 初始化 RALPH_TASK.md" >/dev/null 2>&1 || true
 
 echo "[branch] 运行 Ralph（分支: $BRANCH_NAME）"
-echo "[branch] 使用测试循环模式：每次迭代后运行测试，直到测试通过"
-set +e
 
-# 检查是否有测试命令，如果有则使用测试循环模式
+# 检查是否有测试命令，有则用测试循环模式（每次迭代后跑测试直到通过）
 test_cmd=$(grep -E '^test_command:' "$WORKSPACE/RALPH_TASK.md" 2>/dev/null | sed -E 's/^test_command:[[:space:]]*["'\'']?([^"'\'']+)["'\'']?.*$/\1/' | head -1)
 
+set +e
 if [[ -n "$test_cmd" ]]; then
-  echo "[branch] 检测到测试命令: $test_cmd"
-  echo "[branch] 使用 ralph-loop-until-tests-pass.sh（测试驱动开发模式）"
+  echo "[branch] 检测到测试命令，使用 ralph-loop-until-tests-pass.sh（测试驱动开发模式）"
   "$SCRIPT_DIR/ralph-loop-until-tests-pass.sh" -y "$WORKSPACE"
 else
   echo "[branch] 未检测到测试命令，使用标准 ralph-loop.sh"
   "$SCRIPT_DIR/ralph-loop.sh" -y "$WORKSPACE"
 fi
-
 rc=$?
 set -e
 

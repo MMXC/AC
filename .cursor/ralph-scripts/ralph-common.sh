@@ -814,6 +814,14 @@ Ralph's strength is state-in-git, not LLM memory. Commit early and often:
 
 If you get rotated, the next agent picks up from your last commit. Your commits ARE your memory.
 
+## Task Workflow (Backlog + Branch)
+
+You are running in task-branch mode: RALPH_TASK.md was generated from a backlog task. Follow this flow:
+
+1. **Refine the plan (细化约定)** before coding: If RALPH_TASK.md does not yet have an "Implementation Steps" section with **per-step acceptance**, add it now. List steps (e.g. 1.1 Add route, 1.2 Write handler, 2.1 Run test) and for each step write a short **acceptance** (e.g. "1.1 done when: GET /api/v1/rooms returns 200"). This lets you iterate at the failing step when tests fail.
+2. **Implement step by step**: Do one step, verify its acceptance if you can (quick check or run), then move on. When the overall test command fails, map the failure to a step and fix that step before re-running tests.
+3. **Test convergence**: Run the test command from RALPH_TASK.md; do not mark the task complete until tests pass. If they fail, fix the corresponding step and re-run.
+
 ## Task Execution (CRITICAL - READ CAREFULLY)
 
 **YOU MUST ACTUALLY WRITE CODE AND CREATE FILES. DO NOT JUST READ FILES AND EXIT.**
@@ -823,7 +831,7 @@ If you get rotated, the next agent picks up from your last commit. Your commits 
    - Create package.json if missing
    - Create necessary directories
    - Install dependencies if needed
-3. **Follow Implementation Steps** - if RALPH_TASK.md has "Implementation Steps", follow them in order
+3. **Follow Implementation Steps** - if RALPH_TASK.md has "Implementation Steps", follow them in order (with per-step acceptance above)
 4. **Work on the next unchecked criterion** - look for \`[ ]\` in Success Criteria section
 5. **ACTUALLY WRITE CODE**:
    - Create new files as needed
