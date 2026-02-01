@@ -283,10 +283,11 @@ function handleScreenFrame(data) {
 
 /**
  * 处理画面流开始（成员端）
+ * 房主已开始共享，成员端不再显示「等待房主开始共享...」，改为「房主正在共享，正在建立连接...」
  */
 function handleScreenStreamStart(data) {
     console.log('画面流开始:', data);
-    updateVideoPlaceholder('正在接收画面流...', '');
+    updateVideoPlaceholder('房主正在共享，正在建立连接...', '');
     
     // 显示画面容器
     showVideoContainer();
@@ -586,10 +587,14 @@ function sendScreenStreamStart() {
     if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) {
         return;
     }
+    if (typeof window === 'undefined' || !window.currentRoomId) {
+        return;
+    }
     
     try {
         const message = {
             type: 'SCREEN_STREAM_START',
+            roomId: window.currentRoomId,
             data: {
                 timestamp: Date.now(),
             },
@@ -608,10 +613,14 @@ function sendScreenStreamStop() {
     if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) {
         return;
     }
+    if (typeof window === 'undefined' || !window.currentRoomId) {
+        return;
+    }
     
     try {
         const message = {
             type: 'SCREEN_STREAM_STOP',
+            roomId: window.currentRoomId,
             data: {
                 timestamp: Date.now(),
             },
@@ -1122,6 +1131,12 @@ async function handleWebRTCOffer(message) {
     if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) {
         console.warn('收到 WebRTC Offer 时 WebSocket 未连接');
         return;
+    }
+
+    // 成员端收到房主 OFFER 即表示房主已开始共享，立即更新 UI：不再显示「等待房主开始共享...」
+    updateVideoPlaceholder('房主正在共享，正在建立连接...', '');
+    if (typeof showVideoContainer === 'function') {
+        showVideoContainer();
     }
 
     const pc = createPeerConnection();
