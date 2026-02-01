@@ -127,6 +127,15 @@ with sync_playwright() as p:
     exit 1
 fi
 
+# WSL + Windows Python：传给 python.exe 的脚本路径需为 Windows 格式，否则无法找到文件
+if [[ -n "${WSL_DISTRO_NAME:-}" || "$(uname -r 2>/dev/null)" == *Microsoft* ]]; then
+    if [[ "$PYTHON" == *"Scripts/python.exe"* || "$PYTHON" == *"Scripts\\python.exe"* ]]; then
+        if command -v wslpath &>/dev/null; then
+            TEST_SCRIPT_WIN="$(wslpath -w "$TEST_SCRIPT" 2>/dev/null)" && TEST_SCRIPT="$TEST_SCRIPT_WIN"
+        fi
+    fi
+fi
+
 # 运行测试脚本
 echo "运行测试脚本: $TEST_SCRIPT"
 echo ""
