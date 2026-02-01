@@ -16,12 +16,12 @@ room.js 与 operation-source.js 均在顶层声明 `const API_BASE`，在同一�
 
 ## Success Criteria
 
-- [ ] #1 顶层仅在一处声明或初始化 API_BASE
-- [ ] #2 room.js 与 operation-source.js 均可正确获取 API 根地址
-- [ ] #3 控制台无 "API_BASE has already been declared" 错误
+- [x] #1 顶层仅在一处声明或初始化 API_BASE
+- [x] #2 room.js 与 operation-source.js 均可正确获取 API 根地址
+- [x] #3 控制台无 "API_BASE has already been declared" 错误
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 仅在一处初始化 API_BASE** — done when: 仅 room.js 在 window 上设置 `window.API_BASE`，无顶层 `const API_BASE` 声明。
+2. **1.2 room.js 使用 getApiBase()** — done when: room.js 内所有请求使用 `getApiBase()` 获取 API 根地址，控制台无 "API_BASE has already been declared"。
+3. **1.3 运行 fix-frontend 测试** — done when: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend` 通过。

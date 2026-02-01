@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 15
-- Current status: Task Complete - 修复 webrtcState 重复声明导致的 SyntaxError（backlog-115）
+- Iterations completed: 16
+- Current status: Task Complete - 修复 API_BASE 重复声明导致的 SyntaxError（backlog-116）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 修复 API_BASE 重复声明导致的 SyntaxError（backlog-116）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 仅一处初始化、1.2 room.js 用 getApiBase()、1.3 运行 fix-frontend）
+- room.js：移除顶层 `const API_BASE`，仅在此处初始化 `window.API_BASE`，新增 `getApiBase()`，所有 fetch 改为使用 `getApiBase()`；导出改为 `getApiBase`
+- operation-source.js 已使用 getApiBase() 与 window.API_BASE，无需改动
+- 测试通过：docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend
+- RALPH_TASK.md 三项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 修复 webrtcState 重复声明导致的 SyntaxError（backlog-115）
@@ -295,4 +303,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 14:42:35
+**Session 1 started** (model: auto)
+
+### 2026-02-01 14:54:23
 **Session 1 started** (model: auto)

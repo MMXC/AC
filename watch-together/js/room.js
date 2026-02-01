@@ -2,9 +2,8 @@
  * 房间页面功能
  */
 
-// API 基础 URL（使用全局变量，避免重复声明）
+// API 基础 URL：仅在此处初始化 window.API_BASE，避免与 operation-source.js 等重复声明
 if (typeof window !== 'undefined') {
-    // 如果 window.API_BASE 已定义，使用它；否则设置默认值
     if (!window.API_BASE) {
         if (window.API_BASE_URL) {
             window.API_BASE = window.API_BASE_URL;
@@ -15,7 +14,10 @@ if (typeof window !== 'undefined') {
         }
     }
 }
-const API_BASE = typeof window !== 'undefined' ? window.API_BASE : 'http://localhost:3001';
+
+function getApiBase() {
+    return (typeof window !== 'undefined' && window.API_BASE) || 'http://localhost:3001';
+}
 
 // 成员列表数据
 let membersList = [];
@@ -338,7 +340,7 @@ async function validateRoom(roomId) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/api/v1/rooms/${roomId}`);
+        const response = await fetch(`${getApiBase()}/api/v1/rooms/${roomId}`);
         
         if (!response.ok) {
             // 如果是 500 错误，尝试解析错误信息
@@ -420,7 +422,7 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         }
         
         // 调用加入房间 API
-        const joinResponse = await fetch(`${API_BASE}/api/v1/rooms/${roomId}/join`, {
+        const joinResponse = await fetch(`${getApiBase()}/api/v1/rooms/${roomId}/join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -739,7 +741,7 @@ async function updateRoomUrl(roomId, userId, url) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/api/v1/rooms/${roomId}/url`, {
+        const response = await fetch(`${getApiBase()}/api/v1/rooms/${roomId}/url`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -907,7 +909,7 @@ async function init() {
             // 如果用户已加入房间，先离开房间
             if (window.currentUserId && window.currentRoomId) {
                 try {
-                    await fetch(`${API_BASE}/api/v1/rooms/${window.currentRoomId}/leave`, {
+                    await fetch(`${getApiBase()}/api/v1/rooms/${window.currentRoomId}/leave`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1098,6 +1100,6 @@ if (typeof module !== 'undefined' && module.exports) {
         hideShareRoomButton,
         generateRoomLink,
         copyRoomLink,
-        API_BASE,
+        getApiBase,
     };
 }
