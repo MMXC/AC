@@ -16,12 +16,12 @@ webrtc-manager.js 与 screen-streaming.js 均声明顶层变量 `webrtcState`，
 
 ## Success Criteria
 
-- [ ] #1 页面中仅有一处 `webrtcState` 或等效状态的顶层声明
-- [ ] #2 控制台无 "webrtcState has already been declared" 错误
-- [ ] #3 屏幕共享与 WebRTC 连接逻辑仍可正常工作
+- [x] #1 页面中仅有一处 `webrtcState` 或等效状态的顶层声明
+- [x] #2 控制台无 "webrtcState has already been declared" 错误
+- [x] #3 屏幕共享与 WebRTC 连接逻辑仍可正常工作
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 统一 webrtcState 顶层声明** — done when: 全仓库仅 screen-streaming.js 一处顶层 `webrtcState`，webrtc-manager.js 使用独立命名（如 webrtcManagerState）不冲突。
+2. **1.2 验证无重复声明错误** — done when: 打开 join/room 页面，控制台无 "webrtcState has already been declared"。
+3. **1.3 验证功能** — done when: 运行 `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend` 通过；watch-together 单元测试 webrtc-signaling + screen-streaming 仍通过。

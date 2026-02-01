@@ -1,21 +1,11 @@
 /**
  * 操作来源管理功能
+ * API 基础 URL 使用 room.js 设置的 window.API_BASE，避免与 room.js 重复声明 const API_BASE
  */
 
-// API 基础 URL（使用全局变量，避免重复声明）
-if (typeof window !== 'undefined') {
-    // 如果 window.API_BASE 已定义，使用它；否则设置默认值
-    if (!window.API_BASE) {
-        if (window.API_BASE_URL) {
-            window.API_BASE = window.API_BASE_URL;
-        } else if (typeof process !== 'undefined' && process.env && process.env.API_BASE) {
-            window.API_BASE = process.env.API_BASE;
-        } else {
-            window.API_BASE = 'http://localhost:3001';
-        }
-    }
+function getApiBase() {
+    return (typeof window !== 'undefined' && window.API_BASE) || 'http://localhost:3001';
 }
-const API_BASE = typeof window !== 'undefined' ? window.API_BASE : 'http://localhost:3001';
 
 let currentOperationSourceUserId = null;
 
@@ -24,7 +14,7 @@ let currentOperationSourceUserId = null;
  */
 async function setOperationSource(roomId, userId, operationSourceUserId) {
     try {
-        const response = await fetch(`${API_BASE}/api/v1/rooms/${roomId}/operation-source`, {
+        const response = await fetch(`${getApiBase()}/api/v1/rooms/${roomId}/operation-source`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
