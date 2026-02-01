@@ -4,9 +4,10 @@ title: watch-together-server 数据模型与 Prisma Schema
 status: Done
 assignee: []
 created_date: '2026-01-31 11:14'
-updated_date: '2026-01-31 17:17'
+updated_date: '2026-02-01 05:37'
 labels: []
 dependencies: []
+ordinal: 17000
 ---
 
 ## Description
@@ -15,7 +16,6 @@ dependencies: []
 在 watch-together-server 中定义 Prisma 数据模型：Room（id、name、hostId、currentUrl、inviteLink、createdAt）、RoomMember（id、roomId、userId、nickname、isHost、joinedAt）、Message 等，并配置 DATABASE_URL，运行 prisma migrate deploy。
 
 **Test Command**: `docker compose up -d postgres watch-together-server && docker compose exec watch-together-server npx prisma validate && docker compose exec watch-together-server npx prisma migrate deploy`
-
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

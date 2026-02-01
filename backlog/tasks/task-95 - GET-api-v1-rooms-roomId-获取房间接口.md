@@ -1,12 +1,13 @@
 ---
 id: TASK-95
 title: 'GET /api/v1/rooms/:roomId 获取房间接口'
-status: In Progress
+status: To Do
 assignee: []
 created_date: '2026-01-31 11:15'
-updated_date: '2026-01-31 12:01'
+updated_date: '2026-02-01 05:37'
 labels: []
 dependencies: []
+ordinal: 3000
 ---
 
 ## Description

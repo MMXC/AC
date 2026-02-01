@@ -4,9 +4,10 @@ title: 'POST /api/v1/rooms/:roomId/leave 离开房间接口'
 status: Done
 assignee: []
 created_date: '2026-01-31 11:15'
-updated_date: '2026-01-31 17:35'
+updated_date: '2026-02-01 05:37'
 labels: []
 dependencies: []
+ordinal: 14000
 ---
 
 ## Description

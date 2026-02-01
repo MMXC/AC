@@ -4,9 +4,10 @@ title: PostgreSQL 容器与初始化脚本
 status: Done
 assignee: []
 created_date: '2026-01-31 11:13'
-updated_date: '2026-01-31 11:31'
+updated_date: '2026-02-01 05:37'
 labels: []
 dependencies: []
+ordinal: 19000
 ---
 
 ## Description

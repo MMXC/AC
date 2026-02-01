@@ -4,9 +4,10 @@ title: 成员端播放器 UI 集成与状态展示
 status: Done
 assignee: []
 created_date: '2026-01-31 11:19'
-updated_date: '2026-01-31 19:43'
+updated_date: '2026-02-01 05:37'
 labels: []
 dependencies: []
+ordinal: 2000
 ---
 
 ## Description

@@ -1,12 +1,13 @@
 ---
 id: TASK-92
 title: 数据库种子脚本（可选）
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-31 11:14'
-updated_date: '2026-01-31 11:37'
+updated_date: '2026-02-01 05:37'
 labels: []
 dependencies: []
+ordinal: 21000
 ---
 
 ## Description

@@ -4,9 +4,10 @@ title: 'PUT /api/v1/rooms/:roomId/url 更新房间 URL 接口'
 status: Done
 assignee: []
 created_date: '2026-01-31 11:15'
-updated_date: '2026-01-31 17:30'
+updated_date: '2026-02-01 05:37'
 labels: []
 dependencies: []
+ordinal: 15000
 ---
 
 ## Description
