@@ -216,7 +216,7 @@ function connectWebSocket() {
         return;
     }
     
-    // 验证 userId 格式（后端可能返回 user-xxx 或 UUID/cuid，接受非空且不含非法字符即可）
+    // 验证 userId 格式：与后端约定一致，接受 UUID（如 8f0bb8e5-9711-419b-8481-accbdf28ace2）或 user-xxx/cuid 等
     const userIdPattern = /^[\w-]{8,}$/;
     if (!userIdPattern.test(currentUserId)) {
         console.error('无法连接 WebSocket: userId 格式不正确', currentUserId);
