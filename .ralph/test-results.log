@@ -1288,3 +1288,29 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 14:57:32
+Command: docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend
+═══════════════════════════════════════════════════════════════════
+time="2026-02-01T14:57:32+08:00" level=warning msg="Found orphan containers ([watch-together-api]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container watch-together-postgres  Running
+ Container watch-together-redis  Running
+ Container watch-together  Running
+ Container watch-together-server  Running
+ Container watch-together-postgres  Waiting
+ Container watch-together-redis  Waiting
+ Container watch-together-postgres  Healthy
+ Container watch-together-redis  Healthy
+检查 docker-compose 服务状态...
+运行测试脚本: C:\project\AC\.cursor\skills\watch-together-webapp-testing\tests\test-fix-frontend.py
+
+导航到 http://localhost:3001/room/cml3e2dac0000npj6k7bx0kzn ...
+✅ fix-1/2/3: 无重复声明类 SyntaxError
+✅ fix-4: 无 userId 格式错误，WebSocket 可正常尝试连接
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
