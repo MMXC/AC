@@ -211,6 +211,55 @@ app.post('/api/v1/rooms/:roomId/join', async (req, res) => {
     }
 });
 
+app.post('/api/v1/rooms/:roomId/leave', async (req, res) => {
+    try {
+        const roomId = req.params.roomId;
+        const { userId } = req.body || {};
+        if (!roomId) {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'roomId is required' },
+            });
+        }
+        if (userId == null || String(userId).trim() === '') {
+            return res.status(400).json({
+                success: false,
+                error: { code: 'BAD_REQUEST', message: 'userId is required' },
+            });
+        }
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+        });
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Room not found' },
+            });
+        }
+        const member = await prisma.roomMember.findUnique({
+            where: {
+                roomId_userId: { roomId, userId: String(userId) },
+            },
+        });
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Member not found in this room' },
+            });
+        }
+        await prisma.roomMember.delete({
+            where: { id: member.id },
+        });
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        console.error('POST /api/v1/rooms/:roomId/leave error:', err);
+        return res.status(500).json({
+            success: false,
+            error: { code: 'INTERNAL_ERROR', message: err.message || 'Internal server error' },
+        });
+    }
+});
+
 app.post('/api/v1/rooms', async (req, res) => {
     try {
         const { name, hostNickname, url } = req.body || {};
