@@ -16,6 +16,11 @@ let screenStreamState = {
     quality: 0.7, // 图片质量（0-1）
 };
 
+// ICE 协商超时（毫秒），超时后提示用户检查网络
+const ICE_NEGOTIATION_TIMEOUT_MS = 20000;
+// 可恢复错误自动重试次数（如为某成员建立连接）
+const WEBRTC_RETRY_PER_MEMBER_MAX = 2;
+
 // WebRTC 状态
 // 房主端：peerConnections 为 Map<userId, RTCPeerConnection>，localStream 为当前共享流
 // 成员端：保留单个 peerConnection / remoteStream / targetUserId
@@ -32,6 +37,12 @@ let webrtcState = {
     pendingIceCandidatesByMember: new Map(),
     /** 成员端：在 setRemoteDescription 之前收到的房主 ICE 候选队列 */
     pendingIceCandidates: [],
+    /** 房主端：每个成员的 ICE 协商超时定时器，key 为成员 userId */
+    iceTimeoutByMember: new Map(),
+    /** 房主端：每个成员已重试次数，key 为成员 userId */
+    retryCountByMember: new Map(),
+    /** 成员端：ICE 协商超时定时器 */
+    iceTimeoutHandle: null,
 };
 
 /**
@@ -138,15 +149,16 @@ function handleUserJoinedRoom(event) {
 
 /**
  * 处理 WebSocket 连接事件
+ * 信令重连后，房主若正在共享则自动重新向所有成员建立 WebRTC 连接（有限重连）。
  */
 function handleWebSocketConnected(event) {
     const ws = event.detail?.ws;
     if (ws) {
         screenStreamState.ws = ws;
-        
+
         // 监听 WebSocket 消息
         ws.addEventListener('message', handleWebSocketMessage);
-        
+
         // 初始化 WebRTC 管理器（如果存在）
         if (typeof initWebRTCManager === 'function') {
             try {
@@ -155,35 +167,51 @@ function handleWebSocketConnected(event) {
                 console.warn('初始化 WebRTC 管理器失败:', error);
             }
         }
+
+        // 房主且正在共享：信令重连后自动重新建立 WebRTC 连接（可恢复错误有限重连）
+        if (typeof window !== 'undefined' && window.isHost && screenStreamState.isStreaming && screenStreamState.mediaStream) {
+            const stream = screenStreamState.mediaStream;
+            stopWebRTCPeerConnection(false);
+            startWebRTCPeerConnectionAsHost(stream).catch((err) => {
+                console.error('WebSocket 重连后恢复 WebRTC 失败:', err);
+                showScreenSharingError(
+                    '恢复共享失败',
+                    '信令已重连，但无法自动恢复画面共享。请点击「停止共享」后再次「开始共享」重试。',
+                    true
+                );
+            });
+        }
     }
 }
 
 /**
  * 处理 WebSocket 断开事件
+ * 房主：停止共享并提示；成员：停止播放、关闭 WebRTC 并提示。
  */
 function handleWebSocketDisconnected(event) {
     const wasStreaming = screenStreamState.isStreaming;
     screenStreamState.ws = null;
-    
-    // 如果正在共享，停止共享并显示错误提示
+
+    // 成员端：信令中断时立即停止共享/播放并关闭 WebRTC 连接
+    if (typeof window !== 'undefined' && !window.isHost) {
+        if (webrtcState.iceTimeoutHandle) {
+            clearTimeout(webrtcState.iceTimeoutHandle);
+            webrtcState.iceTimeoutHandle = null;
+        }
+        stopWebRTCPeerConnection(false);
+        hideMemberViewingStatusLabel();
+        updateVideoPlaceholder('信令中断', 'WebSocket 信令连接已断开，已停止播放。请检查网络后刷新页面重试。');
+    }
+
+    // 房主：如果正在共享，停止共享并显示错误提示
     if (wasStreaming) {
         stopScreenSharing();
-        
-        // 显示连接中断错误提示
         showScreenSharingError(
-            '连接中断',
+            '信令中断',
             'WebSocket 信令连接已断开，屏幕共享已停止。请检查网络连接后刷新页面重试。',
-            true // 可恢复，用户可以通过刷新页面重试
+            true
         );
-        
-        // 更新占位符提示
         updateVideoPlaceholder('连接中断', 'WebSocket 连接已断开，请刷新页面重试');
-    }
-    
-    // 通知成员端连接中断
-    if (!window.isHost) {
-        hideMemberViewingStatusLabel();
-        updateVideoPlaceholder('连接中断', '信令连接已断开，请刷新页面重试');
     }
 }
 
@@ -391,8 +419,8 @@ async function startScreenSharing() {
         let isRecoverable = false;
         
         if (error.name === 'NotAllowedError') {
-            errorTitle = '权限被拒绝';
-            errorMessage = '屏幕共享权限被拒绝。请点击浏览器地址栏的锁图标，允许屏幕共享权限后重试。';
+            errorTitle = '您已拒绝屏幕共享权限';
+            errorMessage = '权限被拒绝：您点击了「取消」或拒绝了屏幕共享。若要共享画面，请点击「开始共享」后在弹出的窗口中选择要共享的屏幕或窗口并允许权限。';
             isRecoverable = true;
         } else if (error.name === 'NotFoundError') {
             errorTitle = '未找到屏幕源';
@@ -617,13 +645,26 @@ function createPeerConnection() {
 }
 
 /**
+ * 房主端：清除某成员的 ICE 超时定时器
+ */
+function clearIceTimeoutForMember(targetUserId) {
+    const tid = webrtcState.iceTimeoutByMember.get(targetUserId);
+    if (tid) {
+        clearTimeout(tid);
+        webrtcState.iceTimeoutByMember.delete(targetUserId);
+    }
+}
+
+/**
  * 房主端：为指定成员创建 PeerConnection 并发送 Offer（单条连接）
+ * ICE 长时间未连接则超时退出；可恢复错误时在限制次数内自动重试。
  */
 async function addPeerConnectionForMember(targetUserId, stream) {
     if (typeof window === 'undefined') return;
     if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) return;
     if (!window.currentRoomId || !window.currentUserId) return;
     if (webrtcState.peerConnections.has(targetUserId)) {
+        clearIceTimeoutForMember(targetUserId);
         closePeerConnectionForMember(targetUserId);
     }
 
@@ -652,6 +693,10 @@ async function addPeerConnectionForMember(targetUserId, stream) {
 
     pc.onconnectionstatechange = () => {
         console.log(`WebRTC 连接状态 [${targetUserId}]:`, pc.connectionState);
+        if (pc.connectionState === 'connected') {
+            clearIceTimeoutForMember(targetUserId);
+            webrtcState.retryCountByMember.delete(targetUserId);
+        }
     };
 
     const offer = await pc.createOffer();
@@ -670,13 +715,38 @@ async function addPeerConnectionForMember(targetUserId, stream) {
     });
     screenStreamState.ws.send(JSON.stringify(offerMessage));
     console.log('已发送 WebRTC Offer 给成员:', targetUserId);
+
+    // ICE 协商超时：长时间未连接则关闭并提示，可恢复时有限次数内重试
+    const timeoutId = setTimeout(() => {
+        webrtcState.iceTimeoutByMember.delete(targetUserId);
+        if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+        const currentRetries = webrtcState.retryCountByMember.get(targetUserId) || 0;
+        closePeerConnectionForMember(targetUserId);
+        if (currentRetries < WEBRTC_RETRY_PER_MEMBER_MAX - 1) {
+            webrtcState.retryCountByMember.set(targetUserId, currentRetries + 1);
+            addPeerConnectionForMember(targetUserId, stream).catch(err => {
+                console.error('重试为成员建立 WebRTC 连接失败:', targetUserId, err);
+                webrtcState.retryCountByMember.delete(targetUserId);
+            });
+        } else {
+            webrtcState.retryCountByMember.delete(targetUserId);
+            showScreenSharingError(
+                '部分成员连接超时',
+                'ICE 协商超时，请检查网络。受影响成员可刷新页面后重试。',
+                true
+            );
+        }
+    }, ICE_NEGOTIATION_TIMEOUT_MS);
+    webrtcState.iceTimeoutByMember.set(targetUserId, timeoutId);
 }
 
 /**
  * 房主端：关闭对指定成员的 PeerConnection 并释放资源
  */
 function closePeerConnectionForMember(targetUserId) {
+    clearIceTimeoutForMember(targetUserId);
     webrtcState.pendingIceCandidatesByMember.delete(targetUserId);
+    webrtcState.retryCountByMember.delete(targetUserId);
     const pc = webrtcState.peerConnections.get(targetUserId);
     if (pc) {
         try {
@@ -746,6 +816,17 @@ async function startWebRTCPeerConnectionAsHost(stream) {
  */
 function stopWebRTCPeerConnection(notifyPeer) {
     if (typeof window === 'undefined') return;
+
+    // 清除所有 ICE 协商超时定时器
+    if (webrtcState.iceTimeoutByMember && webrtcState.iceTimeoutByMember.size > 0) {
+        webrtcState.iceTimeoutByMember.forEach((tid) => clearTimeout(tid));
+        webrtcState.iceTimeoutByMember.clear();
+    }
+    webrtcState.retryCountByMember && webrtcState.retryCountByMember.clear();
+    if (webrtcState.iceTimeoutHandle) {
+        clearTimeout(webrtcState.iceTimeoutHandle);
+        webrtcState.iceTimeoutHandle = null;
+    }
 
     // 房主端：关闭所有成员的 PeerConnection
     if (webrtcState.peerConnections && webrtcState.peerConnections.size > 0) {
@@ -1084,15 +1165,25 @@ async function handleWebRTCOffer(message) {
 
     pc.onconnectionstatechange = () => {
         console.log('WebRTC 连接状态（成员端）:', pc.connectionState);
+        if (pc.connectionState === 'connected') {
+            if (webrtcState.iceTimeoutHandle) {
+                clearTimeout(webrtcState.iceTimeoutHandle);
+                webrtcState.iceTimeoutHandle = null;
+            }
+        }
         // 房主停止共享或连接断开时，停止播放并更新状态文案
         if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+            if (webrtcState.iceTimeoutHandle) {
+                clearTimeout(webrtcState.iceTimeoutHandle);
+                webrtcState.iceTimeoutHandle = null;
+            }
             if (typeof window !== 'undefined' && window.VideoPlayer && typeof window.VideoPlayer.detachStream === 'function') {
                 window.VideoPlayer.detachStream();
             }
             hideMemberViewingStatusLabel();
             updateVideoPlaceholder(
                 pc.connectionState === 'failed' ? '连接出错' : '房主已停止共享',
-                pc.connectionState === 'failed' ? '连接失败，请刷新重试' : ''
+                pc.connectionState === 'failed' ? '连接失败，请检查网络后刷新重试' : ''
             );
         }
     };
@@ -1119,6 +1210,21 @@ async function handleWebRTCOffer(message) {
 
     screenStreamState.ws.send(JSON.stringify(answerMessage));
     console.log('成员端已发送 WebRTC Answer 给房主:', message.fromUserId);
+
+    // ICE 协商超时：长时间未连接则退出并提示用户检查网络
+    if (webrtcState.iceTimeoutHandle) {
+        clearTimeout(webrtcState.iceTimeoutHandle);
+    }
+    webrtcState.iceTimeoutHandle = setTimeout(() => {
+        webrtcState.iceTimeoutHandle = null;
+        if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+        stopWebRTCPeerConnection(false);
+        hideMemberViewingStatusLabel();
+        updateVideoPlaceholder(
+            '连接超时',
+            'ICE 协商超时，请检查网络后刷新页面重试。'
+        );
+    }, ICE_NEGOTIATION_TIMEOUT_MS);
 }
 
 async function handleWebRTCAnswer(message) {
