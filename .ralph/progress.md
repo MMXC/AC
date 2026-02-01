@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 5
-- Current status: Task Complete - 成员端 VideoPlayer 组件（可附加 MediaStream）
+- Iterations completed: 13
+- Current status: Task Complete - WebRTC 错误处理与重试策略（backlog-113）
 
 ## How This Works
 
@@ -14,6 +14,66 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - WebRTC 错误处理与重试策略（backlog-113）
+- #1：房主拒绝 getDisplayMedia 时 NotAllowedError 显示「您已拒绝屏幕共享权限」及明确文案，showScreenSharingError 可重试
+- #2：ICE 协商超时 20s（ICE_NEGOTIATION_TIMEOUT_MS），房主端 addPeerConnectionForMember 超时后有限次数重试并提示「部分成员连接超时，请检查网络」；成员端 handleWebRTCOffer 后超时则 stopWebRTCPeerConnection 并 updateVideoPlaceholder「ICE 协商超时，请检查网络后刷新页面重试」
+- #3：handleWebSocketDisconnected 房主停止共享并提示；成员端调用 stopWebRTCPeerConnection(false)、更新占位符「信令中断，已停止播放」
+- #4：房主端 ICE 超时后对单成员最多重试 WEBRTC_RETRY_PER_MEMBER_MAX 次；chat.js 已有 WebSocket 最多 3 次自动重连，失败后「自动重连失败，请检查网络连接后刷新页面」；handleWebSocketConnected 房主正在共享时自动重新 startWebRTCPeerConnectionAsHost 恢复 WebRTC
+- watch-together 单元测试 webrtc-signaling + screen-streaming 共 77 个用例通过；RALPH_TASK.md 四项成功标准已勾选
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 仅向房主暴露开始/停止共享按钮并与权限系统集成（backlog-111）
+- #1：screen-streaming.js 中 showStartSharingButton() 增加 window.isHost 判断，非房主则隐藏并 return；updateStartSharingButton 非房主直接 return，确保仅房主可见/可操作共享按钮
+- #2：watch-together-server/dist/server.js 在转发 WebRTC 信令前，对 WEBRTC_OFFER 校验 fromUserId === roomId + '-host'，非房主发起则拒绝并打日志，不转发
+- #3：stopScreenSharing() 已调用 updateStartSharingButton(false)，房主停止共享后按钮恢复「开始共享」、文案恢复
+- #4：仅拒绝非房主的 WEBRTC_OFFER，ANSWER/ICE/END 与成员接收逻辑未改，普通成员正常观看已有 WebRTC 流
+- watch-together 单元测试 webrtc-signaling + screen-streaming 共 77 个用例通过；RALPH_TASK.md 四项成功标准已勾选
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 房主向所有成员建立 WebRTC 连接（backlog-110）
+- 验证 watch-together/js/screen-streaming.js 已实现四项标准：#1 peerConnections Map(userId -> RTCPeerConnection)、addPeerConnectionForMember；#2 信令带 toUserId，服务器按 toUserId 点对点转发；#3 handleMemberJoinedRoom 在房主正在共享时为新成员 addPeerConnectionForMember；#4 handleMemberLeftRoom / handleWebRTCEnd 调用 closePeerConnectionForMember 关闭对应 PC
+- chat.js 已派发 memberJoinedRoom / memberLeftRoom，room.js 提供 getMembersList()
+- 新增 screen-streaming-basic.test.js 中「房主向所有成员建立 WebRTC 连接 (backlog-110)」4 条用例，webrtc-signaling + screen-streaming 共 77 个用例通过
+- RALPH_TASK.md 四项成功标准已勾选
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 通过 WebSocket 信令在房主与单成员间建立 WebRTC 连接（汇总 backlog-109）
+- 验证 screen-streaming.js / webrtc-signaling.js / video-player.js 已实现完整流程：#1 房主点击开始共享 → getDisplayMedia → startWebRTCPeerConnectionAsHost → addPeerConnectionForMember 发送 WEBRTC_OFFER；#2 成员 handleWebRTCOffer → setRemoteDescription → createAnswer → WEBRTC_ANSWER 回传；#3 双方 onicecandidate 发送 WEBRTC_ICE_CANDIDATE，handleWebRTCIceCandidate + pending 队列 + drainPendingIceCandidates 直至连接建立；#4 成员端 pc.ontrack → VideoPlayer.attachStream(remoteStream) 播放画面
+- 运行 watch-together 单元测试：webrtc-signaling + screen-streaming 共 73 个用例通过
+- RALPH_TASK.md 四项成功标准已勾选
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 双方实现 WEBRTC_ICE_CANDIDATE 收发与 addIceCandidate（backlog-107）
+- 确认 screen-streaming.js 房主端 addPeerConnectionForMember 与成员端 handleWebRTCOffer 中均已设置 pc.onicecandidate，通过 createICECandidateMessage 发送 WEBRTC_ICE_CANDIDATE（#1）
+- 接收方 handleWebRTCIceCandidate 正确解析 message.candidate 并调用 pc.addIceCandidate；新增 ICE 候选排队：在 setRemoteDescription 之前到达的候选写入 pendingIceCandidatesByMember（房主）/ pendingIceCandidates（成员），在 handleWebRTCAnswer / handleWebRTCOffer 中 setRemoteDescription 后执行 drainPendingIceCandidates，确保 connectionState 能变为 connected（#2 #4）
+- 服务器端已按 toUserId 转发 WEBRTC_ICE_CANDIDATE，路由正确（#3）
+- 运行 watch-together 单元测试：webrtc-signaling + screen-streaming 共 73 个用例通过；RALPH_TASK.md 四项成功标准已勾选
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 房主端实现 offer 创建与 WEBRTC_OFFER 发送（backlog-105）
+- 验证 watch-together/js/screen-streaming.js 与 webrtc-signaling.js 已实现完整流程：房主点击「开始共享」→ getDisplayMedia 获取 MediaStream → startWebRTCPeerConnectionAsHost → 为每个成员 addPeerConnectionForMember（创建 RTCPeerConnection、addTrack、createOffer、createOfferMessage 含 roomId/fromUserId/toUserId/sdp）→ WebSocket 发送 WEBRTC_OFFER
+- 四项成功标准均已满足：#1 getDisplayMedia 流获取；#2 RTCPeerConnection + addTrack；#3 createOffer 后发送格式正确的 WEBRTC_OFFER；#4 消息含 toUserId 和 sdp
+- 运行 watch-together 单元测试：webrtc-signaling + screen-streaming 共 73 个用例通过
+- RALPH_TASK.md 四项成功标准已勾选
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 服务器端实现 WebRTC 信令转发（backlog-103）
+- 在 watch-together-server 中增加 WebSocket：使用 http.createServer(app) + WebSocketServer 挂载到同一端口 3000，与 docker-compose 中 WS_BASE_URL=ws://localhost:3000 一致
+- 维护 wsByRoomUser（roomId:userId -> ws）与 wsConnections（房间内连接集合）；连接时从 URL 查询参数取 roomId、userId
+- 识别 WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR，按 message.roomId 与 message.toUserId 点对点转发；toUserId 为 null 时向房间内其他连接广播；整条消息原样 JSON 转发，不解析或修改 SDP/ICE
+- 目标用户不在线时 sendToUser 内 console.warn，不抛错不崩溃
+- 仅 WebRTC 信令类型进入转发分支，其他消息类型不处理，信令与聊天/操作同步流分离
+- package.json 增加 ws 依赖；dist/server.js 实现完整；npm run test:api 通过；RALPH_TASK 四项成功标准已勾选
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session 1 completed** - 设计 WebRTC 信令消息协议（backlog-102）
+- 确认 watch-together/docs/webrtc-signaling-protocol.md 与 watch-together/js/webrtc-signaling-types.ts 已完整列出所有 WebRTC 信令消息（WEBRTC_OFFER、WEBRTC_ANSWER、WEBRTC_ICE_CANDIDATE、WEBRTC_END、WEBRTC_ERROR）的 JSON 结构与字段说明
+- #1 #2：文档与 TS 类型已满足；#4：文档含版本化策略（version 字段）、扩展性设计（tracks、多房主预留）
+- #3：前端信令层统一使用类型：chat.js 与 screen-streaming.js 的 WebRTC 消息分支改为使用 WebRTCSignalingType 常量（或 fallback 对象），发送层已使用 createOfferMessage/createAnswerMessage/createICECandidateMessage
+- 测试命令通过：cd watch-together && npm test -- webrtc-signaling（29 个用例全部通过）
+- RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 2]
 **Session 1 completed** - 修复 test-results 失败（generate-test.py NameError）
@@ -184,3 +244,33 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-01 02:34:02
 **Session 2 started** (model: auto)
+
+### 2026-02-01 02:39:15
+**Session 1 started** (model: auto)
+
+### 2026-02-01 02:45:27
+**Session 1 started** (model: auto)
+
+### 2026-02-01 02:57:43
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:03:35
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:07:43
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:20:01
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:25:38
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:32:25
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:38:56
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:45:49
+**Session 1 started** (model: auto)

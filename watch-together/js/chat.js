@@ -452,12 +452,12 @@ function handleWebSocketMessage(message) {
             }
             break;
 
-        case 'WEBRTC_OFFER':
-        case 'WEBRTC_ANSWER':
-        case 'WEBRTC_ICE_CANDIDATE':
-        case 'WEBRTC_END':
-        case 'WEBRTC_ERROR':
-            // WebRTC 信令消息：转交给专门的处理函数（如 screen-streaming.js）
+        case (window.WebRTCSignalingType && window.WebRTCSignalingType.WEBRTC_OFFER):
+        case (window.WebRTCSignalingType && window.WebRTCSignalingType.WEBRTC_ANSWER):
+        case (window.WebRTCSignalingType && window.WebRTCSignalingType.WEBRTC_ICE_CANDIDATE):
+        case (window.WebRTCSignalingType && window.WebRTCSignalingType.WEBRTC_END):
+        case (window.WebRTCSignalingType && window.WebRTCSignalingType.WEBRTC_ERROR):
+            // WebRTC 信令消息：转交给专门的处理函数（如 screen-streaming.js），类型来自 webrtc-signaling.js
             if (typeof window !== 'undefined' && typeof window.handleWebRTCSignalingMessage === 'function') {
                 window.handleWebRTCSignalingMessage(message);
             } else {
