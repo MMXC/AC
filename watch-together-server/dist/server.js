@@ -21,6 +21,7 @@ const WEBRTC_SIGNAL_TYPES = [
     "WEBRTC_END",
     "WEBRTC_ERROR",
 ];
+const SCREEN_STREAM_BROADCAST_TYPES = ["SCREEN_STREAM_START", "SCREEN_STREAM_STOP"];
 function sendToUser(roomId, toUserId, message) {
     const key = `${roomId}:${toUserId}`;
     const ws = wsByRoomUser.get(key);
@@ -100,6 +101,20 @@ wss.on("connection", (ws, req) => {
                         const payload = typeof message === "string" ? message : JSON.stringify(message);
                         connections.forEach((sock) => {
                             if (sock !== ws && sock.readyState === 1) sock.send(payload);
+                        });
+                    }
+                }
+                return;
+            }
+            if (SCREEN_STREAM_BROADCAST_TYPES.includes(type)) {
+                const msgRoomId = message.roomId || (ws.roomId || null);
+                if (msgRoomId) {
+                    const connections = wsConnections.get(msgRoomId);
+                    if (connections) {
+                        const payload = typeof message === "string" ? message : JSON.stringify(message);
+                        connections.forEach((sock) => {
+                            if (sock !== ws && sock.readyState === 1)
+                                sock.send(payload);
                         });
                     }
                 }

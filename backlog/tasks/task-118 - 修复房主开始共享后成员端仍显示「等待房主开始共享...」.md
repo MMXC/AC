@@ -4,7 +4,7 @@ title: 修复房主开始共享后成员端仍显示「等待房主开始共享.
 status: Done
 assignee: []
 created_date: '2026-02-01 07:18'
-updated_date: '2026-02-01 07:58'
+updated_date: '2026-02-01 07:27'
 labels: []
 dependencies: []
 ordinal: 24000
