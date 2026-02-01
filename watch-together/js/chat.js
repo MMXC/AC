@@ -216,8 +216,8 @@ function connectWebSocket() {
         return;
     }
     
-    // 验证 userId 格式（应该符合后端要求：user-{8位小写字母或数字}）
-    const userIdPattern = /^user-[a-z0-9]{8}$/;
+    // 验证 userId 格式（后端可能返回 user-xxx 或 UUID/cuid，接受非空且不含非法字符即可）
+    const userIdPattern = /^[\w-]{8,}$/;
     if (!userIdPattern.test(currentUserId)) {
         console.error('无法连接 WebSocket: userId 格式不正确', currentUserId);
         return;

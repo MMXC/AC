@@ -1362,9 +1362,9 @@ function handleWebRTCError(message) {
     }
 }
 
-// 将 WebRTC 信令处理函数暴露到全局，供 chat.js 调用；类型统一使用 webrtc-signaling.js 的 WebRTCSignalingType
+// 将 WebRTC 信令处理函数暴露到全局，供 chat.js 调用；类型使用 webrtc-signaling.js 的 window.WebRTCSignalingType，不重复声明
 if (typeof window !== 'undefined') {
-    var WebRTCSignalingType = window.WebRTCSignalingType || {
+    var signalingType = window.WebRTCSignalingType || {
         WEBRTC_OFFER: 'WEBRTC_OFFER',
         WEBRTC_ANSWER: 'WEBRTC_ANSWER',
         WEBRTC_ICE_CANDIDATE: 'WEBRTC_ICE_CANDIDATE',
@@ -1375,19 +1375,19 @@ if (typeof window !== 'undefined') {
         if (!message || !message.type) return;
 
         switch (message.type) {
-            case WebRTCSignalingType.WEBRTC_OFFER:
+            case signalingType.WEBRTC_OFFER:
                 handleWebRTCOffer(message);
                 break;
-            case WebRTCSignalingType.WEBRTC_ANSWER:
+            case signalingType.WEBRTC_ANSWER:
                 handleWebRTCAnswer(message);
                 break;
-            case WebRTCSignalingType.WEBRTC_ICE_CANDIDATE:
+            case signalingType.WEBRTC_ICE_CANDIDATE:
                 handleWebRTCIceCandidate(message);
                 break;
-            case WebRTCSignalingType.WEBRTC_END:
+            case signalingType.WEBRTC_END:
                 handleWebRTCEnd(message);
                 break;
-            case WebRTCSignalingType.WEBRTC_ERROR:
+            case signalingType.WEBRTC_ERROR:
                 handleWebRTCError(message);
                 break;
             default:

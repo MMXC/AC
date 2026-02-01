@@ -3,8 +3,8 @@
  * 处理 WebRTC 连接建立、ICE 协商、超时和错误处理
  */
 
-// WebRTC 连接状态
-const webrtcState = {
+// WebRTC 连接状态（命名与 screen-streaming.js 的 webrtcState 区分，避免同页加载时重复声明）
+const webrtcManagerState = {
     peerConnections: new Map(), // userId -> RTCPeerConnection
     iceTimeoutTimers: new Map(), // userId -> timeout timer
     retryCounters: new Map(), // userId -> retry count
@@ -26,7 +26,7 @@ const WEBRTC_CONFIG = {
  * 初始化 WebRTC 管理器
  */
 function initWebRTCManager(ws) {
-    webrtcState.ws = ws;
+    webrtcManagerState.ws = ws;
     
     // 监听 WebSocket 消息
     if (ws) {
@@ -98,7 +98,7 @@ function handleWebRTCSignalingMessage(event) {
  */
 function createPeerConnection(targetUserId) {
     // 如果已存在连接，先关闭
-    if (webrtcState.peerConnections.has(targetUserId)) {
+    if (webrtcManagerState.peerConnections.has(targetUserId)) {
         closePeerConnection(targetUserId);
     }
     
@@ -148,7 +148,7 @@ function createPeerConnection(targetUserId) {
         handleWebRTCError(targetUserId, error);
     });
     
-    webrtcState.peerConnections.set(targetUserId, pc);
+    webrtcManagerState.peerConnections.set(targetUserId, pc);
     
     return pc;
 }
@@ -161,24 +161,24 @@ function setICETimeout(targetUserId) {
     clearICETimeout(targetUserId);
     
     const timer = setTimeout(() => {
-        const pc = webrtcState.peerConnections.get(targetUserId);
+        const pc = webrtcManagerState.peerConnections.get(targetUserId);
         if (pc && (pc.iceConnectionState === 'checking' || pc.iceConnectionState === 'new')) {
             console.warn(`ICE 协商超时 [${targetUserId}]`);
             handleICETimeout(targetUserId);
         }
     }, WEBRTC_CONFIG.iceTimeout);
     
-    webrtcState.iceTimeoutTimers.set(targetUserId, timer);
+    webrtcManagerState.iceTimeoutTimers.set(targetUserId, timer);
 }
 
 /**
  * 清除 ICE 协商超时
  */
 function clearICETimeout(targetUserId) {
-    const timer = webrtcState.iceTimeoutTimers.get(targetUserId);
+    const timer = webrtcManagerState.iceTimeoutTimers.get(targetUserId);
     if (timer) {
         clearTimeout(timer);
-        webrtcState.iceTimeoutTimers.delete(targetUserId);
+        webrtcManagerState.iceTimeoutTimers.delete(targetUserId);
     }
 }
 
@@ -186,7 +186,7 @@ function clearICETimeout(targetUserId) {
  * 处理 ICE 协商超时
  */
 function handleICETimeout(targetUserId) {
-    const pc = webrtcState.peerConnections.get(targetUserId);
+    const pc = webrtcManagerState.peerConnections.get(targetUserId);
     if (!pc) return;
     
     // 关闭连接
@@ -205,7 +205,7 @@ function handleICETimeout(targetUserId) {
  * 处理 ICE 协商失败
  */
 function handleICEFailure(targetUserId) {
-    const pc = webrtcState.peerConnections.get(targetUserId);
+    const pc = webrtcManagerState.peerConnections.get(targetUserId);
     if (!pc) return;
     
     // 关闭连接
@@ -282,10 +282,10 @@ function handleWebRTCError(targetUserId, error) {
  * 关闭 WebRTC 连接
  */
 function closePeerConnection(targetUserId) {
-    const pc = webrtcState.peerConnections.get(targetUserId);
+    const pc = webrtcManagerState.peerConnections.get(targetUserId);
     if (pc) {
         pc.close();
-        webrtcState.peerConnections.delete(targetUserId);
+        webrtcManagerState.peerConnections.delete(targetUserId);
     }
     
     clearICETimeout(targetUserId);
@@ -295,23 +295,23 @@ function closePeerConnection(targetUserId) {
  * 重试计数器管理
  */
 function getRetryCount(targetUserId) {
-    return webrtcState.retryCounters.get(targetUserId) || 0;
+    return webrtcManagerState.retryCounters.get(targetUserId) || 0;
 }
 
 function incrementRetryCounter(targetUserId) {
     const current = getRetryCount(targetUserId);
-    webrtcState.retryCounters.set(targetUserId, current + 1);
+    webrtcManagerState.retryCounters.set(targetUserId, current + 1);
 }
 
 function resetRetryCounter(targetUserId) {
-    webrtcState.retryCounters.delete(targetUserId);
+    webrtcManagerState.retryCounters.delete(targetUserId);
 }
 
 /**
  * 发送 ICE Candidate
  */
 function sendICECandidate(targetUserId, candidate) {
-    if (!webrtcState.ws || webrtcState.ws.readyState !== WebSocket.OPEN) {
+    if (!webrtcManagerState.ws || webrtcManagerState.ws.readyState !== WebSocket.OPEN) {
         return;
     }
     
@@ -334,7 +334,7 @@ function sendICECandidate(targetUserId, candidate) {
         candidate: candidate.toJSON(),
     });
     
-    webrtcState.ws.send(JSON.stringify(message));
+    webrtcManagerState.ws.send(JSON.stringify(message));
 }
 
 /**
@@ -375,8 +375,8 @@ async function handleOffer(message) {
             sdp: answer.sdp,
         });
         
-        if (webrtcState.ws && webrtcState.ws.readyState === WebSocket.OPEN) {
-            webrtcState.ws.send(JSON.stringify(answerMessage));
+        if (webrtcManagerState.ws && webrtcManagerState.ws.readyState === WebSocket.OPEN) {
+            webrtcManagerState.ws.send(JSON.stringify(answerMessage));
         }
         
         // 设置超时
@@ -394,7 +394,7 @@ async function handleAnswer(message) {
     const { fromUserId, sdp } = message;
     
     try {
-        const pc = webrtcState.peerConnections.get(fromUserId);
+        const pc = webrtcManagerState.peerConnections.get(fromUserId);
         if (!pc) {
             console.warn(`未找到连接 [${fromUserId}]`);
             return;
@@ -420,7 +420,7 @@ async function handleICECandidate(message) {
     const { fromUserId, candidate } = message;
     
     try {
-        const pc = webrtcState.peerConnections.get(fromUserId);
+        const pc = webrtcManagerState.peerConnections.get(fromUserId);
         if (!pc) {
             console.warn(`未找到连接 [${fromUserId}]`);
             return;
@@ -482,7 +482,7 @@ if (typeof module !== 'undefined' && module.exports) {
         createPeerConnection,
         closePeerConnection,
         handleWebRTCSignalingMessage,
-        webrtcState,
+        webrtcManagerState,
         WEBRTC_CONFIG,
     };
 }

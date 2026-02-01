@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 14
-- Current status: Task Complete - GET /api/v1/rooms/:roomId 获取房间接口（backlog-95）
+- Iterations completed: 15
+- Current status: Task Complete - 修复 webrtcState 重复声明导致的 SyntaxError（backlog-115）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 修复 webrtcState 重复声明导致的 SyntaxError（backlog-115）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps 与每步验收
+- webrtc-manager.js 将顶层 `const webrtcState` 改名为 `const webrtcManagerState`，页面中仅 screen-streaming.js 保留顶层 `webrtcState`，消除 "webrtcState has already been declared" 错误
+- 为使 fix-frontend 测试通过：join.html 移除重复引入的 webrtc-signaling.js；screen-streaming.js 中 handleWebRTCSignalingMessage 使用局部变量 signalingType 替代重复声明的 WebRTCSignalingType；operation-source.js 使用 getApiBase() 替代顶层 const API_BASE；chat.js/sync.js 放宽 userId 格式校验以接受后端返回的 UUID/cuid
+- 测试命令通过：docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend；watch-together 单元测试 webrtc-signaling + screen-streaming 共 77 个用例通过
+- RALPH_TASK.md 三项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - GET /api/v1/rooms/:roomId 获取房间接口（backlog-95）
@@ -284,4 +292,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 13:44:19
+**Session 1 started** (model: auto)
+
+### 2026-02-01 14:42:35
 **Session 1 started** (model: auto)
