@@ -32,11 +32,13 @@ function buildRoomPayload(room, members, includeCurrentUrl = false) {
         userId: m.userId,
         nickname: m.nickname,
     }));
+    const hostId = room.id + '-host';
     const payload = {
         roomId: room.id,
         name: room.name,
         currentUrl: room.currentUrl ?? null,
         members: memberList,
+        hostId,
     };
     if (includeCurrentUrl) {
         payload.currentUrl = room.currentUrl ?? null;

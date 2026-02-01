@@ -14,13 +14,14 @@ test_command: "docker compose up -d && cd watch-together-server && npm run test:
 
 ## Success Criteria
 
-- [ ] #1 接口路径为 /api/v1/rooms/:roomId
-- [ ] #2 房间存在时返回 200 与 room 数据（含 members、currentUrl、hostId）
-- [ ] #3 房间不存在时返回 404 或 400，含 error 信息
-- [ ] #4 room 结构与 room.js 预期一致
+- [x] #1 接口路径为 /api/v1/rooms/:roomId
+- [x] #2 房间存在时返回 200 与 room 数据（含 members、currentUrl、hostId）
+- [x] #3 房间不存在时返回 404 或 400，含 error 信息
+- [x] #4 room 结构与 room.js 预期一致
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 确认/补充 GET 路由与 handler** — done when: GET /api/v1/rooms/:roomId 存在且返回 200 时 body 含 success、data（含 roomId、name、members、currentUrl、hostId）
+2. **1.2 房间不存在时返回 404** — done when: GET 不存在的 roomId 返回 404 且 body 含 success: false、error
+3. **1.3 room 含 hostId 与 room.js 一致** — done when: buildRoomPayload 或 GET 返回的 data 含 hostId（房主 userId，即 roomId+'-host'）
+4. **2.1 运行测试** — done when: `docker compose up -d && cd watch-together-server && npm run test:api:get` 通过

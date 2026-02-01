@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 13
-- Current status: Task Complete - WebRTC 错误处理与重试策略（backlog-113）
+- Iterations completed: 14
+- Current status: Task Complete - GET /api/v1/rooms/:roomId 获取房间接口（backlog-95）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - GET /api/v1/rooms/:roomId 获取房间接口（backlog-95）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps 与每步验收
+- GET /api/v1/rooms/:roomId 已存在；在 buildRoomPayload 中增加 hostId（room.id + '-host'），使 room 结构与 room.js validateRoom/joinRoomWithNickname 预期一致（含 members、currentUrl、hostId）
+- 房间存在时返回 200 与 data；房间不存在时返回 404 与 error
+- 测试命令通过：docker compose up -d && cd watch-together-server && npm run test:api:get
+- RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - WebRTC 错误处理与重试策略（backlog-113）
@@ -273,4 +281,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 03:45:49
+**Session 1 started** (model: auto)
+
+### 2026-02-01 13:44:19
 **Session 1 started** (model: auto)
