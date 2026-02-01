@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 17
-- Current status: Task Complete - 修复 WebSocket 连接时 userId 格式校验与后端不一致（backlog-117）
+- Iterations completed: 18
+- Current status: In Progress - 修复聊天消息不显示的问题（backlog-120）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session in progress** - 修复聊天消息不显示的问题（backlog-120）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 服务端 ws 保存 roomId/userId、1.2 处理 CHAT_MESSAGE 并广播、1.3 前端发送/渲染、2.1 自动化测试）
+- 服务端：watch-together-server/dist/server.js 连接时 ws.roomId/ws.userId；收到 CHAT_MESSAGE 时生成 id/timestamp，向房间内所有连接广播（含发送者）；CHAT_MESSAGE 使用 ws.roomId 取房间
+- 前端：chat.js 默认 WebSocket URL 改为 ws://localhost:3000；连接成功时设置 document.body.dataset.chatWsConnected 供测试等待
+- 测试脚本：test-120.py 实现真实断言（房主发消息后两侧 #chatMessages 含文本、成员发消息后两侧含文本），并等待 data-chat-ws-connected
+- 成功标准 #1–#5 已勾选；#6 自动化测试在本地运行仍失败（消息区域仍为「暂无消息」），可能与环境/时序有关，待后续验证
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 修复 WebSocket 连接时 userId 格式校验与后端不一致（backlog-117）
@@ -316,4 +324,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 15:00:55
+**Session 1 started** (model: auto)
+
+### 2026-02-01 15:49:02
 **Session 1 started** (model: auto)

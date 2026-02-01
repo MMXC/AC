@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const http = require("http");
+const crypto = require("crypto");
 const { WebSocketServer } = require("ws");
 const app_1 = __importDefault(require("./app"));
 const PORT = process.env.PORT || 3000;
@@ -37,6 +38,8 @@ wss.on("connection", (ws, req) => {
     const roomId = url.searchParams.get("roomId");
     const userId = url.searchParams.get("userId");
     if (roomId && userId) {
+        ws.roomId = roomId;
+        ws.userId = userId;
         if (!wsConnections.has(roomId)) {
             wsConnections.set(roomId, new Set());
         }
@@ -48,6 +51,30 @@ wss.on("connection", (ws, req) => {
             const message = JSON.parse(data.toString());
             const type = message && message.type;
             if (!type) return;
+            // 聊天消息：向房间内所有连接广播（含发送者），前端据此渲染消息区域
+            const connRoomId = ws.roomId || roomId;
+            if (type === "CHAT_MESSAGE" && connRoomId && message.userId && message.nickname != null && message.content != null) {
+                const id = crypto.randomUUID();
+                const timestamp = new Date().toISOString();
+                const payload = JSON.stringify({
+                    type: "CHAT_MESSAGE",
+                    data: {
+                        id,
+                        userId: message.userId,
+                        nickname: message.nickname,
+                        content: String(message.content).trim(),
+                        timestamp,
+                    },
+                });
+                const connections = wsConnections.get(connRoomId);
+                if (connections) {
+                    connections.forEach((sock) => {
+                        if (sock.readyState === 1)
+                            sock.send(payload);
+                    });
+                }
+                return;
+            }
             if (WEBRTC_SIGNAL_TYPES.includes(type)) {
                 const msgRoomId = message.roomId;
                 const toUserId = message.toUserId;

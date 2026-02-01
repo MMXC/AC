@@ -223,8 +223,8 @@ function connectWebSocket() {
         return;
     }
     
-    // 获取 WebSocket URL（优先使用 window 配置，否则使用默认值）
-    let wsBaseUrl = 'ws://localhost:3001';
+    // 获取 WebSocket URL（优先使用 window 配置；默认与 API 同主机，端口 3000）
+    let wsBaseUrl = 'ws://localhost:3000';
     if (typeof window !== 'undefined' && window.WS_BASE_URL) {
         wsBaseUrl = window.WS_BASE_URL;
     } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
@@ -248,6 +248,11 @@ function connectWebSocket() {
         
         // 重置重试计数
         WS_RECONNECT_CONFIG.retryCount = 0;
+        
+        // 供自动化测试等待：连接就绪后可发送聊天消息
+        if (typeof document !== 'undefined' && document.body) {
+            document.body.dataset.chatWsConnected = 'true';
+        }
         
         // 触发 WebSocket 连接事件，供其他模块使用（如 screen-streaming.js）
         if (typeof window !== 'undefined') {
