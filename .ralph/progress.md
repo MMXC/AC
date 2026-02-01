@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 12
-- Current status: Task Complete - 仅向房主暴露开始/停止共享按钮并与权限系统集成（backlog-111）
+- Iterations completed: 13
+- Current status: Task Complete - WebRTC 错误处理与重试策略（backlog-113）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - WebRTC 错误处理与重试策略（backlog-113）
+- #1：房主拒绝 getDisplayMedia 时 NotAllowedError 显示「您已拒绝屏幕共享权限」及明确文案，showScreenSharingError 可重试
+- #2：ICE 协商超时 20s（ICE_NEGOTIATION_TIMEOUT_MS），房主端 addPeerConnectionForMember 超时后有限次数重试并提示「部分成员连接超时，请检查网络」；成员端 handleWebRTCOffer 后超时则 stopWebRTCPeerConnection 并 updateVideoPlaceholder「ICE 协商超时，请检查网络后刷新页面重试」
+- #3：handleWebSocketDisconnected 房主停止共享并提示；成员端调用 stopWebRTCPeerConnection(false)、更新占位符「信令中断，已停止播放」
+- #4：房主端 ICE 超时后对单成员最多重试 WEBRTC_RETRY_PER_MEMBER_MAX 次；chat.js 已有 WebSocket 最多 3 次自动重连，失败后「自动重连失败，请检查网络连接后刷新页面」；handleWebSocketConnected 房主正在共享时自动重新 startWebRTCPeerConnectionAsHost 恢复 WebRTC
+- watch-together 单元测试 webrtc-signaling + screen-streaming 共 77 个用例通过；RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 仅向房主暴露开始/停止共享按钮并与权限系统集成（backlog-111）
@@ -262,4 +270,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 03:38:56
+**Session 1 started** (model: auto)
+
+### 2026-02-01 03:45:49
 **Session 1 started** (model: auto)
