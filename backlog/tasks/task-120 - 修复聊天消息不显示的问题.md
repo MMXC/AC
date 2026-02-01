@@ -1,9 +1,10 @@
 ---
 id: TASK-120
 title: 修复聊天消息不显示的问题
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-01 07:19'
+updated_date: '2026-02-01 07:47'
 labels: []
 dependencies: []
 ---
