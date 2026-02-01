@@ -25,6 +25,7 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 服务端：连接时在 ws 上保存 roomId、userId** — done when: 收到消息时能根据 ws 确定房间与发送者
+2. **1.2 服务端：处理 CHAT_MESSAGE，生成 id/timestamp 并向房间内所有连接广播（含发送者）** — done when: 任一端发送消息后，房主端与成员端消息区域均能收到并显示
+3. **1.3 前端：确认发送不因 userId 等失败、收到 CHAT_MESSAGE 后写入 messageHistory 并 renderMessage** — 已有逻辑；done when: 消息区域 DOM 显示发送者标识与内容，多条按时间排列
+4. **2.1 自动化测试** — done when: `skill:watch-together-webapp-testing 120`（或 backlog-120 对应 TASK_ID）双浏览器任一方发消息，两侧断言消息区域存在对应文本，通过
