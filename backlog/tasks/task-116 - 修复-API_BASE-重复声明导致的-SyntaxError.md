@@ -4,9 +4,10 @@ title: 修复 API_BASE 重复声明导致的 SyntaxError
 status: Done
 assignee: []
 created_date: '2026-02-01 06:22'
-updated_date: '2026-02-01 06:56'
+updated_date: '2026-02-01 07:50'
 labels: []
 dependencies: []
+ordinal: 26000
 ---
 
 ## Description

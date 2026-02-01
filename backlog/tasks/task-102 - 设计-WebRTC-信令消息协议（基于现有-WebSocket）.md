@@ -4,10 +4,10 @@ title: 设计 WebRTC 信令消息协议（基于现有 WebSocket）
 status: Done
 assignee: []
 created_date: '2026-01-31 11:16'
-updated_date: '2026-02-01 05:37'
+updated_date: '2026-02-01 07:49'
 labels: []
 dependencies: []
-ordinal: 10000
+ordinal: 11000
 ---
 
 ## Description

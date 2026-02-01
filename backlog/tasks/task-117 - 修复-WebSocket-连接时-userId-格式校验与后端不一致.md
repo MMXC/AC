@@ -4,9 +4,10 @@ title: 修复 WebSocket 连接时 userId 格式校验与后端不一致
 status: Done
 assignee: []
 created_date: '2026-02-01 06:22'
-updated_date: '2026-02-01 07:03'
+updated_date: '2026-02-01 07:50'
 labels: []
 dependencies: []
+ordinal: 25000
 ---
 
 ## Description

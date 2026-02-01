@@ -4,10 +4,10 @@ title: 仅向房主暴露开始/停止共享按钮并与权限系统集成
 status: Done
 assignee: []
 created_date: '2026-01-31 11:19'
-updated_date: '2026-02-01 05:37'
+updated_date: '2026-02-01 07:49'
 labels: []
 dependencies: []
-ordinal: 3000
+ordinal: 4000
 ---
 
 ## Description

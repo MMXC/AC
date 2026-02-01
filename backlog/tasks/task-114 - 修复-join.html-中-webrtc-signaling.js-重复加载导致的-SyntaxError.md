@@ -1,12 +1,13 @@
 ---
 id: TASK-114
 title: 修复 join.html 中 webrtc-signaling.js 重复加载导致的 SyntaxError
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-02-01 06:22'
-updated_date: '2026-02-01 06:28'
+updated_date: '2026-02-01 07:50'
 labels: []
 dependencies: []
+ordinal: 28000
 ---
 
 ## Description

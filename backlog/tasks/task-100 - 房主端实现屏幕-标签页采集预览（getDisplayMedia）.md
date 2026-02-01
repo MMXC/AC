@@ -4,10 +4,10 @@ title: 房主端实现屏幕/标签页采集预览（getDisplayMedia）
 status: Done
 assignee: []
 created_date: '2026-01-31 11:16'
-updated_date: '2026-02-01 05:37'
+updated_date: '2026-02-01 07:49'
 labels: []
 dependencies: []
-ordinal: 12000
+ordinal: 13000
 ---
 
 ## Description

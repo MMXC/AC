@@ -4,10 +4,10 @@ title: 'POST /api/v1/rooms/:roomId/join 加入房间接口'
 status: Done
 assignee: []
 created_date: '2026-01-31 11:15'
-updated_date: '2026-02-01 05:37'
+updated_date: '2026-02-01 07:49'
 labels: []
 dependencies: []
-ordinal: 16000
+ordinal: 17000
 ---
 
 ## Description

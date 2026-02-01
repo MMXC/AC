@@ -4,10 +4,10 @@ title: Prisma 迁移脚本与 deploy 流程
 status: Done
 assignee: []
 created_date: '2026-01-31 11:14'
-updated_date: '2026-02-01 05:37'
+updated_date: '2026-02-01 07:49'
 labels: []
 dependencies: []
-ordinal: 20000
+ordinal: 21000
 ---
 
 ## Description
