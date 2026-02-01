@@ -1,28 +1,30 @@
 ---
-backlog_id: backlog-117
-task: 修复 WebSocket 连接时 userId 格式校验与后端不一致
-test_command: "docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend"
+backlog_id: backlog-120
+task: 修复聊天消息不显示的问题
+test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 ---
 
-# Task: 修复 WebSocket 连接时 userId 格式校验与后端不一致
+# Task: 修复聊天消息不显示的问题
 
 ## Description
 
-加入房间后，后端返回 UUID 格式的 userId（如 `8f0bb8e5-9711-419b-8481-accbdf28ace2`），但 chat.js 与 sync.js 中 WebSocket 连接前校验 userId 为正则 `/^user-[a-z0-9]{8}$/`，导致「userId 格式不正确」而无法连接。需将校验规则更新为同时支持 UUID 格式（或与后端约定一致），使新成员能正常连接聊天与操作同步 WebSocket。
+房主页与成员页消息区域不显示消息。需修复聊天的发送、接收与展示：发送方通过聊天 WebSocket 发送消息；服务端广播或点对点推送给房间内其他连接；接收方在 WebSocket 收到消息后写入消息列表并渲染到消息区域。确保消息列表 DOM 与数据绑定正确，新消息能追加显示。
 
-**Test Command**: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend`
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
-**Test Command**: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend`
+**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 
 ## Success Criteria
 
-- [x] #1 chat.js 中 userId 格式校验接受后端返回的 UUID 格式
-- [x] #2 sync.js 中 userId 格式校验接受后端返回的 UUID 格式
-- [x] #3 新成员加入房间后，能成功连接聊天 WebSocket 与操作同步 WebSocket
-- [x] #4 控制台无「userId 格式不正确」相关错误
+- [ ] #1 发送消息后，聊天 WebSocket 能成功发出（无因 userId 等导致的发送失败）
+- [ ] #2 房主发送一条消息后，房主端消息区域显示该条消息
+- [ ] #3 房主发送一条消息后，成员端消息区域显示该条消息
+- [ ] #4 成员发送一条消息后，成员端与房主端消息区域均显示该条消息
+- [ ] #5 消息展示包含发送者标识与内容，多条消息按时间顺序排列
+- [ ] #6 自动化测试：双浏览器，任一方发消息，两侧断言消息区域存在对应文本，通过
 
 ## Implementation Steps
 
-1. **1.1 chat.js 中 userId 校验** — done when: 校验规则接受后端返回的 UUID（如 `8f0bb8e5-9711-419b-8481-accbdf28ace2`），不再仅限 `/^user-[a-z0-9]{8}$/`。
-2. **1.2 sync.js 中 userId 校验** — done when: 与 chat.js 一致，接受 UUID 格式。
-3. **1.3 运行验收** — done when: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend` 通过，控制台无「userId 格式不正确」。
+<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
+<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
+<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
