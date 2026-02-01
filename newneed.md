@@ -9,7 +9,7 @@
 
 - **ID**: fix-1
 - **描述**: join.html 中 webrtc-signaling.js 被引入了两次（约第 525 行与第 528 行），导致 `Identifier 'WebRTCSignalingType' has already been declared`。移除重复的 script 标签，确保该脚本只加载一次。
-- **测试命令**: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend`
+- **测试命令**: `skill:watch-together-webapp-testing ${TASK_ID}`（脚本由技能根据本任务描述与测试场景/验证步骤自动生成，无需写死）
 - **成功标准**:
   1. [ ] join.html 中仅保留一处 webrtc-signaling.js 引用
   2. [ ] 页面加载后控制台无 "WebRTCSignalingType has already been declared" 错误
@@ -22,7 +22,7 @@
 
 - **ID**: fix-2
 - **描述**: webrtc-manager.js 与 screen-streaming.js 均声明顶层变量 `webrtcState`，在同一页面加载时触发 `Identifier 'webrtcState' has already been declared`。需统一状态管理：或将 webrtc-manager 整合进 screen-streaming，或改用不同变量名/命名空间，避免重复声明。
-- **测试命令**: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend`
+- **测试命令**: `skill:watch-together-webapp-testing ${TASK_ID}`（脚本由技能根据本任务描述与测试场景/验证步骤自动生成，无需写死）
 - **成功标准**:
   1. [ ] 页面中仅有一处 `webrtcState` 或等效状态的顶层声明
   2. [ ] 控制台无 "webrtcState has already been declared" 错误
@@ -35,7 +35,7 @@
 
 - **ID**: fix-3
 - **描述**: room.js 与 operation-source.js 均在顶层声明 `const API_BASE`，在同一页面加载时触发 `Identifier 'API_BASE' has already been declared`。改为从 `window.API_BASE` 或统一配置模块读取，仅在一处完成初始化与声明。
-- **测试命令**: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend`
+- **测试命令**: `skill:watch-together-webapp-testing ${TASK_ID}`（脚本由技能根据本任务描述与测试场景/验证步骤自动生成，无需写死）
 - **成功标准**:
   1. [ ] 顶层仅在一处声明或初始化 API_BASE
   2. [ ] room.js 与 operation-source.js 均可正确获取 API 根地址
@@ -48,10 +48,72 @@
 
 - **ID**: fix-4
 - **描述**: 加入房间后，后端返回 UUID 格式的 userId（如 `8f0bb8e5-9711-419b-8481-accbdf28ace2`），但 chat.js 与 sync.js 中 WebSocket 连接前校验 userId 为正则 `/^user-[a-z0-9]{8}$/`，导致「userId 格式不正确」而无法连接。需将校验规则更新为同时支持 UUID 格式（或与后端约定一致），使新成员能正常连接聊天与操作同步 WebSocket。
-- **测试命令**: `docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend`
+- **测试命令**: `skill:watch-together-webapp-testing ${TASK_ID}`（脚本由技能根据本任务描述与测试场景/验证步骤自动生成，无需写死）
 - **成功标准**:
   1. [ ] chat.js 中 userId 格式校验接受后端返回的 UUID 格式
   2. [ ] sync.js 中 userId 格式校验接受后端返回的 UUID 格式
   3. [ ] 新成员加入房间后，能成功连接聊天 WebSocket 与操作同步 WebSocket
   4. [ ] 控制台无「userId 格式不正确」相关错误
 - **依赖**: 无
+
+---
+
+### 任务 fix-5a: 修复房主开始共享后成员端仍显示「等待房主开始共享...」
+
+- **ID**: fix-5a
+- **描述**: 房主点击开始共享并选择共享画面后，成员端依旧显示「等待房主开始共享...」。需修复共享状态/信令的同步：房主开始共享后，通过 WebSocket 或 WebRTC 信令将「已开始共享」状态通知成员端，成员端收到后更新 UI（展示共享画面或「正在共享」状态），并隐藏「等待房主开始共享...」。
+- **测试命令**: `skill:watch-together-webapp-testing ${TASK_ID}`（脚本由技能根据本任务描述与测试场景/验证步骤自动生成，无需写死）
+- **成功标准**:
+  1. [ ] 房主选择共享源并点击开始共享后，信令/状态能下发到已连接的成员端
+  2. [ ] 成员端收到「房主已开始共享」后，不再显示「等待房主开始共享...」
+  3. [ ] 成员端在房主共享后展示共享画面或明确的「正在共享」状态（如占位文案/播放区域）
+  4. [ ] 自动化测试：双浏览器（房主+成员），房主开始共享 → 成员页在约定超时内出现共享状态或画面，断言通过
+- **验证步骤**:
+  1. 房主进入房间并保持页面打开；成员另开浏览器/匿名窗口进入同一房间
+  2. 房主点击「开始共享」并选择画面/窗口后确认
+  3. 在成员端页面检查：原「等待房主开始共享...」消失，且出现共享画面或「正在共享」等状态
+  4. 可选：房主点击「停止共享」后，成员端恢复等待状态
+- **依赖**: 无
+
+---
+
+### 任务 fix-5b: 修复房主端与成员端左侧成员列表只显示自己的问题
+
+- **ID**: fix-5b
+- **描述**: 房主页与成员页左侧成员列表仅显示当前用户自己，其他在线用户不出现。需修复成员列表的数据源与同步：确保加入房间后从服务端或 WebSocket 拉取/订阅房间成员列表，并在成员进入/离开时更新列表；房主端与成员端共用同一套成员列表逻辑，列表渲染所有当前房间在线用户（含自己）。
+- **测试命令**: `skill:watch-together-webapp-testing ${TASK_ID}`（脚本由技能根据本任务描述与测试场景/验证步骤自动生成，无需写死）
+- **成功标准**:
+  1. [ ] 加入房间后，成员列表有明确的数据来源（API 或 WebSocket 推送），且能拿到除自己外的其他成员
+  2. [ ] 房主端左侧成员列表展示房间内所有在线成员（含自己），2 人在房时列表至少 2 条
+  3. [ ] 成员端左侧成员列表展示房间内所有在线成员（含自己），2 人在房时列表至少 2 条
+  4. [ ] 新成员加入或某人离开后，各端列表在约定时间内更新一致
+  5. [ ] 自动化测试：双浏览器同时在一房，断言两侧成员列表数量 ≥ 2，且包含当前页用户
+- **验证步骤**:
+  1. 房主进入房间，查看左侧成员列表，记录当前条数
+  2. 成员另开浏览器进入同一房间
+  3. 房主端刷新或等待同步后，成员列表应增加一条（或至少为 2）
+  4. 成员端查看左侧成员列表，应至少包含 2 人（自己与房主）
+  5. 成员离开或关闭页面，房主端列表应在合理时间内减少
+- **依赖**: 建议在 fix-4 通过后验证（WebSocket 可连），无硬依赖
+
+---
+
+### 任务 fix-5c: 修复聊天消息不显示的问题
+
+- **ID**: fix-5c
+- **描述**: 房主页与成员页消息区域不显示消息。需修复聊天的发送、接收与展示：发送方通过聊天 WebSocket 发送消息；服务端广播或点对点推送给房间内其他连接；接收方在 WebSocket 收到消息后写入消息列表并渲染到消息区域。确保消息列表 DOM 与数据绑定正确，新消息能追加显示。
+- **测试命令**: `skill:watch-together-webapp-testing ${TASK_ID}`（脚本由技能根据本任务描述与测试场景/验证步骤自动生成，无需写死）
+- **成功标准**:
+  1. [ ] 发送消息后，聊天 WebSocket 能成功发出（无因 userId 等导致的发送失败）
+  2. [ ] 房主发送一条消息后，房主端消息区域显示该条消息
+  3. [ ] 房主发送一条消息后，成员端消息区域显示该条消息
+  4. [ ] 成员发送一条消息后，成员端与房主端消息区域均显示该条消息
+  5. [ ] 消息展示包含发送者标识与内容，多条消息按时间顺序排列
+  6. [ ] 自动化测试：双浏览器，任一方发消息，两侧断言消息区域存在对应文本，通过
+- **验证步骤**:
+  1. 房主与成员均在房间内，确保聊天输入框可用
+  2. 房主在输入框输入并发送一条唯一内容（如带时间戳的文本）
+  3. 房主端消息区域应出现该条消息；成员端消息区域也应出现该条消息
+  4. 成员发送另一条唯一内容，房主端与成员端均应显示两条消息（房主一条、成员一条）
+  5. 检查控制台无发送失败、连接断开等错误
+- **依赖**: 建议在 fix-4 通过后验证（聊天 WebSocket 可连），无硬依赖
