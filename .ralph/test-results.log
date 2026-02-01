@@ -475,3 +475,767 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 02:42:55
+Command: cd watch-together && npm test -- webrtc-signaling
+═══════════════════════════════════════════════════════════════════
+
+> watch-together@0.1.0 test
+> node --experimental-vm-modules node_modules/jest/bin/jest.js webrtc-signaling
+
+PASS __tests__/webrtc-signaling.test.js
+  WebRTC 信令消息协议
+    消息类型常量
+      ✓ 应该定义所有必需的消息类型 (9 ms)
+      ✓ 协议版本应该正确
+    创建消息函数
+      ✓ createOfferMessage 应该创建有效的 Offer 消息
+      ✓ createOfferMessage 应该支持广播消息（toUserId 为 null）
+      ✓ createOfferMessage 应该支持 tracks 扩展字段 (1 ms)
+      ✓ createAnswerMessage 应该创建有效的 Answer 消息
+      ✓ createICECandidateMessage 应该创建有效的 ICE Candidate 消息
+      ✓ createICECandidateMessage 应该支持 null candidate（候选地址收集完成） (1 ms)
+      ✓ createEndMessage 应该创建有效的 End 消息
+      ✓ createErrorMessage 应该创建有效的 Error 消息 (2 ms)
+    消息验证
+      ✓ validateWebRTCSignalingMessage 应该验证有效的 Offer 消息
+      ✓ validateWebRTCSignalingMessage 应该拒绝缺少必需字段的消息
+      ✓ validateWebRTCSignalingMessage 应该拒绝无效的消息类型
+      ✓ validateWebRTCSignalingMessage 应该验证有效的 Answer 消息 (1 ms)
+      ✓ validateWebRTCSignalingMessage 应该验证有效的 ICE Candidate 消息
+      ✓ validateWebRTCSignalingMessage 应该验证 null candidate（候选地址收集完成）
+      ✓ validateWebRTCSignalingMessage 应该验证有效的 Error 消息
+      ✓ validateWebRTCSignalingMessage 应该拒绝非对象输入 (3 ms)
+    类型检查函数
+      ✓ isOfferMessage 应该正确识别 Offer 消息 (1 ms)
+      ✓ isAnswerMessage 应该正确识别 Answer 消息
+      ✓ isICECandidateMessage 应该正确识别 ICE Candidate 消息
+      ✓ isEndMessage 应该正确识别 End 消息
+      ✓ isErrorMessage 应该正确识别 Error 消息 (1 ms)
+    前端 send/receive 场景测试
+      ✓ 应该能够正确序列化和反序列化消息（模拟 WebSocket 发送）
+      ✓ 应该能够处理所有消息类型的序列化/反序列化 (1 ms)
+      ✓ 应该能够处理字段名错误的情况（防御性编程）
+      ✓ 应该能够处理广播消息（toUserId 为 null）
+    实际使用场景示例
+      ✓ 房主向单个成员建立连接的完整流程
+      ✓ 房主向所有成员广播 Offer
+
+Test Suites: 1 passed, 1 total
+Tests:       29 passed, 29 total
+Snapshots:   0 total
+Time:        5.552 s, estimated 6 s
+Ran all test suites matching /webrtc-signaling/i.
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 02:48:57
+Command: skill:watch-together-webapp-testing TASK-103
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-103.py
+   包含 8 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-103.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-103.py
+
+============================================================
+测试 TASK-103
+============================================================
+
+启动浏览器（房主端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2o1qo500001uht997klbew
+✅ 已保存房主端初始截图: backlog/test-results/task-103/initial.png
+
+测试场景 1: 服务器能识别并转发 WebRTC 信令到正确的目标连接
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: 不对 SDP/ICE 做任何修改，仅透明转发
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: 目标用户不在线时，有合理警告日志而不会崩溃
+  ⚠️  场景 3 需要根据具体需求实现
+
+测试场景 4: WebRTC 信令不会干扰现有聊天/操作同步消息流
+  ⚠️  场景 4 需要根据具体需求实现
+
+测试场景 5: 服务器能识别并转发 WebRTC 信令到正确的目标连接
+  ⚠️  场景 5 需要根据具体需求实现
+
+测试场景 6: 不对 SDP/ICE 做任何修改，仅透明转发
+  ⚠️  场景 6 需要根据具体需求实现
+
+测试场景 7: 目标用户不在线时，有合理警告日志而不会崩溃
+  ⚠️  场景 7 需要根据具体需求实现
+
+测试场景 8: WebRTC 信令不会干扰现有聊天/操作同步消息流
+  ⚠️  场景 8 需要根据具体需求实现
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+⚠️  场景 4: 需要手动实现
+⚠️  场景 5: 需要手动实现
+⚠️  场景 6: 需要手动实现
+⚠️  场景 7: 需要手动实现
+⚠️  场景 8: 需要手动实现
+
+总计: 0 通过, 0 失败, 8 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:00:44
+Command: skill:watch-together-webapp-testing TASK-105
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-105.py
+   包含 8 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-105.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-105.py
+
+============================================================
+测试 TASK-105
+============================================================
+
+启动浏览器（房主端）...
+启动浏览器（成员端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2ogwds0000m5de5dzj3b1y
+
+让成员端加入房间...
+  ✅ 成员端已填写昵称
+  ✅ 成员端已点击加入按钮
+✅ 已保存成员端截图: backlog/test-results/task-105/member-joined.png
+✅ 已保存房主端初始截图: backlog/test-results/task-105/initial.png
+
+测试场景 1: 点击开始共享后能成功获取 getDisplayMedia 流
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: 能正确创建 RTCPeerConnection 并将流轨道添加进去
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: createOffer 成功后能通过 WebSocket 发送格式正确的 WEBRTC_OFFER
+  ⚠️  场景 3 需要根据具体需求实现
+
+测试场景 4: WEBRTC_OFFER 包含 toUserId 和 sdp 字段
+  ⚠️  场景 4 需要根据具体需求实现
+
+测试场景 5: 点击开始共享后能成功获取 getDisplayMedia 流
+  ⚠️  场景 5 需要根据具体需求实现
+
+测试场景 6: 能正确创建 RTCPeerConnection 并将流轨道添加进去
+  ⚠️  场景 6 需要根据具体需求实现
+
+测试场景 7: createOffer 成功后能通过 WebSocket 发送格式正确的 WEBRTC_OFFER
+  ⚠️  场景 7 需要根据具体需求实现
+
+测试场景 8: WEBRTC_OFFER 包含 toUserId 和 sdp 字段
+  ⚠️  场景 8 需要根据具体需求实现
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+⚠️  场景 4: 需要手动实现
+⚠️  场景 5: 需要手动实现
+⚠️  场景 6: 需要手动实现
+⚠️  场景 7: 需要手动实现
+⚠️  场景 8: 需要手动实现
+
+总计: 0 通过, 0 失败, 8 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:04:57
+Command: skill:watch-together-webapp-testing TASK-106
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-106.py
+   包含 4 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-106.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-106.py
+
+============================================================
+测试 TASK-106
+============================================================
+
+启动浏览器（房主端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2omb120000nqba9ctd8qvl
+✅ 已保存房主端初始截图: backlog/test-results/task-106/initial.png
+
+测试场景 1: 能正确解析并处理 WebSocket 收到的 WEBRTC_OFFER
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: 能创建 RTCPeerConnection 并 setRemoteDescription(offer)
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: createAnswer 成功后能通过 WebSocket 发送 WEBRTC_ANSWER
+  ⚠️  场景 3 需要根据具体需求实现
+
+测试场景 4: WEBRTC_ANSWER 的 toUserId 指向房主
+  ⚠️  场景 4 需要根据具体需求实现
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+⚠️  场景 4: 需要手动实现
+
+总计: 0 通过, 0 失败, 4 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:11:20
+Command: skill:watch-together-webapp-testing TASK-107
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-107.py
+   包含 8 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-107.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-107.py
+
+============================================================
+测试 TASK-107
+============================================================
+
+启动浏览器（房主端）...
+启动浏览器（成员端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2ouiiw0000xh42rqkivoob
+
+让成员端加入房间...
+  ✅ 成员端已填写昵称
+  ✅ 成员端已点击加入按钮
+✅ 已保存成员端截图: backlog/test-results/task-107/member-joined.png
+✅ 已保存房主端初始截图: backlog/test-results/task-107/initial.png
+
+测试场景 1: 房主与成员端都能在 onicecandidate 中发送 WEBRTC_ICE_CANDIDATE
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: 接收方能正确解析并调用 addIceCandidate
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: ICE 候选能通过 WebSocket 正确路由到目标连接
+  ⚠️  场景 3 需要根据具体需求实现
+
+测试场景 4: 双方 connectionState 能变为 connected
+  ⚠️  场景 4 需要根据具体需求实现
+
+测试场景 5: 房主与成员端都能在 onicecandidate 中发送 WEBRTC_ICE_CANDIDATE
+  ⚠️  场景 5 需要根据具体需求实现
+
+测试场景 6: 接收方能正确解析并调用 addIceCandidate
+  ⚠️  场景 6 需要根据具体需求实现
+
+测试场景 7: ICE 候选能通过 WebSocket 正确路由到目标连接
+  ⚠️  场景 7 需要根据具体需求实现
+
+测试场景 8: 双方 connectionState 能变为 connected
+  ⚠️  场景 8 需要根据具体需求实现
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+⚠️  场景 4: 需要手动实现
+⚠️  场景 5: 需要手动实现
+⚠️  场景 6: 需要手动实现
+⚠️  场景 7: 需要手动实现
+⚠️  场景 8: 需要手动实现
+
+总计: 0 通过, 0 失败, 8 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:22:40
+Command: skill:watch-together-webapp-testing TASK-109
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-109.py
+   包含 8 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-109.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-109.py
+
+============================================================
+测试 TASK-109
+============================================================
+
+启动浏览器（房主端）...
+启动浏览器（成员端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2p93xz0000z8m6ud8qv8q5
+
+让成员端加入房间...
+  ✅ 成员端已填写昵称
+  ✅ 成员端已点击加入按钮
+✅ 已保存成员端截图: backlog/test-results/task-109/member-joined.png
+✅ 已保存房主端初始截图: backlog/test-results/task-109/initial.png
+
+测试场景 1: 房主点击开始共享能向目标成员发送 WEBRTC_OFFER
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: 成员收到 WEBRTC_OFFER 后能创建 answer 并用 WEBRTC_ANSWER 回传
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: 双方能正确处理 WEBRTC_ICE_CANDIDATE 直至连接建立
+  ⚠️  场景 3 需要根据具体需求实现
+
+测试场景 4: 成员端 VideoPlayer 成功接收远端 MediaStream 并播放画面
+  ✅ 找到视频元素: video#videoStream
+  ⚠️  视频未播放（可能用户还未选择屏幕源）
+
+测试场景 5: 房主点击开始共享能向目标成员发送 WEBRTC_OFFER
+  ⚠️  场景 5 需要根据具体需求实现
+
+测试场景 6: 成员收到 WEBRTC_OFFER 后能创建 answer 并用 WEBRTC_ANSWER 回传
+  ⚠️  场景 6 需要根据具体需求实现
+
+测试场景 7: 双方能正确处理 WEBRTC_ICE_CANDIDATE 直至连接建立
+  ⚠️  场景 7 需要根据具体需求实现
+
+测试场景 8: 成员端 VideoPlayer 成功接收远端 MediaStream 并播放画面
+  ✅ 找到视频元素: video#videoStream
+  ⚠️  视频未播放（可能用户还未选择屏幕源）
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+⚠️  场景 4: 视频未播放（需要用户选择屏幕源）
+⚠️  场景 5: 需要手动实现
+⚠️  场景 6: 需要手动实现
+⚠️  场景 7: 需要手动实现
+⚠️  场景 8: 视频未播放（需要用户选择屏幕源）
+
+总计: 0 通过, 0 失败, 8 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:29:31
+Command: skill:watch-together-webapp-testing TASK-110
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-110.py
+   包含 8 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-110.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-110.py
+
+============================================================
+测试 TASK-110
+============================================================
+
+启动浏览器（房主端）...
+启动浏览器（成员端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2phwzx000012cg1od3ka10
+
+让成员端加入房间...
+  ✅ 成员端已填写昵称
+  ✅ 成员端已点击加入按钮
+✅ 已保存成员端截图: backlog/test-results/task-110/member-joined.png
+✅ 已保存房主端初始截图: backlog/test-results/task-110/initial.png
+
+测试场景 1: 房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: 信令层能为每个成员正确路由 WebRTC 信令
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: 新成员加入时可增量建立连接，不影响已有连接
+  ⚠️  场景 3 需要根据具体需求实现
+
+测试场景 4: 成员离开时，房主端能关闭对应 PeerConnection 并释放资源
+  ⚠️  未找到停止/关闭按钮
+
+测试场景 5: 房主端为每个成员创建并跟踪独立的 PeerConnection（以 userId 为 key）
+  ⚠️  场景 5 需要根据具体需求实现
+
+测试场景 6: 信令层能为每个成员正确路由 WebRTC 信令
+  ⚠️  场景 6 需要根据具体需求实现
+
+测试场景 7: 新成员加入时可增量建立连接，不影响已有连接
+  ⚠️  场景 7 需要根据具体需求实现
+
+测试场景 8: 成员离开时，房主端能关闭对应 PeerConnection 并释放资源
+  ⚠️  未找到停止/关闭按钮
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+⚠️  场景 4: 未找到停止按钮
+⚠️  场景 5: 需要手动实现
+⚠️  场景 6: 需要手动实现
+⚠️  场景 7: 需要手动实现
+⚠️  场景 8: 未找到停止按钮
+
+总计: 0 通过, 0 失败, 8 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:35:54
+Command: skill:watch-together-webapp-testing TASK-111
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-111.py
+   包含 8 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-111.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-111.py
+
+============================================================
+测试 TASK-111
+============================================================
+
+启动浏览器（房主端）...
+启动浏览器（成员端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2pq4go00006cxgsv5kipjg
+
+让成员端加入房间...
+  ✅ 成员端已填写昵称
+  ✅ 成员端已点击加入按钮
+✅ 已保存成员端截图: backlog/test-results/task-111/member-joined.png
+✅ 已保存房主端初始截图: backlog/test-results/task-111/initial.png
+
+测试场景 1: currentUser.isOwner === true 时显示共享按钮，否则不显示/禁用
+  ⚠️  场景 1 需要手动实现
+
+测试场景 2: 普通成员伪造共享请求时，后端拒绝
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: 房主停止共享后，按钮/文案状态能及时恢复
+  ⚠️  场景 3 需要手动实现
+
+测试场景 4: 权限逻辑不影响普通成员正常观看已有 WebRTC 视频流
+  ✅ 找到视频元素: video#videoStream
+  ⚠️  视频未播放（可能用户还未选择屏幕源）
+
+测试场景 5: currentUser.isOwner === true 时显示共享按钮，否则不显示/禁用
+  ⚠️  场景 5 需要手动实现
+
+测试场景 6: 普通成员伪造共享请求时，后端拒绝
+  ⚠️  场景 6 需要根据具体需求实现
+
+测试场景 7: 房主停止共享后，按钮/文案状态能及时恢复
+  ⚠️  场景 7 需要手动实现
+
+测试场景 8: 权限逻辑不影响普通成员正常观看已有 WebRTC 视频流
+  ✅ 找到视频元素: video#videoStream
+  ⚠️  视频未播放（可能用户还未选择屏幕源）
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+⚠️  场景 4: 视频未播放（需要用户选择屏幕源）
+⚠️  场景 5: 需要手动实现
+⚠️  场景 6: 需要手动实现
+⚠️  场景 7: 需要手动实现
+⚠️  场景 8: 视频未播放（需要用户选择屏幕源）
+
+总计: 0 通过, 0 失败, 8 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:42:26
+Command: skill:watch-together-webapp-testing TASK-112
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-112.py
+   包含 4 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-112.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-112.py
+
+============================================================
+测试 TASK-112
+============================================================
+
+启动浏览器（房主端）...
+启动浏览器（成员端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2pyj0r0000orxgtefve5yk
+
+让成员端加入房间...
+  ✅ 成员端已填写昵称
+  ✅ 成员端已点击加入按钮
+✅ 已保存成员端截图: backlog/test-results/task-112/member-joined.png
+✅ 已保存房主端初始截图: backlog/test-results/task-112/initial.png
+
+测试场景 1: 房主未开始共享时，成员端显示「等待房主开始共享...」
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: WebRTC 建立并收到远端流时，显示视频和「正在播放房主画面」
+  ✅ 找到视频元素: video#videoStream
+  ⚠️  视频未播放（可能用户还未选择屏幕源）
+
+测试场景 3: 房主停止共享或连接断开时，停止播放并显示「房主已停止共享」或错误提示
+  ⚠️  未找到停止/关闭按钮
+
+测试场景 4: 状态文案与实际连接状态一致
+  ⚠️  场景 4 需要根据具体需求实现
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 视频未播放（需要用户选择屏幕源）
+⚠️  场景 3: 未找到停止按钮
+⚠️  场景 4: 需要手动实现
+
+总计: 0 通过, 0 失败, 4 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-01 03:50:30
+Command: skill:watch-together-webapp-testing TASK-113
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-113.py
+   包含 8 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-113.py
+运行测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-113.py
+
+============================================================
+测试 TASK-113
+============================================================
+
+启动浏览器（房主端）...
+启动浏览器（成员端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml2q8whc0000ig4hnlap3kql
+
+让成员端加入房间...
+  ✅ 成员端已填写昵称
+  ✅ 成员端已点击加入按钮
+✅ 已保存成员端截图: backlog/test-results/task-113/member-joined.png
+✅ 已保存房主端初始截图: backlog/test-results/task-113/initial.png
+
+测试场景 1: 房主拒绝 getDisplayMedia 权限时有明确错误提示
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: ICE 长时间协商失败时能超时退出并提示用户检查网络
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: WebSocket 信令中断时，前端能检测并停止共享/播放，提示错误
+  ⚠️  未找到停止/关闭按钮
+
+测试场景 4: 对可恢复错误在限制次数内尝试自动重连，失败后给出清晰说明
+  ⚠️  场景 4 需要根据具体需求实现
+
+测试场景 5: 房主拒绝 getDisplayMedia 权限时有明确错误提示
+  ⚠️  场景 5 需要根据具体需求实现
+
+测试场景 6: ICE 长时间协商失败时能超时退出并提示用户检查网络
+  ⚠️  场景 6 需要根据具体需求实现
+
+测试场景 7: WebSocket 信令中断时，前端能检测并停止共享/播放，提示错误
+  ⚠️  未找到停止/关闭按钮
+
+测试场景 8: 对可恢复错误在限制次数内尝试自动重连，失败后给出清晰说明
+  ⚠️  场景 8 需要根据具体需求实现
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 未找到停止按钮
+⚠️  场景 4: 需要手动实现
+⚠️  场景 5: 需要手动实现
+⚠️  场景 6: 需要手动实现
+⚠️  场景 7: 未找到停止按钮
+⚠️  场景 8: 需要手动实现
+
+总计: 0 通过, 0 失败, 8 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
