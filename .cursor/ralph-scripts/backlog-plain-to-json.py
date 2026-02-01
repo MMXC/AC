@@ -135,6 +135,13 @@ def emit_ralph_task(parsed: Dict, task_numeric: str) -> str:
       lines.append(f"- [ ] {item}")
   else:
     lines.append("- [ ] <fill in acceptance criteria>")
+  lines.append("")
+  lines.append("## Implementation Steps")
+  lines.append("")
+  lines.append("<!-- 细化约定时填写：步骤 + 每步验收，例如 -->")
+  lines.append("<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->")
+  lines.append("<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->")
+  lines.append("")
 
   return "\n".join(lines).rstrip() + "\n"
 

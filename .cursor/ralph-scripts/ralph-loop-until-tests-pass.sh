@@ -384,7 +384,7 @@ main() {
       # Update backlog status if needed
       if [[ "$task_status" != "COMPLETE" ]]; then
         echo "⚠️  Note: Some criteria may still be unchecked, but tests pass."
-        echo "   You may want to mark remaining criteria as complete."
+        echo "   You may want to mark remaining criteria in RALPH_TASK.md and re-run, or run finalize-task.sh to archive."
       fi
       
       # Finalize completed task (update status, save doc, delete RALPH_TASK.md)
@@ -413,6 +413,7 @@ main() {
         echo "  1. Fix issues manually and run tests again"
         echo "  2. Run this script again with more iterations: -n $((MAX_ITERATIONS + 10))"
         echo "  3. Review .ralph/errors.log, .ralph/test-results.log and .ralph/progress.md"
+        update_backlog_status "$WORKSPACE" "To Do" "$SCRIPT_DIR" 2>/dev/null || true
         exit 1
       fi
       
@@ -426,6 +427,7 @@ main() {
         "GUTTER")
           echo "🚨 Gutter detected. Check .ralph/errors.log"
           echo "   The agent may be stuck. Consider fixing issues manually."
+          update_backlog_status "$WORKSPACE" "To Do" "$SCRIPT_DIR" 2>/dev/null || true
           exit 1
           ;;
         "COMPLETE")
@@ -446,6 +448,7 @@ main() {
   done
   
   echo "⚠️  Max iterations reached. Tests still failing."
+  update_backlog_status "$WORKSPACE" "To Do" "$SCRIPT_DIR" 2>/dev/null || true
   exit 1
 }
 

@@ -818,7 +818,7 @@ If you get rotated, the next agent picks up from your last commit. Your commits 
 
 You are running in task-branch mode: RALPH_TASK.md was generated from a backlog task. Follow this flow:
 
-1. **Refine the plan (细化约定)** before coding: If RALPH_TASK.md does not yet have an "Implementation Steps" section with **per-step acceptance**, add it now. List steps (e.g. 1.1 Add route, 1.2 Write handler, 2.1 Run test) and for each step write a short **acceptance** (e.g. "1.1 done when: GET /api/v1/rooms returns 200"). This lets you iterate at the failing step when tests fail.
+1. **Refine the plan (细化约定)** before coding: If RALPH_TASK.md does not yet have an "Implementation Steps" section with **per-step acceptance**, add it now. List steps (e.g. 1.1 Add route, 1.2 Write handler, 2.1 Run test) and for each step write a short **acceptance** (e.g. "1.1 done when: GET /api/v1/rooms returns 200"). Step-level acceptance and any per-step check commands are filled by you in that section during 细化约定; the overall test_command in frontmatter stays as the final gate. This lets you iterate at the failing step when tests fail.
 2. **Implement step by step**: Do one step, verify its acceptance if you can (quick check or run), then move on. When the overall test command fails, map the failure to a step and fix that step before re-running tests.
 3. **Test convergence**: Run the test command from RALPH_TASK.md; do not mark the task complete until tests pass. If they fail, fix the corresponding step and re-run.
 
@@ -1225,11 +1225,7 @@ run_ralph_loop() {
       echo "Completed in $iteration iteration(s)."
       echo "Check git log for detailed history."
       echo ""
-      
-      # Finalize task (update status, save doc, delete RALPH_TASK.md)
-      # Note: finalize_completed_task is already called in check_task_complete,
-      # but we call it again here to ensure it happens even if called directly
-      finalize_completed_task "$workspace" "$script_dir" || true
+      # finalize_completed_task already run inside check_task_complete when all criteria checked
       
       # Open PR if requested
       if [[ "$OPEN_PR" == "true" ]] && [[ -n "$USE_BRANCH" ]]; then

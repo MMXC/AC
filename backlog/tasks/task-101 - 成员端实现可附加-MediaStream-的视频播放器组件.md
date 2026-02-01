@@ -15,8 +15,6 @@ dependencies: []
 在成员房间页面实现 VideoPlayer 组件，对外暴露 attachStream(MediaStream) 和 detachStream()，用于播放远端 MediaStream（先用 getUserMedia 模拟）。组件不关心 WebRTC 细节，只关心 MediaStream。
 
 **Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
-
-**Test Command**: `skill:watch-together-webapp-testing ${TASK_ID}`
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
