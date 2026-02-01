@@ -52,7 +52,8 @@ wss.on("connection", (ws, req) => {
             const type = message && message.type;
             if (!type) return;
             // 聊天消息：向房间内所有连接广播（含发送者），前端据此渲染消息区域
-            if (type === "CHAT_MESSAGE" && roomId && message.userId && message.nickname != null && message.content != null) {
+            const connRoomId = ws.roomId || roomId;
+            if (type === "CHAT_MESSAGE" && connRoomId && message.userId && message.nickname != null && message.content != null) {
                 const id = crypto.randomUUID();
                 const timestamp = new Date().toISOString();
                 const payload = JSON.stringify({
@@ -65,7 +66,7 @@ wss.on("connection", (ws, req) => {
                         timestamp,
                     },
                 });
-                const connections = wsConnections.get(roomId);
+                const connections = wsConnections.get(connRoomId);
                 if (connections) {
                     connections.forEach((sock) => {
                         if (sock.readyState === 1)
