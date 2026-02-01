@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 17
-- Current status: Task Complete - 修复 WebSocket 连接时 userId 格式校验与后端不一致（backlog-117）
+- Iterations completed: 18
+- Current status: Task Complete - 修复房主开始共享后成员端仍显示「等待房主开始共享...」（backlog-118）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 修复房主开始共享后成员端仍显示「等待房主开始共享...」（backlog-118）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 服务器转发共享状态、1.2 房主发送带 roomId、1.3 成员端更新 UI、1.4 展示共享状态或画面、1.5 运行测试）
+- watch-together-server/dist/server.js：增加 SCREEN_STREAM_START/STOP 广播，连接时存储 ws.roomId/ws.userId，收到上述类型时向房间内除发送者外广播
+- screen-streaming.js：sendScreenStreamStart/sendScreenStreamStop 消息体增加 roomId；handleScreenStreamStart 占位文案改为「房主正在共享，正在建立连接...」；handleWebRTCOffer 开头增加 updateVideoPlaceholder('房主正在共享，正在建立连接...') 与 showVideoContainer()
+- 测试通过：docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh TASK-118 RALPH_TASK.md
+- RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 修复 WebSocket 连接时 userId 格式校验与后端不一致（backlog-117）
