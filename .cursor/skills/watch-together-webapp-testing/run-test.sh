@@ -31,6 +31,19 @@ fi
 # 提取任务数字 ID
 TASK_NUM="${TASK_ID#TASK-}"
 
+# fix-1/2/3/4 或 fix-frontend 使用专用前端修复测试脚本
+if [[ "$TASK_ID" == "fix-1" || "$TASK_ID" == "fix-2" || "$TASK_ID" == "fix-3" || "$TASK_ID" == "fix-4" || "$TASK_ID" == "fix-frontend" ]]; then
+    TEST_SCRIPT="$SCRIPT_DIR/tests/test-fix-frontend.py"
+    if [[ ! -f "$TEST_SCRIPT" ]]; then
+        echo "❌ 修复测试脚本不存在: $TEST_SCRIPT"
+        exit 1
+    fi
+    SKIP_GENERATE=1
+else
+    TEST_SCRIPT="$SCRIPT_DIR/tests/test-${TASK_ID}.py"
+    SKIP_GENERATE=0
+fi
+
 # 检查 docker-compose 服务是否运行
 echo "检查 docker-compose 服务状态..."
 if ! docker-compose ps 2>/dev/null | grep -q "Up"; then
@@ -44,10 +57,8 @@ if ! docker-compose ps 2>/dev/null | grep -q "Up"; then
     fi
 fi
 
-# 检查测试脚本是否存在，如果不存在则自动生成
-TEST_SCRIPT="$SCRIPT_DIR/tests/test-${TASK_ID}.py"
-
-if [[ ! -f "$TEST_SCRIPT" ]]; then
+# 检查测试脚本是否存在，如果不存在则自动生成（fix 任务除外）
+if [[ "${SKIP_GENERATE:-0}" -eq 0 ]] && [[ ! -f "$TEST_SCRIPT" ]]; then
     echo "📝 测试脚本不存在，正在自动生成..."
     
     # 生成测试脚本
