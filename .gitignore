@@ -40,3 +40,7 @@ next-env.d.ts
 
 # Ralph config (may contain API key)
 .cursor/ralph-config.json
+
+# Ralph runtime logs (avoid blocking branch checkout)
+.ralph/activity.log
+.ralph/signal_debug.log

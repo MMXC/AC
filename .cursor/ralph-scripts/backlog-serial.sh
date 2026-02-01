@@ -294,6 +294,9 @@ process_task() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
+    # 暂存 .ralph 运行时日志（保留内容），避免阻止 checkout main
+    git -C "$WORKSPACE" stash push -u -m "ralph serial logs" -- .ralph/activity.log .ralph/signal_debug.log 2>/dev/null || true
+
     # 确保在主分支上合并
     git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null
     git -C "$WORKSPACE" pull >/dev/null 2>&1 || true
@@ -304,6 +307,8 @@ process_task() {
     set -e
 
     if [[ $merge_rc -ne 0 ]]; then
+      # 合并失败时恢复日志
+      git -C "$WORKSPACE" stash pop 2>/dev/null || true
       echo "⚠️  自动合并失败（可能有冲突）。已尝试回滚合并状态，请手动处理：" >&2
       set +e
       git -C "$WORKSPACE" merge --abort >/dev/null 2>&1
@@ -326,12 +331,16 @@ process_task() {
       else
         echo "✅ 主分支已 push: $MAIN_BRANCH"
       fi
+      # 合并成功后恢复 .ralph 日志到工作区（保留运行日志）
+      git -C "$WORKSPACE" stash pop 2>/dev/null || true
     fi
   fi
-  
+
   # 切换回主分支（准备下一个任务）
   echo "[serial] 切换回主分支: $MAIN_BRANCH"
+  git -C "$WORKSPACE" stash push -u -m "ralph serial logs" -- .ralph/activity.log .ralph/signal_debug.log 2>/dev/null || true
   git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null
+  git -C "$WORKSPACE" stash pop 2>/dev/null || true
   
   echo "✅ 任务完成: TASK-$task_id"
   return 0
