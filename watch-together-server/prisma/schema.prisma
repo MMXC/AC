@@ -16,7 +16,6 @@ model Room {
   hostId       String?
   hostNickname String?
   currentUrl   String?
-  inviteLink   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

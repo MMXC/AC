@@ -1,9 +1,10 @@
 ---
 id: TASK-98
 title: 'POST /api/v1/rooms/:roomId/leave 离开房间接口'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:15'
+updated_date: '2026-01-31 17:31'
 labels: []
 dependencies: []
 ---
