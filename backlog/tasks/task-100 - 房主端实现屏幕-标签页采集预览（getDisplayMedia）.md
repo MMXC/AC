@@ -1,9 +1,10 @@
 ---
 id: TASK-100
 title: 房主端实现屏幕/标签页采集预览（getDisplayMedia）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-31 11:16'
+updated_date: '2026-01-31 17:43'
 labels: []
 dependencies: []
 ---
