@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 16
-- Current status: Task Complete - 修复 API_BASE 重复声明导致的 SyntaxError（backlog-116）
+- Iterations completed: 17
+- Current status: Task Complete - 修复 WebSocket 连接时 userId 格式校验与后端不一致（backlog-117）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-01 [Ralph Iteration 1]
+**Session completed** - 修复 WebSocket 连接时 userId 格式校验与后端不一致（backlog-117）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 chat.js 校验、1.2 sync.js 校验、1.3 运行 fix-frontend）
+- chat.js / sync.js 已使用 `/^[\w-]{8,}$/` 接受 UUID，注释改为明确「与后端约定一致，接受 UUID（如 8f0bb8e5-9711-419b-8481-accbdf28ace2）」
+- 测试通过：docker compose up -d && .cursor/skills/watch-together-webapp-testing/run-test.sh fix-frontend（fix-1/2/3 无 SyntaxError，fix-4 无 userId 格式错误）
+- RALPH_TASK.md 四项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session completed** - 修复 API_BASE 重复声明导致的 SyntaxError（backlog-116）
@@ -306,4 +313,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-01 14:54:23
+**Session 1 started** (model: auto)
+
+### 2026-02-01 15:00:55
 **Session 1 started** (model: auto)
