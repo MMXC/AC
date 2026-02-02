@@ -1,13 +1,36 @@
 # Watch Together Web Application Testing Skill
 
-通用的浏览器端功能测试技能，用于 watch-together 项目。能够根据 backlog task 的描述和测试场景**自动生成并执行** Playwright 测试脚本。
+通用的浏览器端功能测试技能，用于 watch-together 项目。能够根据 backlog task 的描述和测试场景**自动生成并执行**测试（支持 **agent-browser 命令序列** 或 **Playwright 脚本**）。
 
 ## 核心特性
 
-✅ **自动生成测试脚本**：根据任务描述和测试场景自动生成 Playwright 测试代码  
+✅ **先探查再生成**：推荐先用 agent-browser 打开页面并 `snapshot -i` 查看结构，再根据页面 ref/文案与测试场景生成测试，避免选择器与页面脱节  
+✅ **双产出**：可生成 agent-browser 命令（shell 脚本）或 Playwright 测试脚本  
+✅ **自动生成**：根据任务描述和测试场景自动生成测试代码或命令  
 ✅ **通用性**：适用于任何浏览器端功能测试任务，不限于特定任务  
-✅ **智能识别**：自动识别按钮、视频、对话框等常见 UI 元素  
-✅ **灵活扩展**：生成的测试脚本可以手动完善和定制
+✅ **灵活扩展**：生成的测试可以手动完善和定制
+
+## 推荐流程：先看页面结构，再写测试
+
+1. **打开页面并查看结构**（使用 [agent-browser](.cursor/skills/agent-browser/SKILL.md)）  
+   ```bash
+   agent-browser open http://localhost:3001/room/<roomId>   # 或首页等
+   agent-browser wait --load networkidle
+   agent-browser snapshot -i   # 得到可交互元素与 ref（@e1, @e2...）
+   ```  
+   若有加入/登录表单，可先 `fill`/`click` 再 `snapshot -i` 一次。
+
+2. **根据 snapshot + backlog 测试场景生成测试**  
+   - **agent-browser 命令**：按 ref 和文案写出 `open` → `fill`/`click` → `get text`/`screenshot` → `close` 等，保存为 `.sh` 直接运行。  
+   - **Playwright 脚本**：运行 `generate-test.py` 生成 Python 脚本；选择器可参考 snapshot 中的角色、文案。
+
+3. **执行测试**  
+   - agent-browser：执行生成的 shell 脚本。  
+   - Playwright：`python3 .cursor/skills/watch-together-webapp-testing/tests/test-task-<id>.py`。
+
+**示例脚本**：`templates/agent-browser-recon-and-test.sh`（先 open → wait → snapshot -i，再按 ref 填写/点击、get text、screenshot、close；可根据实际 snapshot 修改 ref）。
+
+**换行符**：所有 `templates/*.sh` 使用 **LF**（Unix 换行），以便在 WSL/Git Bash 下正常执行。仓库已通过 `.gitattributes` 的 `.cursor/skills/**/*.sh text eol=lf` 统一；若在 Windows 编辑后出现 `bad interpreter` 或语法错误，可用 `sed -i 's/\r$//' 脚本名` 或编辑器「以 LF 保存」修复。
 
 ## 快速开始
 
@@ -42,8 +65,17 @@ ralph-run-task-branch.sh <task-id>
 1. 从 backlog task 读取任务描述和测试场景
 2. 生成 RALPH_TASK.md
 3. 识别技能引用格式 `skill:watch-together-webapp-testing TASK-<id>`
-4. **自动生成测试脚本**（如果不存在）
+4. **自动生成测试脚本**（如果不存在；可选先跑 agent-browser snapshot 再生成）
 5. 执行测试并返回结果
+
+## 两种测试产出
+
+| 产出 | 适用 | 生成方式 | 运行方式 |
+|------|------|----------|----------|
+| **agent-browser 命令** | 快速验证、CLI 友好、与 snapshot ref 一致 | 根据 snapshot + 测试场景手写或由 AI 生成 | 直接执行 shell 命令或 `.sh` 脚本 |
+| **Playwright 脚本** | CI、批量、双浏览器等复杂场景 | `generate-test.py` 根据任务/场景生成 | `python3 tests/test-task-<id>.py` |
+
+建议：先 `agent-browser open` + `snapshot -i` 拿到页面结构，再决定用 agent-browser 命令还是 Playwright，或两者都生成。
 
 ## 测试脚本生成
 
@@ -159,6 +191,7 @@ test_command: "skill:watch-together-webapp-testing TASK-32"
 
 ## 参考
 
+- **agent-browser 技能**：`.cursor/skills/agent-browser/SKILL.md`（先打开页面、snapshot 查看结构，再编写/生成测试命令）
 - 基础技能：`.cursor/skills/webapp-testing/SKILL.md`
 - Playwright 文档：https://playwright.dev/python/
 - getDisplayMedia API：https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia

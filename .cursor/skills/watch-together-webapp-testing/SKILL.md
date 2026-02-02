@@ -1,12 +1,34 @@
 ---
 name: watch-together-webapp-testing
-description: 通用的浏览器端功能测试技能，用于 watch-together 项目。项目通过 docker-compose 启动，前端在 localhost:3001。能够根据 backlog task 的描述和测试场景自动生成并执行 Playwright 测试脚本。
+description: 通用的浏览器端功能测试技能，用于 watch-together 项目。项目通过 docker-compose 启动，前端在 localhost:3001。先打开页面查看结构（agent-browser snapshot），再根据 backlog 测试场景生成 agent-browser 命令或 Playwright 脚本并执行。
 license: Complete terms in LICENSE.txt
 ---
 
 # Watch Together Web Application Testing
 
 通用的浏览器端功能测试技能，用于 watch-together 项目。能够根据任务描述和测试场景自动生成并执行测试。
+
+## 推荐流程：先探查页面结构，再编写测试
+
+1. **打开页面并查看结构**（使用 agent-browser，见 `.cursor/skills/agent-browser/SKILL.md`）  
+   - 打开目标 URL（如房间页、首页）：`agent-browser open http://localhost:3001/room/<roomId>` 或 `agent-browser open http://localhost:3001`  
+   - 等待加载：`agent-browser wait --load networkidle`  
+   - 获取可交互元素与 refs：`agent-browser snapshot -i`（或 `snapshot -i --json` 便于解析）  
+   - 若有登录/加入表单，可先填写并提交，再对结果页做一次 snapshot  
+
+2. **根据页面结构 + backlog 测试场景生成测试**  
+   - 依据 snapshot 中的 ref（如 `@e1`、`@e2`）和文案（按钮名、占位符等）确定操作对象  
+   - 产出二选一或并存：  
+     - **agent-browser 命令序列**：写成 shell 脚本（`open` → `wait` → `fill`/`click` 等 → `get text`/`screenshot` → `close`），可直接运行  
+     - **Playwright 脚本**：沿用现有 `generate-test.py` 生成 Python 脚本，选择器可参考 snapshot 中的角色、文案、ref 对应关系  
+
+3. **执行测试**  
+   - agent-browser：直接执行生成的 shell 命令或脚本  
+   - Playwright：`python3 .cursor/skills/watch-together-webapp-testing/tests/test-task-<id>.py`  
+
+这样可避免选择器与页面脱节，提高测试可维护性。
+
+**示例模板**：`templates/agent-browser-recon-and-test.sh`（先 open → wait → snapshot -i，再按 ref 填写/点击、get text、screenshot、close；ref 需根据实际 snapshot 修改）。
 
 ## 项目配置
 
@@ -36,11 +58,22 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ### 2. 技能工作原理
 
-技能会：
-1. 读取 backlog task 或 RALPH_TASK.md
-2. 提取测试场景和测试用例
-3. 根据测试场景自动生成 Playwright 测试脚本
-4. 执行测试并返回结果
+技能会（推荐先探查再生成）：
+
+1. **可选：先探查页面结构**  
+   - 使用 agent-browser：`open` 目标 URL → `wait --load networkidle` → `snapshot -i`（或 `--json`）  
+   - 根据 snapshot 中的 ref（如 `@e1`、`@e2`）和文案确定要操作的元素  
+
+2. **读取任务与场景**  
+   - 读取 backlog task 或 RALPH_TASK.md  
+   - 提取测试场景和测试用例  
+
+3. **生成测试**（二选一或并存）  
+   - **agent-browser 命令**：按 snapshot 的 ref 和文案，写出 `agent-browser open/fill/click/get text/screenshot/close` 等命令序列（可保存为 `.sh` 脚本）  
+   - **Playwright 脚本**：根据测试场景自动生成 Python 测试脚本；选择器可参考 snapshot 中的角色、文案或对应 ref  
+
+4. **执行测试并返回结果**  
+   - 运行生成的 agent-browser 脚本或 `python3 tests/test-task-<id>.py`
 
 ### 3. 测试场景格式
 
@@ -101,9 +134,10 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## 测试脚本生成规则
 
-- **按钮测试**：自动提取按钮文本，使用 `button:has-text()` 查找
-- **视频测试**：检查多个常见选择器（`video#videoStream`, `video[srcObject]` 等）
-- **权限相关**：如果场景涉及权限，自动添加相应的浏览器 flags 和权限设置
+- **优先使用页面结构**：若已用 agent-browser 做过 `snapshot -i`，优先用 snapshot 中的 ref（`@e1`、`@e2`）或角色/文案生成 agent-browser 命令；生成 Playwright 时可将 ref 对应到 `role`、`text=`、`placeholder=` 等选择器  
+- **按钮测试**：自动提取按钮文本，使用 `button:has-text()` 或 agent-browser `find role button click --name "..."`  
+- **视频测试**：检查多个常见选择器（`video#videoStream`, `video[srcObject]` 等）或 agent-browser `get text "#videoPlaceholder"`  
+- **权限相关**：如果场景涉及权限，自动添加相应的浏览器 flags 和权限设置  
 - **用户交互**：如果涉及 `getDisplayMedia` 等 API，使用非 headless 模式并等待用户操作
 
 ## 运行测试
@@ -148,6 +182,7 @@ python3 .cursor/skills/watch-together-webapp-testing/tests/test-task-32.py
 
 ## 参考
 
+- **agent-browser 技能**：`.cursor/skills/agent-browser/SKILL.md`（先 `open` → `snapshot -i` 查看页面结构，再编写/生成测试命令）
 - 基础技能：`.cursor/skills/webapp-testing/SKILL.md`
 - Playwright 文档：https://playwright.dev/python/
 - getDisplayMedia API：https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia

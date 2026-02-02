@@ -61,3 +61,25 @@
   4. 成员发送另一条唯一内容，房主端与成员端均应显示两条消息（房主一条、成员一条）
   5. 检查控制台无发送失败、连接断开等错误
 - **依赖**: 建议在 fix-4 通过后验证（聊天 WebSocket 可连），无硬依赖
+
+---
+
+### 任务 fix-chat-display: 修复聊天发送后消息区域不显示（agent-browser 测试复现）
+
+- **ID**: fix-chat-display
+- **描述**: 根据 agent-browser 自动化测试失败日志，成员端在聊天框输入并点击「发送」后，消息区域（#chatMessages）未包含发送的内容。现象：`fill "#chatInput"` 与 `click "#chatSendButton"` 均成功（✓ Done），但 `get text "#chatMessages"` 不包含刚发送的文本，断言失败。需修复聊天消息的发送、服务端广播与前端渲染，使发送后当前页消息区域能显示该条消息。
+- **测试命令**: `bash .cursor/skills/watch-together-webapp-testing/templates/agent-browser-chat-send-and-display.sh "http://localhost:3001/room/<roomId>"`（或指定具体房间 URL）
+- **失败现象（参考日志）**:
+  - 步骤 5 在聊天框输入并发送：✓ Done
+  - 步骤 7 断言：❌ 聊天显示失败：消息区域未包含 "测试消息_agent_browser_..."
+  - 消息区域内容（前 500 字）为空或未含发送文本
+- **成功标准**:
+  1. [ ] 成员端在 #chatInput 输入并点击「发送」后，#chatMessages 内能出现该条消息文本
+  2. [ ] 上述 agent-browser 脚本执行至步骤 7 断言通过（消息区域包含发送内容）
+  3. [ ] 消息展示包含发送者标识与内容（可选：与 fix-5c 一致）
+- **验证步骤**:
+  1. 启动前端与后端，确保房间可加入
+  2. 执行 `agent-browser-chat-send-and-display.sh` 指定房间 URL
+  3. 脚本应执行至步骤 7 输出「✅ 聊天发送并显示：消息区域包含 ...」且退出码为 0
+  4. 可选：双浏览器任一方发消息，两侧消息区域均显示
+- **依赖**: 与 fix-5c 同源（聊天消息不显示），可一并修复或单独验证本脚本通过

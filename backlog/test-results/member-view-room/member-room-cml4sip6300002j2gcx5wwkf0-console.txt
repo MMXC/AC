@@ -1,0 +1,16 @@
+[log] 已设置临时用户ID: user-xouy1u24
+[log] VideoPlayer: 初始化完成
+[log] 等待用户加入房间... {currentRoomId: cml4sip6300002j2gcx5wwkf0}
+[log] 等待用户加入房间... {syncCurrentRoomId: cml4sip6300002j2gcx5wwkf0}
+[log] 加入房间成功，服务器返回的 userId: 0c374f8f-a8d5-4490-bf46-b496ec4fc920
+[log] 房间信息: {currentUrl: https://www.sanguosha.com/, hostId: cml4sip6300002j2gcx5wwkf0-host, isHost: false, serverIsHost: false, joinDataFull: Object}
+[log] 普通成员进入房间，显示画面容器占位
+[log] 用户已成功加入房间，触发 userJoinedRoom 事件 {userId: 0c374f8f-a8d5-4490-bf46-b496ec4fc920, nickname: 测试成员, roomId: cml4sip6300002j2gcx5wwkf0, isHost: false}
+[log] 收到 userJoinedRoom 事件 {userId: 0c374f8f-a8d5-4490-bf46-b496ec4fc920, nickname: 测试成员, roomId: cml4sip6300002j2gcx5wwkf0, isHost: false}
+[log] 收到 userJoinedRoom 事件（操作同步） {userId: 0c374f8f-a8d5-4490-bf46-b496ec4fc920, nickname: 测试成员, roomId: cml4sip6300002j2gcx5wwkf0, isHost: false}
+[log] 用户已加入房间，准备连接 WebSocket {currentUserId: 0c374f8f-a8d5-4490-bf46-b496ec4fc920, currentRoomId: cml4sip6300002j2gcx5wwkf0}
+[log] 正在连接 WebSocket: ws://localhost:3000/ws?roomId=cml4sip6300002j2gcx5wwkf0&userId=0c374f8f-a8d5-4490-bf46-b496ec4fc920
+[log] 用户已加入房间，准备连接操作同步 WebSocket {syncCurrentUserId: 0c374f8f-a8d5-4490-bf46-b496ec4fc920, syncCurrentRoomId: cml4sip6300002j2gcx5wwkf0}
+[log] 正在连接操作同步 WebSocket: ws://localhost:3000/ws?roomId=cml4sip6300002j2gcx5wwkf0&userId=0c374f8f-a8d5-4490-bf46-b496ec4fc920
+[log] WebSocket 连接已建立
+[log] 操作同步 WebSocket 连接已建立
