@@ -1415,3 +1415,66 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-02 16:25:54
+Command: skill:watch-together-webapp-testing TASK-122
+═══════════════════════════════════════════════════════════════════
+检查 docker-compose 服务状态...
+📝 测试脚本不存在，正在自动生成...
+✅ 已生成测试脚本: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-task-122.py
+   包含 3 个测试场景
+✅ 测试脚本已生成: /mnt/c/project/AC/.cursor/skills/watch-together-webapp-testing/tests/test-TASK-122.py
+运行测试脚本: C:\project\AC\.cursor\skills\watch-together-webapp-testing\tests\test-TASK-122.py
+
+============================================================
+测试 TASK-122
+============================================================
+
+启动浏览器（房主端）...
+启动浏览器（成员端）...
+导航到 http://localhost:3001 ...
+等待页面加载...
+
+检测到需要创建房间...
+找到创建房间表单，填写表单...
+  ✅ 已填写房间名称: 测试房间
+  ✅ 已填写 URL: https://www.example.com
+  ✅ 已填写房主昵称: 测试房主
+  提交表单...
+  等待跳转到房间页面...
+  ✅ 已跳转到房间页面
+
+✅ 房间 ID: cml4wnsgj000011bvibyti13w
+
+让成员端加入房间...
+  ✅ 成员端已填写昵称
+  ✅ 成员端已点击加入按钮
+✅ 已保存成员端截图: backlog/test-results/task-122/member-joined.png
+✅ 已保存房主端初始截图: backlog/test-results/task-122/initial.png
+
+测试场景 1: 房主在 #chatInput 输入并点击「发送」后，至少一名成员端 #chatMessages 内出现该条消息文本（服务端广播已实现；成员端由 chat 收包渲染，sync 收到 CHAT_MESSAGE 时转发给 window.handleWebSocketMessage 以兼容先连 sync 的场景）
+  ⚠️  场景 1 需要根据具体需求实现
+
+测试场景 2: agent-browser 或 Playwright 双端测试：房主发送 → 成员端断言 #chatMessages 包含发送内容（test-122.py 已添加，需在本地/CI 通过）
+  ⚠️  场景 2 需要根据具体需求实现
+
+测试场景 3: 消息展示包含发送者标识（如房主/昵称）与内容（renderMessage 已展示 nickname 与 content）
+  ⚠️  场景 3 需要根据具体需求实现
+✅ 已保存房主端最终截图: {artifact_dir}/final.png
+
+============================================================
+测试结果汇总
+============================================================
+⚠️  场景 1: 需要手动实现
+⚠️  场景 2: 需要手动实现
+⚠️  场景 3: 需要手动实现
+
+总计: 0 通过, 0 失败, 3 跳过
+============================================================
+
+✅ 测试通过
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
