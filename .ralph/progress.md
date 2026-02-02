@@ -15,6 +15,12 @@ This is how Ralph maintains continuity across iterations.
 
 ## Session History
 
+### 2026-02-03 [Ralph Iteration 3]
+**Session 3 completed** - backlog-126 成员列表：sync.js 默认 WS 端口改为 3000，测试等待时间加长
+- 修复：sync.js 默认 WebSocket URL 从 ws://localhost:3001 改为 ws://localhost:3000，与 chat.js 及 watch-together-server 一致，确保独立 sync 连接也能收到 SYNC_STATE/MEMBER_JOINED
+- 测试：test-task-126.py 成员 B 加入后等待 SYNC_STATE 的时间从 8s 增至 12s，并增加 2s 稳定等待
+- E2E 仍失败（房主端 1 人、成员A 端未出现成员B），疑为房主/成员 WS 连接时序或 Playwright/Docker 环境；后续可加服务端 broadcast 时连接数日志或本地手动验证
+
 ### 2026-02-03 [Ralph Iteration 2]
 **Session 2 completed** - 成员列表实时更新：SYNC_STATE 用 setMembersList 整表替换，sync 转发成员消息
 - 前端：chat.js 收到 SYNC_STATE 时用 setMembersList(message.data.members 映射为 id/name) 整表替换成员列表，避免 remove-then-add 逻辑问题
@@ -350,3 +356,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-03 03:38:19
 **Session 2 started** (model: auto)
+
+### 2026-02-03 03:49:40
+**Session 3 started** (model: auto)

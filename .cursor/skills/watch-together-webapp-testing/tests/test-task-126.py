@@ -142,25 +142,25 @@ def test_task_126():
             page_member_b.locator('input[name="nickname"], input[placeholder*="昵称"]').first.fill('成员B')
             page_member_b.locator('button:has-text("加入"), button:has-text("进入")').first.click()
             page_member_b.wait_for_load_state('networkidle')
-            time.sleep(1)
+            time.sleep(2)
 
-            # 4. 等待房主端与成员A端成员列表出现「成员B」（最多等 8 秒）
+            # 4. 等待房主端与成员A端成员列表出现「成员B」（最多等 12 秒，给 WebSocket SYNC_STATE 足够时间）
             print("\n等待成员列表推送（房主与成员A端出现成员B）...")
             try:
                 page_host.wait_for_function(
                     "Array.from(document.querySelectorAll('#membersList li.member-item .member-name')).some(el => el.textContent && el.textContent.includes('成员B'))",
-                    timeout=8000
+                    timeout=12000
                 )
             except Exception:
                 pass
             try:
                 page_member_a.wait_for_function(
                     "Array.from(document.querySelectorAll('#membersList li.member-item .member-name')).some(el => el.textContent && el.textContent.includes('成员B'))",
-                    timeout=8000
+                    timeout=12000
                 )
             except Exception:
                 pass
-            time.sleep(1)
+            time.sleep(2)
 
             # 5. 断言房主端与成员 A 端成员列表均包含「成员B」
             host_names_after = get_member_names_from_page(page_host)

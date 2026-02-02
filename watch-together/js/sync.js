@@ -68,8 +68,8 @@ function connectSyncWebSocket() {
     }
 
     // 否则创建新的连接
-    // 获取 WebSocket URL（优先使用 window 配置，否则使用默认值）
-    let wsBaseUrl = 'ws://localhost:3001';
+    // 获取 WebSocket URL：与 chat.js 及后端一致，优先使用 window 配置，默认 3000（watch-together-server）
+    let wsBaseUrl = 'ws://localhost:3000';
     if (typeof window !== 'undefined' && window.WS_BASE_URL) {
         wsBaseUrl = window.WS_BASE_URL;
     } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
