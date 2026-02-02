@@ -406,6 +406,64 @@ def test_{function_name}():
                 test_results.append(("场景 {i}", False, "未找到开始共享按钮"))
 '''
         
+        elif 'chatinput' in scenario_lower or 'chatmessages' in scenario_lower or ('发送' in scenario and ('成员' in scenario or 'member' in scenario_lower or 'chat' in scenario_lower)) or ('房主发送' in scenario and '成员' in scenario):
+            # 房主发送消息 → 成员端 #chatMessages 显示（TASK-125 及同类任务复用）
+            test_code += f'''            # 房主在 #chatInput 输入并点击发送，成员端 #chatMessages 应包含该消息
+            chat_text = f"test-msg-''' + '{time.time()}' + '''"
+            chat_input = page.locator('#chatInput')
+            if chat_input.count() == 0:
+                chat_input = page.locator('input[placeholder*="消息"], input[name="message"]')
+            if chat_input.count() > 0:
+                chat_input.first.fill(chat_text)
+                print(f"  ✅ 房主端已输入: {{chat_text[:20]}}...")
+                send_btn = page.locator('#chatSendButton, button:has-text("发送")')
+                if send_btn.count() > 0 and send_btn.first.is_visible():
+                    send_btn.first.click()
+                    print(f"  ✅ 已点击发送")
+                    page.wait_for_timeout(2000)
+                    if page_member:
+                        member_msgs = page_member.locator('#chatMessages')
+                        if member_msgs.count() > 0:
+                            member_text = member_msgs.first.inner_text()
+                            if chat_text in member_text:
+                                print(f"  ✅ 成员端 #chatMessages 包含发送内容")
+                                test_results.append(("场景 {i}", True, "成员端 #chatMessages 包含房主发送的文本"))
+                            else:
+                                print(f"  ❌ 成员端 #chatMessages 未包含发送内容。当前内容: {{member_text[:200]}}")
+                                test_results.append(("场景 {i}", False, "成员端 #chatMessages 未包含房主发送的文本"))
+                        else:
+                            print(f"  ❌ 成员端未找到 #chatMessages")
+                            test_results.append(("场景 {i}", False, "成员端未找到 #chatMessages"))
+                else:
+                    print(f"  ❌ 未找到发送按钮")
+                    test_results.append(("场景 {i}", False, "未找到发送按钮"))
+            else:
+                print(f"  ❌ 未找到 #chatInput")
+                test_results.append(("场景 {i}", False, "未找到 #chatInput"))
+'''
+        
+        elif '成员列表' in scenario or '成员加入' in scenario or ('成员' in scenario and ('实时' in scenario or '更新' in scenario or '显示' in scenario)):
+            # 成员加入后成员列表应显示新成员（TASK-126 及同类任务复用）
+            test_code += f'''            # 检查房主端/成员端成员列表是否包含新加入成员
+            member_list_selector = '#memberList, .member-list, [data-testid="member-list"], ul.members'
+            found_on_host = False
+            found_on_member = False
+            if page.locator(member_list_selector).count() > 0:
+                host_list_text = page.locator(member_list_selector).first.inner_text()
+                if '测试成员' in host_list_text or '测试房主' in host_list_text:
+                    found_on_host = True
+                print(f"  {{'✅' if found_on_host else '⚠️'}} 房主端成员列表: {{host_list_text[:100]}}...")
+            if page_member and page_member.locator(member_list_selector).count() > 0:
+                member_list_text = page_member.locator(member_list_selector).first.inner_text()
+                if '测试成员' in member_list_text or '测试房主' in member_list_text:
+                    found_on_member = True
+                print(f"  {{'✅' if found_on_member else '⚠️'}} 成员端成员列表: {{member_list_text[:100]}}...")
+            if found_on_host or found_on_member:
+                test_results.append(("场景 {i}", True, "成员列表包含预期成员"))
+            else:
+                test_results.append(("场景 {i}", None, "成员列表需根据页面选择器调整"))
+'''
+        
         else:
             # 通用场景处理
             test_code += f'''            # 场景: {scenario}

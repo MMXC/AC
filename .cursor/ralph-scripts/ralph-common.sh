@@ -818,9 +818,10 @@ If you get rotated, the next agent picks up from your last commit. Your commits 
 
 You are running in task-branch mode: RALPH_TASK.md was generated from a backlog task. Follow this flow:
 
-1. **Refine the plan (细化约定)** before coding: If RALPH_TASK.md does not yet have an "Implementation Steps" section with **per-step acceptance**, add it now. List steps (e.g. 1.1 Add route, 1.2 Write handler, 2.1 Run test) and for each step write a short **acceptance** (e.g. "1.1 done when: GET /api/v1/rooms returns 200"). Step-level acceptance and any per-step check commands are filled by you in that section during 细化约定; the overall test_command in frontmatter stays as the final gate. This lets you iterate at the failing step when tests fail.
+1. **Refine the plan (细化约定)** before coding: If RALPH_TASK.md does not yet have an "Implementation Steps" section with **per-step acceptance**, add it now. List steps (e.g. 1.1 Add route, 1.2 Write handler, 2.1 Run test) and for each step write a short **acceptance** (e.g. "1.1 done when: GET /api/v1/rooms returns 200"). This lets you iterate at the failing step when tests fail.
 2. **Implement step by step**: Do one step, verify its acceptance if you can (quick check or run), then move on. When the overall test command fails, map the failure to a step and fix that step before re-running tests.
 3. **Test convergence**: Run the test command from RALPH_TASK.md; do not mark the task complete until tests pass. If they fail, fix the corresponding step and re-run.
+4. **Test assertions from scenarios (完成前)**: Before marking complete, generate or update the test assertion script so each test scenario has a **real assertion** (not a placeholder). Prefer updating the existing \`tests/test-task-<id>.py\`; for browser-side assertions use the **agent-browser** skill and document commands or a small script.
 
 ## Task Execution (CRITICAL - READ CAREFULLY)
 
@@ -846,9 +847,10 @@ You are running in task-branch mode: RALPH_TASK.md was generated from a backlog 
    - Example: \`- [ ] Implement parser\` becomes \`- [x] Implement parser\`
    - This is how progress is tracked - YOU MUST update the file
 8. **Commit your work**: \`git add -A && git commit -m 'ralph: [describe what you did]'\`
-9. Update \`.ralph/progress.md\` with what you accomplished
-10. When ALL criteria show \`[x]\`: output \`<ralph>COMPLETE</ralph>\`
-11. If stuck 3+ times on same issue: output \`<ralph>GUTTER</ralph>\`
+9. **Update \`.ralph/progress.md\` (Session History)**: In the **Session History** section, add a **new** block: \`**Session N completed** - <one-line summary of this session>\`, then a bullet list of what you did (e.g. 细化约定、实现要点、测试命令与结果). Use the same N as the current iteration (shown in the prompt). This is how session summaries are preserved; YOU MUST add this block before signaling complete.
+10. **Before marking complete – 根据测试场景生成断言脚本**: If this task has test scenarios (in RALPH_TASK.md or backlog 测试场景/Acceptance Criteria), generate or update the test assertion script so each scenario has a **real assertion** (no placeholder like "需要根据具体需求实现"). Prefer updating the existing test file (e.g. \`.cursor/skills/watch-together-webapp-testing/tests/test-task-<id>.py\`) and only replace placeholder scenario blocks; keep the existing setup (create room, two browsers, member join). For assertions that need browser-side cooperation, use the **agent-browser** skill and document the commands or generate a small script (e.g. \`run-task-<id>-browser.sh\`).
+11. When ALL criteria show \`[x]\` **and** step 9 (progress.md Session History) is done: output \`<ralph>COMPLETE</ralph>\`
+12. If stuck 3+ times on same issue: output \`<ralph>GUTTER</ralph>\`
 
 **IMPORTANT**: If you finish without writing any code or creating any files, you have NOT completed the task. You must make actual changes to the codebase.
 
@@ -871,7 +873,7 @@ When something fails:
 You may receive a warning that context is running low. When you see it:
 1. Finish your current file edit
 2. Commit and push your changes
-3. Update .ralph/progress.md with what you accomplished and what's next
+3. Update .ralph/progress.md: add a **Session N completed** block in Session History (one-line summary + bullet list of what you did and what's next)
 4. You will be rotated to a fresh agent that continues your work
 
 Begin by reading the state files.

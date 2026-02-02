@@ -1,10 +1,10 @@
 ---
 id: TASK-126
 title: 成员加入房间后成员列表不实时更新
-status: In Progress
+status: To Do
 assignee: []
 created_date: '2026-02-02 08:38'
-updated_date: '2026-02-02 14:41'
+updated_date: '2026-02-02 14:51'
 labels: []
 dependencies: []
 ---
