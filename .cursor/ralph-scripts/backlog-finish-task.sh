@@ -1,10 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # backlog-finish-task.sh
 #
 # 完成一个任务：
 # - backlog 状态改为 Done
 # - 清理 .ralph/claims/task-<id>.claim 占用文件
+#
+# 约定：应在 main 上执行（合并任务分支到 main 后），再由调用方在 main 上提交变更。
 #
 # Usage:
 #   backlog-finish-task.sh <task_id_number> [workspace]

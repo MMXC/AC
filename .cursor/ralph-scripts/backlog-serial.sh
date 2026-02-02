@@ -4,8 +4,9 @@
 #
 # 串行处理 backlog 任务：逐个抢占、执行、完成，直到没有 To Do 任务为止。
 # 遵循 ralph-git-workflow 规范：
+# - backlog 状态变更（In Progress / Done / To Do）仅在 main 上执行并提交
 # - 每个任务在独立分支 task/TASK-<id> 上工作
-# - 完成后推送分支并提供 PR 创建命令
+# - 完成后推送分支、可选合并到 main，在 main 上标记 Done 并提交
 # - 提交信息使用 ralph: TASK-<id> 前缀
 #
 # Usage:
@@ -37,10 +38,10 @@ Options:
   -h, --help                帮助
 
 流程：
-  1. 从 backlog 抢占一个 To Do 任务（优先最小 ID，检查依赖）
-  2. 创建/切换到分支 task/TASK-<id>
-  3. 生成 RALPH_TASK.md 并运行 ralph-loop.sh
-  4. 成功后标记为 Done，推送分支，提示/创建 PR
+  1. 在 main 上抢占任务（backlog → In Progress），若有变更则提交到 main
+  2. 创建/切换到分支 task/TASK-<id>，生成 RALPH_TASK.md 并运行 Ralph
+  3. 成功：推送任务分支；若 --auto-merge 则合并 main→任务分支→main，在 main 上标记 Done 并提交
+  4. 失败：在 main 上标记 To Do 并提交（由 runner 执行）
   5. 继续下一个任务
 
 示例：
@@ -135,17 +136,10 @@ if ! git -C "$WORKSPACE" rev-parse --verify main >/dev/null 2>&1; then
   fi
 fi
 
-ORIGINAL_BRANCH="$(git -C "$WORKSPACE" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "$MAIN_BRANCH")"
-
-# 确保主分支是最新的
+# 约定：backlog 变更只在 main 上执行并提交。进入主循环前确保在 main。
 echo "[serial] 更新主分支: $MAIN_BRANCH"
 git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null 2>&1 || true
 git -C "$WORKSPACE" pull >/dev/null 2>&1 || true
-
-# 恢复原分支（如果不同）
-if [[ "$ORIGINAL_BRANCH" != "$MAIN_BRANCH" ]]; then
-  git -C "$WORKSPACE" checkout "$ORIGINAL_BRANCH" >/dev/null 2>&1 || true
-fi
 
 process_task() {
   local task_id="$1"
@@ -156,22 +150,17 @@ process_task() {
   echo "📋 处理任务: TASK-$task_id"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   
-  # 确保从主分支创建任务分支
-  echo "[serial] 切换到主分支: $MAIN_BRANCH"
-  git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null
-  git -C "$WORKSPACE" pull >/dev/null 2>&1 || true
-  
-  # 检查工作区是否干净
+  # 约定：抢占已在 main 上执行，若有 backlog 变更则在此提交到 main
   if [[ -n "$(git -C "$WORKSPACE" status --porcelain)" ]]; then
-    echo "⚠️  主分支有未提交更改，先提交..." >&2
+    echo "[serial] 在 main 上提交 backlog 抢占变更: TASK-$task_id In Progress"
     git -C "$WORKSPACE" add -A
-    git -C "$WORKSPACE" commit -m "ralph: checkpoint before TASK-$task_id" || {
-      echo "❌ 无法提交当前更改，请先手动处理" >&2
+    git -C "$WORKSPACE" commit -m "ralph: claim TASK-$task_id In Progress" || {
+      echo "❌ 无法提交抢占变更，请先手动处理" >&2
       return 1
     }
   fi
   
-  # 创建或切换到任务分支
+  # 创建或切换到任务分支（从当前 main）
   if git -C "$WORKSPACE" rev-parse --verify "$branch_name" >/dev/null 2>&1; then
     echo "[serial] 切换到已存在的分支: $branch_name"
     git -C "$WORKSPACE" checkout "$branch_name" >/dev/null
@@ -189,18 +178,14 @@ process_task() {
   
   if [[ $rc -ne 0 ]]; then
     echo "❌ Ralph 执行失败（exit=$rc）：TASK-$task_id" >&2
-    echo "[serial] 任务状态已重置为 To Do，可重新处理"
-    # runner 脚本已经处理了失败情况（重置状态、删除 claim）
+    echo "[serial] 任务状态已在 main 上重置为 To Do 并提交"
+    # runner 已切回 main、执行 backlog To Do 并提交
     return 1
   fi
   
-  # 成功：标记为 Done
-  echo "[serial] 标记任务为 Done"
-  "$FINISH_SCRIPT" "$task_id" "$WORKSPACE" >/dev/null || {
-    echo "⚠️  标记 Done 失败，但任务已成功完成" >&2
-  }
+  # 成功：Done 仅在合并到 main 后在 main 上执行（见下方 --auto-merge 块）
   
-  # 推送分支
+  # 推送任务分支
   echo "[serial] 推送分支: $branch_name"
   set +e
   git -C "$WORKSPACE" push -u origin "$branch_name" >/dev/null 2>&1
@@ -286,7 +271,7 @@ process_task() {
     fi
   fi
 
-  # 自动合并到主分支（不依赖 gh）
+  # 自动合并到主分支（不依赖 gh）：先合 main→任务分支，再合任务分支→main，在 main 上标记 Done 并提交
   if [[ "$AUTO_MERGE" == "true" ]]; then
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -294,10 +279,24 @@ process_task() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
-    # 暂存 .ralph 运行时日志（保留内容），避免阻止 checkout main
+    # 暂存 .ralph 运行时日志，避免阻止 checkout
     git -C "$WORKSPACE" stash push -u -m "ralph serial logs" -- .ralph/activity.log .ralph/signal_debug.log 2>/dev/null || true
 
-    # 确保在主分支上合并
+    # 1) 在任务分支上合并 main，减少后续冲突
+    echo "[serial] 在任务分支上合并 $MAIN_BRANCH..."
+    set +e
+    git -C "$WORKSPACE" merge "$MAIN_BRANCH" -m "ralph: merge $MAIN_BRANCH into TASK-$task_id" 2>&1
+    merge_main_rc=$?
+    set -e
+    if [[ $merge_main_rc -ne 0 ]]; then
+      git -C "$WORKSPACE" stash pop 2>/dev/null || true
+      echo "⚠️  合并 $MAIN_BRANCH 到任务分支失败（可能有冲突），请手动处理：" >&2
+      echo "  git checkout $branch_name && git merge $MAIN_BRANCH" >&2
+      git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null 2>&1 || true
+      return 1
+    fi
+
+    # 2) 切回 main，拉取后合并任务分支
     git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null
     git -C "$WORKSPACE" pull >/dev/null 2>&1 || true
 
@@ -307,9 +306,8 @@ process_task() {
     set -e
 
     if [[ $merge_rc -ne 0 ]]; then
-      # 合并失败时恢复日志
       git -C "$WORKSPACE" stash pop 2>/dev/null || true
-      echo "⚠️  自动合并失败（可能有冲突）。已尝试回滚合并状态，请手动处理：" >&2
+      echo "⚠️  合并任务分支到 $MAIN_BRANCH 失败（可能有冲突）。已尝试回滚，请手动处理：" >&2
       set +e
       git -C "$WORKSPACE" merge --abort >/dev/null 2>&1
       set -e
@@ -317,23 +315,32 @@ process_task() {
       echo "  2) git merge $branch_name" >&2
       echo "  3) 解决冲突后 git add -A && git commit" >&2
       echo "  4) git push origin $MAIN_BRANCH" >&2
-    else
-      echo "✅ 已合并到 $MAIN_BRANCH"
-
-      set +e
-      git -C "$WORKSPACE" push origin "$MAIN_BRANCH" 2>&1
-      push_main_rc=$?
-      set -e
-
-      if [[ $push_main_rc -ne 0 ]]; then
-        echo "⚠️  push 主分支失败（可能未配置远程或权限问题），请手动执行：" >&2
-        echo "  git push origin $MAIN_BRANCH" >&2
-      else
-        echo "✅ 主分支已 push: $MAIN_BRANCH"
-      fi
-      # 合并成功后恢复 .ralph 日志到工作区（保留运行日志）
-      git -C "$WORKSPACE" stash pop 2>/dev/null || true
+      return 1
     fi
+
+    # 3) 约定：在 main 上标记 Done 并提交
+    echo "[serial] 在 main 上标记任务为 Done"
+    "$FINISH_SCRIPT" "$task_id" "$WORKSPACE" >/dev/null || true
+    if [[ -n "$(git -C "$WORKSPACE" status --porcelain)" ]]; then
+      git -C "$WORKSPACE" add -A
+      git -C "$WORKSPACE" commit -m "ralph: TASK-$task_id Done" >/dev/null 2>&1 || true
+    fi
+
+    set +e
+    git -C "$WORKSPACE" push origin "$MAIN_BRANCH" 2>&1
+    push_main_rc=$?
+    set -e
+
+    if [[ $push_main_rc -ne 0 ]]; then
+      echo "⚠️  push 主分支失败（可能未配置远程或权限问题），请手动执行：" >&2
+      echo "  git push origin $MAIN_BRANCH" >&2
+    else
+      echo "✅ 主分支已 push: $MAIN_BRANCH"
+    fi
+    git -C "$WORKSPACE" stash pop 2>/dev/null || true
+  else
+    echo "[serial] 未使用 --auto-merge；合并到 $MAIN_BRANCH 后请在 main 上执行："
+    echo "  backlog task edit $task_id -s Done   # 若有变更再 git add -A && git commit -m 'ralph: TASK-$task_id Done'"
   fi
 
   # 切换回主分支（准备下一个任务）
@@ -341,7 +348,7 @@ process_task() {
   git -C "$WORKSPACE" stash push -u -m "ralph serial logs" -- .ralph/activity.log .ralph/signal_debug.log 2>/dev/null || true
   git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null
   git -C "$WORKSPACE" stash pop 2>/dev/null || true
-  
+
   echo "✅ 任务完成: TASK-$task_id"
   return 0
 }
@@ -360,7 +367,12 @@ echo ""
 TASK_COUNT=0
 
 while true; do
-  # 尝试抢占一个任务
+  # 约定：抢占只在 main 上执行。先确保在 main 再 claim。
+  echo "[serial] 确保在 main: $MAIN_BRANCH"
+  git -C "$WORKSPACE" checkout "$MAIN_BRANCH" >/dev/null 2>&1 || true
+  git -C "$WORKSPACE" pull >/dev/null 2>&1 || true
+
+  # 尝试抢占一个任务（backlog → In Progress，可能修改 backlog 文件）
   set +e
   TASK_ID="$("$CLAIM_SCRIPT" "$WORKSPACE" 2>&1)"
   claim_rc=$?

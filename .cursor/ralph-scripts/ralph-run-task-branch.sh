@@ -7,9 +7,9 @@
 #
 # 主要流程：
 # 1) 从 backlog task <id> --plain 读取任务内容，生成 RALPH_TASK.md
-# 2) 创建/切换到任务分支 task/TASK-<id>，backlog 标为 In Progress
-# 3) 有 test_command 时用 ralph-loop-until-tests-pass.sh，否则 ralph-loop.sh（流程见 ralph-common.sh build_prompt）
-# 4) 完成后分支保留，可手动合并或创建 PR；加 --pr 则自动 push 并创建 PR
+# 2) 创建/切换到任务分支 task/TASK-<id>（In Progress 由 backlog-serial 在 main 上 claim 时已执行）
+# 3) 有 test_command 时用 ralph-loop-until-tests-pass.sh，否则 ralph-loop.sh
+# 4) 失败时切回 main、标记 To Do 并提交；完成后分支保留，可手动合并或创建 PR
 #
 # Usage:
 #   ralph-run-task-branch.sh <task_id_number> [workspace]
@@ -135,8 +135,7 @@ fi
 git -C "$WORKSPACE" add RALPH_TASK.md
 git -C "$WORKSPACE" commit -m "ralph: TASK-$TASK_ID 初始化 RALPH_TASK.md" >/dev/null 2>&1 || true
 
-# 将 backlog 任务标为 In Progress（与流程「拿任务→开分支→细化约定→实现」一致）
-backlog task edit "$TASK_ID" -s "In Progress" >/dev/null 2>&1 || true
+# 约定：In Progress 由 backlog-serial 在 main 上 claim 时已执行，此处不再重复
 
 echo "[branch] 运行 Ralph（分支: $BRANCH_NAME）"
 
@@ -182,12 +181,25 @@ echo "[branch] 任务分支: $BRANCH_NAME（已保留，可查看/调试）"
 echo "[branch] 查看提交: git log $BRANCH_NAME"
 echo "[branch] 继续调试: git checkout $BRANCH_NAME"
 
-# 失败时恢复 backlog 为 To Do，便于重新抢占或他人接手
-backlog task edit "$TASK_ID" -s "To Do" >/dev/null 2>&1 || true
-
-# 失败时也切换回原分支
-if [[ -n "$ORIGINAL_BRANCH" ]] && [[ "$ORIGINAL_BRANCH" != "$BRANCH_NAME" ]]; then
-  git -C "$WORKSPACE" checkout "$ORIGINAL_BRANCH" >/dev/null 2>&1 || true
+# 约定：backlog 变更只在 main 上执行并提交。失败时切回 main，标记 To Do 并提交。
+MAIN_BR="main"
+if ! git -C "$WORKSPACE" rev-parse --verify main >/dev/null 2>&1; then
+  MAIN_BR="master"
+  git -C "$WORKSPACE" rev-parse --verify master >/dev/null 2>&1 || MAIN_BR=""
+fi
+if [[ -n "$MAIN_BR" ]]; then
+  git -C "$WORKSPACE" checkout "$MAIN_BR" >/dev/null 2>&1 || true
+  backlog task edit "$TASK_ID" -s "To Do" >/dev/null 2>&1 || true
+  CLAIM_FILE="$WORKSPACE/.ralph/claims/task-${TASK_ID}.claim"
+  rm -f "$CLAIM_FILE" 2>/dev/null || true
+  if [[ -n "$(git -C "$WORKSPACE" status --porcelain)" ]]; then
+    git -C "$WORKSPACE" add -A
+    git -C "$WORKSPACE" commit -m "ralph: TASK-$TASK_ID reverted to To Do" >/dev/null 2>&1 || true
+  fi
+  echo "[branch] 已在 $MAIN_BR 上标记 To Do 并提交"
+else
+  backlog task edit "$TASK_ID" -s "To Do" >/dev/null 2>&1 || true
+  rm -f "$WORKSPACE/.ralph/claims/task-${TASK_ID}.claim" 2>/dev/null || true
 fi
 
 exit $rc
