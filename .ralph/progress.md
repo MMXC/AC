@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 19
-- Current status: In Progress - 成员加入房间后成员列表不实时更新（backlog-126）
+- Iterations completed: 20
+- Current status: Done - 成员加入房间后成员列表不实时更新（backlog-126）E2E 通过
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-03 [Ralph Iteration 6]
+**Session 6 completed** - backlog-126 成员列表实时更新 E2E 通过
+- 前端：chat.js 收到 MEMBER_JOINED 后 300ms 发送 REQUEST_SYNC；WS 连接后立即 + 1s 后发送 REQUEST_SYNC；加入房间后启动成员列表 HTTP 轮询（每 1.5s GET /api/v1/rooms/:roomId），弥补 E2E 下 WebSocket 未送达或时序问题
+- 服务端：broadcastSyncStateToRoom 返回 Promise，join  handler 中 await 再返回响应；确保 SYNC_STATE 已发送
+- 测试：重建 watch-together 镜像后运行 skill:watch-together-webapp-testing TASK-126 通过；房主端与成员A端在成员B 加入后均显示 3 人
+- RALPH_TASK 对应 backlog 任务 AC #1–#3 已勾选
 
 ### 2026-02-03 [Ralph Iteration 4]
 **Session 4 completed** - backlog-126 房主 join 后立即触发 chat WebSocket 连接
@@ -369,3 +376,9 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-03 04:00:43
 **Session 4 started** (model: auto)
+
+### 2026-02-03 04:11:48
+**Session 5 started** (model: auto)
+
+### 2026-02-03 04:21:26
+**Session 6 started** (model: auto)

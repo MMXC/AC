@@ -202,7 +202,10 @@ app.post('/api/v1/rooms/:roomId/join', async (req, res) => {
         }
         const broadcastSync = ws_room_broadcast_1.getBroadcastSyncStateToRoom();
         if (typeof broadcastSync === 'function') {
-            broadcastSync(roomId);
+            const syncPromise = broadcastSync(roomId);
+            if (syncPromise && typeof syncPromise.then === 'function') {
+                await syncPromise;
+            }
         }
         return res.status(200).json({
             success: true,

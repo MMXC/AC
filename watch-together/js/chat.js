@@ -5,6 +5,10 @@
 // WebSocket 连接
 let ws = null;
 let currentUserId = null;
+/** 周期性请求成员同步的定时器，用于弥补漏收的 SYNC_STATE（如 E2E 时序） */
+let requestSyncIntervalId = null;
+/** 成员列表 HTTP 轮询后备（当 WebSocket 未送达 SYNC_STATE 时仍能更新列表） */
+let membersListPollIntervalId = null;
 let currentUserNickname = null;
 let currentRoomId = null;
 let messageHistory = [];
@@ -182,6 +186,38 @@ function initChat() {
         
         console.log('用户已加入房间，准备连接 WebSocket', { currentUserId, currentRoomId });
         
+        // 成员列表 HTTP 轮询后备（每 2.5s 拉取房间成员，弥补 E2E 下 WS 未送达或时序问题）
+        if (membersListPollIntervalId) clearInterval(membersListPollIntervalId);
+        if (currentRoomId && typeof getApiBase === 'function' && typeof setMembersList === 'function') {
+            (function pollOnce() {
+                fetch(getApiBase() + '/api/v1/rooms/' + encodeURIComponent(currentRoomId))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data && data.success && data.data && data.data.members && Array.isArray(data.data.members)) {
+                            var list = data.data.members.map(function (m) {
+                                return { id: m.userId || m.id, name: m.nickname || ('成员' + (m.userId || m.id || '').substring(0, 8)) };
+                            });
+                            setMembersList(list);
+                        }
+                    })
+                    .catch(function () {});
+            })();
+            membersListPollIntervalId = setInterval(function () {
+                if (!currentRoomId) return;
+                fetch(getApiBase() + '/api/v1/rooms/' + encodeURIComponent(currentRoomId))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data && data.success && data.data && data.data.members && Array.isArray(data.data.members)) {
+                            var list = data.data.members.map(function (m) {
+                                return { id: m.userId || m.id, name: m.nickname || ('成员' + (m.userId || m.id || '').substring(0, 8)) };
+                            });
+                            setMembersList(list);
+                        }
+                    })
+                    .catch(function () {});
+            }, 1500);
+        }
+        
         // 用户已加入，连接 WebSocket
         connectWebSocket();
     } else {
@@ -260,6 +296,23 @@ function connectWebSocket() {
                 detail: { ws: ws }
             }));
         }
+        // 连接后立即请求一次完整成员同步，确保成员列表与服务器一致
+        if (ws.readyState === 1) {
+            ws.send(JSON.stringify({ type: 'REQUEST_SYNC' }));
+        }
+        // 再延迟请求一次，弥补漏收的 SYNC_STATE（如 E2E 时序导致）
+        setTimeout(function () {
+            if (ws.readyState === 1) {
+                ws.send(JSON.stringify({ type: 'REQUEST_SYNC' }));
+            }
+        }, 1000);
+        // 周期性请求成员同步（每 5s），确保漏收广播时仍能更新成员列表
+        if (requestSyncIntervalId) clearInterval(requestSyncIntervalId);
+        requestSyncIntervalId = setInterval(function () {
+            if (ws && ws.readyState === 1) {
+                ws.send(JSON.stringify({ type: 'REQUEST_SYNC' }));
+            }
+        }, 5000);
     };
 
     ws.onmessage = (event) => {
@@ -277,7 +330,11 @@ function connectWebSocket() {
 
     ws.onclose = (event) => {
         console.log('WebSocket 连接已关闭', event.code, event.reason);
-        
+        if (requestSyncIntervalId) {
+            clearInterval(requestSyncIntervalId);
+            requestSyncIntervalId = null;
+        }
+        // 不在此清除 membersListPollIntervalId，保留 HTTP 轮询以继续更新成员列表
         // 触发 WebSocket 断开事件
         if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('websocketDisconnected', {
@@ -404,6 +461,14 @@ function handleWebSocketMessage(message) {
                     window.dispatchEvent(new CustomEvent('memberJoinedRoom', {
                         detail: { userId: message.data.userId, nickname: message.data.nickname },
                     }));
+                }
+                // 延迟请求一次完整成员列表，弥补漏收的 SYNC_STATE（如 E2E 时序）
+                if (ws && ws.readyState === 1) {
+                    setTimeout(function () {
+                        if (ws && ws.readyState === 1) {
+                            ws.send(JSON.stringify({ type: 'REQUEST_SYNC' }));
+                        }
+                    }, 300);
                 }
             }
             break;

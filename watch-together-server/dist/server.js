@@ -50,8 +50,8 @@ const appModule = require("./app");
 ws_room_broadcast_1.setBroadcastToRoom(broadcastToRoom);
 function broadcastSyncStateToRoom(roomId) {
     const getRoomMembersForSync = appModule.getRoomMembersForSync;
-    if (typeof getRoomMembersForSync !== "function") return;
-    getRoomMembersForSync(roomId)
+    if (typeof getRoomMembersForSync !== "function") return Promise.resolve();
+    return getRoomMembersForSync(roomId)
         .then((members) => {
         if (!members || members.length === 0) return;
         const payload = JSON.stringify({ type: "SYNC_STATE", data: { members } });
@@ -61,7 +61,9 @@ function broadcastSyncStateToRoom(roomId) {
             if (ws.readyState === 1) ws.send(payload);
         });
     })
-        .catch((err) => console.error("[WebSocket] broadcastSyncStateToRoom error:", err));
+        .catch((err) => {
+        console.error("[WebSocket] broadcastSyncStateToRoom error:", err);
+        });
 }
 ws_room_broadcast_1.setBroadcastSyncStateToRoom(broadcastSyncStateToRoom);
 /** 新连接建立时向该客户端发送当前房间成员列表，使成员列表实时一致 */
@@ -97,6 +99,11 @@ wss.on("connection", (ws, req) => {
             if (!type) return;
             // 聊天消息：向房间内所有连接广播（含发送者），前端据此渲染消息区域
             const connRoomId = ws.roomId || roomId;
+            if (type === "REQUEST_SYNC") {
+                const r = ws.roomId;
+                if (r) sendSyncStateToClient(ws, r);
+                return;
+            }
             if (type === "CHAT_MESSAGE" && connRoomId && message.userId && message.nickname != null && message.content != null) {
                 const id = crypto.randomUUID();
                 const timestamp = new Date().toISOString();
