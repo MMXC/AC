@@ -265,6 +265,10 @@ app.post('/api/v1/rooms/:roomId/leave', async (req, res) => {
         if (typeof broadcast === 'function') {
             broadcast(roomId, String(userId), { type: 'MEMBER_LEFT', data: { userId: String(userId) } });
         }
+        const broadcastSync = ws_room_broadcast_1.getBroadcastSyncStateToRoom();
+        if (typeof broadcastSync === 'function') {
+            broadcastSync(roomId);
+        }
         return res.status(200).json({ success: true });
     } catch (err) {
         console.error('POST /api/v1/rooms/:roomId/leave error:', err);

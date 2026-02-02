@@ -64,6 +64,18 @@ function broadcastSyncStateToRoom(roomId) {
         .catch((err) => console.error("[WebSocket] broadcastSyncStateToRoom error:", err));
 }
 ws_room_broadcast_1.setBroadcastSyncStateToRoom(broadcastSyncStateToRoom);
+/** 新连接建立时向该客户端发送当前房间成员列表，使成员列表实时一致 */
+function sendSyncStateToClient(ws, roomId) {
+    const getRoomMembersForSync = appModule.getRoomMembersForSync;
+    if (typeof getRoomMembersForSync !== "function" || !roomId) return;
+    getRoomMembersForSync(roomId)
+        .then((members) => {
+        if (!members || members.length === 0) return;
+        const payload = JSON.stringify({ type: "SYNC_STATE", data: { members } });
+        if (ws.readyState === 1) ws.send(payload);
+    })
+        .catch((err) => console.error("[WebSocket] sendSyncStateToClient error:", err));
+}
 wss.on("connection", (ws, req) => {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
     const roomId = url.searchParams.get("roomId");
@@ -76,6 +88,7 @@ wss.on("connection", (ws, req) => {
         }
         wsConnections.get(roomId).add(ws);
         wsByRoomUser.set(`${roomId}:${userId}`, ws);
+        sendSyncStateToClient(ws, roomId);
     }
     ws.on("message", (data) => {
         try {

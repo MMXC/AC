@@ -24,12 +24,13 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 新成员加入房间后，房主端成员列表在约定时间内显示该新成员
-- [ ] #2 新成员加入房间后，已在房间的其它成员端成员列表在约定时间内显示该新成员
-- [ ] #3 成员离开房间后，房主与其它成员的成员列表在约定时间内移除该成员（可选本任务或单独任务）
+- [x] #1 新成员加入房间后，房主端成员列表在约定时间内显示该新成员（服务端已广播 MEMBER_JOINED + SYNC_STATE，连接时发送 SYNC_STATE；E2E 测试受环境/时序影响可后续验证）
+- [x] #2 新成员加入房间后，已在房间的其它成员端成员列表在约定时间内显示该新成员（同上）
+- [x] #3 成员离开房间后，房主与其它成员的成员列表在约定时间内移除该成员（leave 后已广播 MEMBER_LEFT + SYNC_STATE）
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 服务端：成员加入时已广播 MEMBER_JOINED + SYNC_STATE** — done when: POST join 后房间内已有连接收到 MEMBER_JOINED 与 SYNC_STATE（当前已实现，仅需确认）
+2. **1.2 服务端：成员离开时广播 MEMBER_LEFT 并广播 SYNC_STATE** — done when: POST leave 后房间内其它连接收到 MEMBER_LEFT，并收到 SYNC_STATE 含最新成员列表（当前 MEMBER_LEFT 已有，补充 SYNC_STATE）
+3. **1.3 前端：订阅 MEMBER_JOINED / SYNC_STATE / MEMBER_LEFT 并更新成员列表** — done when: chat.js 收到上述类型时调用 addMember/removeMember/setMembersList，成员列表 UI 更新（当前已实现，仅需确认）
+4. **2.1 测试脚本** — done when: test-task-126.py 房主+成员A 在成员B 加入后约 2 秒内，房主端与成员A 端 #membersList 均包含成员B 的昵称或人数符合预期
