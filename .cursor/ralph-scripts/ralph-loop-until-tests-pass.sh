@@ -151,18 +151,18 @@ run_test_command() {
   
   cd "$workspace"
   
-  # 运行测试前：若有 docker-compose 则先 build 再 up（默认使用 Docker 缓存，容器内可能非最新代码）
+  # 运行测试前：若有 docker-compose 则先 build 再 up（默认无缓存构建，确保容器内为最新代码）
   if [[ -f "docker-compose.yml" ]] || [[ -f "docker-compose.yaml" ]]; then
-    if [[ "${DOCKER_COMPOSE_NO_CACHE:-}" == "1" ]]; then
-      echo "🔧 docker-compose: 无缓存构建并启动服务（DOCKER_COMPOSE_NO_CACHE=1）..." >&2
+    if [[ "${DOCKER_COMPOSE_USE_CACHE:-}" == "1" ]]; then
+      echo "🔧 docker-compose: 构建并启动服务（使用缓存，DOCKER_COMPOSE_USE_CACHE=1）..." >&2
     else
-      echo "🔧 docker-compose: 构建并启动服务（使用缓存；需最新代码请设 DOCKER_COMPOSE_NO_CACHE=1）..." >&2
+      echo "🔧 docker-compose: 无缓存构建并启动服务（确保测试使用最新代码）..." >&2
     fi
     if [[ "${DOCKER_COMPOSE_SKIP_BUILD:-}" != "1" ]]; then
-      if [[ "${DOCKER_COMPOSE_NO_CACHE:-}" == "1" ]]; then
-        docker-compose build --no-cache >&2 || echo "⚠️  docker-compose build --no-cache 失败，继续尝试 up..." >&2
-      else
+      if [[ "${DOCKER_COMPOSE_USE_CACHE:-}" == "1" ]]; then
         docker-compose build >&2 || echo "⚠️  docker-compose build 失败，继续尝试 up..." >&2
+      else
+        docker-compose build --no-cache >&2 || echo "⚠️  docker-compose build --no-cache 失败，继续尝试 up..." >&2
       fi
     fi
     docker-compose up -d >&2 || echo "⚠️  docker-compose up 失败，继续测试..." >&2

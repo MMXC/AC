@@ -10,8 +10,8 @@
 # - 提交信息使用 ralph: TASK-<id> 前缀
 #
 # 测试与 Docker：若任务的 test_command 包含 docker compose，实际执行在
-# ralph-loop-until-tests-pass.sh 中会先 build 再 up。build 默认使用缓存，
-# 容器内可能非最新代码；强制无缓存重建可设置 DOCKER_COMPOSE_NO_CACHE=1。
+# ralph-loop-until-tests-pass.sh 中会先 build 再 up。默认无缓存构建，确保
+# 容器内为最新代码；需加速可设 DOCKER_COMPOSE_USE_CACHE=1 使用缓存。
 #
 # Usage:
 #   backlog-serial.sh [--workspace .] [--watch] [--no-pr]
@@ -49,10 +49,8 @@ Options:
   5. 继续下一个任务
 
 Docker 测试说明（test_command 含 docker compose 时）：
-  - 运行测试前会执行 docker compose build 再 up，但 build 默认使用 Docker 缓存。
-  - 若镜像层未失效，容器内可能是上次构建的代码，并非当前工作区最新代码。
-  - 需确保每次测试都用最新代码时，请设置环境变量再运行本脚本：
-    DOCKER_COMPOSE_NO_CACHE=1 .cursor/ralph-scripts/backlog-serial.sh
+  - 运行测试前会执行 docker compose build 再 up，默认无缓存构建，确保容器内为最新代码。
+  - 需加速（使用缓存）可设置：DOCKER_COMPOSE_USE_CACHE=1
   - 仅跳过 build（沿用已有镜像）可设置：DOCKER_COMPOSE_SKIP_BUILD=1
 
 示例：
