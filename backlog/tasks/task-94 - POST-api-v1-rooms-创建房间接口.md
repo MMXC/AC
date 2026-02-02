@@ -1,13 +1,12 @@
 ---
 id: TASK-94
 title: POST /api/v1/rooms 创建房间接口
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-01-31 11:14'
-updated_date: '2026-02-01 07:49'
+updated_date: '2026-01-31 11:59'
 labels: []
 dependencies: []
-ordinal: 19000
 ---
 
 ## Description
