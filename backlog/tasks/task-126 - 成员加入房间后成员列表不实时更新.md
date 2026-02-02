@@ -4,9 +4,10 @@ title: 成员加入房间后成员列表不实时更新
 status: To Do
 assignee: []
 created_date: '2026-02-02 08:38'
-updated_date: '2026-02-02 18:47'
+updated_date: '2026-02-02 18:57'
 labels: []
 dependencies: []
+ordinal: 1000
 ---
 
 ## Description

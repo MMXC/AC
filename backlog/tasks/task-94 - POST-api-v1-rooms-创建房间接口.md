@@ -4,9 +4,10 @@ title: POST /api/v1/rooms 创建房间接口
 status: To Do
 assignee: []
 created_date: '2026-01-31 11:14'
-updated_date: '2026-01-31 11:59'
+updated_date: '2026-02-02 18:57'
 labels: []
 dependencies: []
+ordinal: 2000
 ---
 
 ## Description
