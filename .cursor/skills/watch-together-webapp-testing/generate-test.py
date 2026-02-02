@@ -57,6 +57,11 @@ def generate_playwright_test(task_id: str, scenarios: list, task_description: st
     """根据测试场景生成 Playwright 测试脚本"""
     
     function_name = task_id.lower().replace("-", "_")
+    # 是否需要第三浏览器让「成员 B」加入（TASK-126 等：新成员加入后成员列表显示该新成员）
+    needs_third_member = any(
+        '成员 B' in s or ('新成员加入' in s and '显示该新成员' in s)
+        for s in scenarios
+    )
     
     test_code = f'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -140,9 +145,12 @@ def test_{function_name}():
         needs_member_view = any(keyword in scenarios_str for keyword in [
             '成员', '观看', '播放', '接收', 'member', 'view', 'play'
         ])
+        needs_third_member = any('成员 B' in s or ('新成员加入' in s and '显示该新成员' in s) for s in scenarios)
         
         browser_member = None
         page_member = None
+        browser_member_b = None
+        page_member_b = None
         
         if needs_member_view:
             print("启动浏览器（成员端）...")
@@ -154,6 +162,11 @@ def test_{function_name}():
                 permissions=context_permissions
             )
             page_member = context_member.new_page()
+        if needs_third_member:
+            print("启动浏览器（成员 B）...")
+            browser_member_b = p.chromium.launch(headless=False, args=browser_args)
+            context_member_b = browser_member_b.new_context(permissions=context_permissions)
+            page_member_b = context_member_b.new_page()
         
         # 使用房主页面作为主页面
         page = page_host
@@ -234,7 +247,9 @@ def test_{function_name}():
         
         # 如果创建了成员端浏览器，让成员加入房间
         if needs_member_view and room_id and page_member:
-            print("\\n让成员端加入房间...")
+            first_nickname = '成员A' if needs_third_member else '测试成员'
+            first_label = '成员 A' if needs_third_member else '成员端'
+            print("\\n让" + first_label + "加入房间...")
             member_room_url = f'http://localhost:3001/room/{{room_id}}'
             page_member.goto(member_room_url)
             page_member.wait_for_load_state('networkidle')
@@ -243,19 +258,37 @@ def test_{function_name}():
             # 成员端可能需要填写昵称并加入
             member_nickname_input = page_member.locator('input[name="nickname"], input[id*="nickname"], input[placeholder*="昵称"]')
             if member_nickname_input.count() > 0:
-                member_nickname_input.first.fill('测试成员')
-                print("  ✅ 成员端已填写昵称")
+                member_nickname_input.first.fill(first_nickname)
+                print(f"  ✅ {{first_label}}已填写昵称")
                 
                 # 查找加入按钮
                 join_button = page_member.locator('button:has-text("加入"), button:has-text("进入"), button[type="submit"]')
                 if join_button.count() > 0:
                     join_button.first.click()
-                    print("  ✅ 成员端已点击加入按钮")
+                    print(f"  ✅ {{first_label}}已点击加入按钮")
                     page_member.wait_for_load_state('networkidle')
                     time.sleep(2)
             
-            page_member.screenshot(path=os.path.join(artifact_dir, 'member-joined.png'), full_page=True)
-            print(f"✅ 已保存成员端截图: {{artifact_dir}}/member-joined.png")
+            first_screenshot = 'member-a-joined.png' if needs_third_member else 'member-joined.png'
+            page_member.screenshot(path=os.path.join(artifact_dir, first_screenshot), full_page=True)
+            print(f"✅ 已保存{{first_label}}截图: {{artifact_dir}}/{{first_screenshot}}")
+        
+        # 成员 B 加入同一房间（需第三浏览器，TASK-126 等）
+        if needs_third_member and room_id and page_member_b:
+            print("\\n成员 B 加入同一房间...")
+            member_room_url = f'http://localhost:3001/room/{{room_id}}'
+            page_member_b.goto(member_room_url)
+            page_member_b.wait_for_load_state('networkidle')
+            time.sleep(2)
+            member_b_nickname = page_member_b.locator('input[name="nickname"], input[id*="nickname"], input[placeholder*="昵称"]')
+            if member_b_nickname.count() > 0:
+                member_b_nickname.first.fill('成员B')
+                join_btn_b = page_member_b.locator('button:has-text("加入"), button:has-text("进入"), button[type="submit"]')
+                if join_btn_b.count() > 0:
+                    join_btn_b.first.click()
+                    page_member_b.wait_for_load_state('networkidle')
+                    time.sleep(2)
+            time.sleep(2)  # 等待成员列表广播更新
         
         # 初始截图（房主端）
         page.screenshot(path=os.path.join(artifact_dir, 'initial.png'), full_page=True)
@@ -443,9 +476,34 @@ def test_{function_name}():
 '''
         
         elif '成员列表' in scenario or '成员加入' in scenario or ('成员' in scenario and ('实时' in scenario or '更新' in scenario or '显示' in scenario)):
-            # 成员加入后成员列表应显示新成员（TASK-126 及同类任务复用）
-            test_code += f'''            # 检查房主端/成员端成员列表是否包含新加入成员
-            member_list_selector = '#memberList, .member-list, [data-testid="member-list"], ul.members'
+            # 成员加入后成员列表应显示新成员（TASK-126：断言含「成员B」时需先执行成员 B 加入步骤）
+            look_for_b = '成员 B' in scenario or '该新成员' in scenario
+            member_list_sel = '#membersList, #memberList, .member-list, [data-testid="member-list"], ul.members'
+            if look_for_b:
+                test_code += f'''            # 检查房主端/成员 A 端成员列表是否包含成员B（需已执行「成员 B 加入」步骤）
+            member_list_selector = '{member_list_sel}'
+            found_host = False
+            found_member_a = False
+            if page.locator(member_list_selector).count() > 0:
+                host_list_text = page.locator(member_list_selector).first.inner_text()
+                print(f"  房主端 #membersList 文本: {{host_list_text[:80]}}")
+                found_host = '成员B' in host_list_text
+                print(f"  {{'✅' if found_host else '❌'}} 房主端成员列表包含「成员B」: {{found_host}}")
+            if page_member and page_member.locator(member_list_selector).count() > 0:
+                member_a_text = page_member.locator(member_list_selector).first.inner_text()
+                print(f"  成员 A 端 #membersList 文本: {{member_a_text[:80]}}")
+                found_member_a = '成员B' in member_a_text
+                print(f"  {{'✅' if found_member_a else '❌'}} 成员 A 端成员列表包含「成员B」: {{found_member_a}}")
+            if found_host and found_member_a:
+                test_results.append(("场景 {i}", True, "房主端与成员 A 端成员列表均包含成员B"))
+            elif found_host or found_member_a:
+                test_results.append(("场景 {i}", False, "仅一端成员列表包含成员B"))
+            else:
+                test_results.append(("场景 {i}", False, "房主端成员列表未包含成员B" if not found_host else "成员 A 端成员列表未包含成员B"))
+'''
+            else:
+                test_code += f'''            # 检查房主端/成员端成员列表是否包含预期成员
+            member_list_selector = '{member_list_sel}'
             found_on_host = False
             found_on_member = False
             if page.locator(member_list_selector).count() > 0:
@@ -501,6 +559,8 @@ def test_{function_name}():
         browser_host.close()
         if browser_member:
             browser_member.close()
+        if browser_member_b:
+            browser_member_b.close()
         
         # 如果有失败的测试，返回 False
         return failed == 0

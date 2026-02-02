@@ -203,7 +203,12 @@ run_test_command() {
           echo "═══════════════════════════════════════════════════════════════════"
           echo ""
         } >> "$test_results_file"
-        
+        # 失败且为「成员列表未包含成员B」时追加提示，供下次循环排查
+        if [[ $exit_code -ne 0 ]]; then
+          if tail -n 120 "$test_results_file" 2>/dev/null | grep -q "成员B" && tail -n 120 "$test_results_file" 2>/dev/null | grep -q "未包含"; then
+            echo "[下次循环提示] 若失败原因为「成员列表未包含成员B」，请确认测试脚本在断言前已执行「成员 B 加入房间」步骤（需第三浏览器、昵称成员B、点击加入后等待约2秒）。" >> "$test_results_file"
+          fi
+        fi
         return $exit_code
       else
         # Fallback: try to find test script directly
