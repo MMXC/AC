@@ -351,34 +351,18 @@ function handleWebSocketMessage(message) {
             } else {
                 console.log('SYNC_STATE 消息中没有 recentMessages');
             }
-            // 同步成员列表
+            // 同步成员列表：服务端 SYNC_STATE 含 { userId, nickname }，用 setMembersList 整表替换保证一致
             if (message.data && message.data.members && Array.isArray(message.data.members)) {
                 console.log('同步成员列表:', message.data.members.length, '个成员');
-                const currentUserId = window.currentUserId;
-                
-                // 使用 addMember 和 removeMember 函数更新成员列表（如果可用）
-                if (typeof addMember === 'function' && typeof removeMember === 'function') {
-                    // 获取当前成员列表
-                    const currentMembers = typeof getMembersList === 'function' ? getMembersList() : [];
-                    
-                    // 创建新成员列表的 userId 集合（用于快速查找）
-                    const newMemberIds = new Set(message.data.members.map(m => m.userId));
-                    
-                    // 移除所有不在新列表中的成员（包括当前用户，因为当前用户也会在新列表中）
-                    currentMembers.forEach(member => {
-                        if (!newMemberIds.has(member.id)) {
-                            removeMember(member.id);
-                        }
-                    });
-                    
-                    // 添加或更新所有成员到列表
-                    message.data.members.forEach(member => {
-                        addMember(member.userId, member.nickname);
-                    });
-                    
-                    console.log('成员列表已同步，当前成员数:', message.data.members.length);
+                if (typeof setMembersList === 'function') {
+                    const list = message.data.members.map(m => ({
+                        id: m.userId,
+                        name: m.nickname || `成员${(m.userId || '').substring(0, 8)}`
+                    }));
+                    setMembersList(list);
+                    console.log('成员列表已同步，当前成员数:', list.length);
                 } else {
-                    console.warn('addMember 或 removeMember 函数不可用，无法同步成员列表');
+                    console.warn('setMembersList 函数不可用，无法同步成员列表');
                 }
             }
             // 初始化操作来源状态
@@ -725,6 +709,7 @@ function getWebSocketConnection() {
 // 将函数暴露到全局作用域，供其他脚本（如 video-player.js）使用
 if (typeof window !== 'undefined') {
     window.getWebSocketConnection = getWebSocketConnection;
+    window.handleWebSocketMessage = handleWebSocketMessage;
 }
 
 // 导出函数供测试使用

@@ -80,7 +80,16 @@ def test_task_126():
             page_host.locator('#createBtn, button[type="submit"], button:has-text("创建房间")').first.click()
             page_host.wait_for_url('**/room/**', timeout=10000)
             page_host.wait_for_load_state('networkidle')
-            time.sleep(5)
+            time.sleep(2)
+            # 等待房主端 WebSocket 连接（chat.js 连接成功时设置 data-chat-ws-connected）
+            try:
+                page_host.wait_for_function(
+                    "document.body && document.body.dataset.chatWsConnected === 'true'",
+                    timeout=10000
+                )
+            except Exception:
+                pass
+            time.sleep(2)
 
             room_id_match = re.search(r'/room/([^/?]+)', page_host.url)
             if not room_id_match:
@@ -98,13 +107,21 @@ def test_task_126():
             page_member_a.locator('input[name="nickname"], input[placeholder*="昵称"]').first.fill('成员A')
             page_member_a.locator('button:has-text("加入"), button:has-text("进入")').first.click()
             page_member_a.wait_for_load_state('networkidle')
-            time.sleep(3)
+            time.sleep(2)
 
-            # 等待房主端与成员A端成员列表至少为 2（确保 WebSocket 推送已收到）
+            # 等待房主端 WebSocket 已连接且成员列表至少为 2（房主+成员A），最多 15 秒
             try:
                 page_host.wait_for_function(
+                    "document.body && document.body.dataset.chatWsConnected === 'true' && document.querySelectorAll('#membersList li.member-item .member-name').length >= 2",
+                    timeout=15000
+                )
+            except Exception:
+                pass
+            # 再等成员A端列表更新
+            try:
+                page_member_a.wait_for_function(
                     "document.querySelectorAll('#membersList li.member-item .member-name').length >= 2",
-                    timeout=8000
+                    timeout=5000
                 )
             except Exception:
                 pass

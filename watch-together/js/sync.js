@@ -142,7 +142,13 @@ function connectSyncWebSocket() {
  * 处理同步消息
  */
 function handleSyncMessage(message) {
-    // 忽略自己发送的消息
+    // 成员列表相关消息：若由 sync 连接收到，转发给 chat 的 handleWebSocketMessage 以更新成员列表
+    if (message.type === 'SYNC_STATE' || message.type === 'MEMBER_JOINED' || message.type === 'MEMBER_LEFT') {
+        if (typeof window !== 'undefined' && typeof window.handleWebSocketMessage === 'function') {
+            window.handleWebSocketMessage(message);
+        }
+    }
+    // 忽略自己发送的消息（仅对需区分发送者的类型）
     if (message.userId === syncCurrentUserId) {
         return;
     }
