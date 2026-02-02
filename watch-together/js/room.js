@@ -539,6 +539,12 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
             window.dispatchEvent(new CustomEvent('userJoinedRoom', {
                 detail: { userId: serverUserId, nickname: serverNickname, roomId, isHost }
             }));
+            // 房主/成员 join 成功后立即触发 chat 连接（避免仅依赖 DOMContentLoaded 的 100ms 时序）
+            if (typeof window.initChat === 'function') {
+                setTimeout(function () {
+                    window.initChat();
+                }, 0);
+            }
         }
         
     } catch (error) {

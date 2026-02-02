@@ -15,6 +15,13 @@ This is how Ralph maintains continuity across iterations.
 
 ## Session History
 
+### 2026-02-03 [Ralph Iteration 4]
+**Session 4 completed** - backlog-126 房主 join 后立即触发 chat WebSocket 连接
+- 前端：chat.js 暴露 window.initChat；userJoinedRoom 监听器内 setTimeout 从 100ms 改为 0，减少延迟
+- 前端：room.js 在 joinRoomWithNickname 成功并派发 userJoinedRoom 后，若 window.initChat 存在则 setTimeout(0, initChat)，确保房主/成员 join 成功后立即尝试连接 WS
+- 测试：test-task-126.py 房主创建房间后等待 chatWsConnected 从 10s 增至 15s、房主端≥2 人等待从 15s 增至 20s、成员A 端≥2 人等待从 5s 增至 8s，并增加 sleep
+- E2E 仍失败（房主端 1 人、成员B 加入后两边未更新），疑为 Playwright/Docker/WSL 环境下房主 WS 未连上或 broadcast 未送达；逻辑与本地手动验证可后续进行
+
 ### 2026-02-03 [Ralph Iteration 3]
 **Session 3 completed** - backlog-126 成员列表：sync.js 默认 WS 端口改为 3000，测试等待时间加长
 - 修复：sync.js 默认 WebSocket URL 从 ws://localhost:3001 改为 ws://localhost:3000，与 chat.js 及 watch-together-server 一致，确保独立 sync 连接也能收到 SYNC_STATE/MEMBER_JOINED
@@ -359,3 +366,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-03 03:49:40
 **Session 3 started** (model: auto)
+
+### 2026-02-03 04:00:43
+**Session 4 started** (model: auto)

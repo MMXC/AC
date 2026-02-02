@@ -691,10 +691,10 @@ if (typeof document !== 'undefined') {
             } else {
                 console.error('userJoinedRoom 事件中的 userId 无效:', event.detail);
             }
-            // 重新初始化
+            // 立即安排连接 WebSocket（微任务延迟，确保 room 状态已写入）
             setTimeout(() => {
                 initChat();
-            }, 100);
+            }, 0);
         });
     });
 }
@@ -706,10 +706,11 @@ function getWebSocketConnection() {
     return ws;
 }
 
-// 将函数暴露到全局作用域，供其他脚本（如 video-player.js）使用
+// 将函数暴露到全局作用域，供其他脚本（如 room.js、video-player.js）使用
 if (typeof window !== 'undefined') {
     window.getWebSocketConnection = getWebSocketConnection;
     window.handleWebSocketMessage = handleWebSocketMessage;
+    window.initChat = initChat;
 }
 
 // 导出函数供测试使用
