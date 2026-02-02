@@ -374,9 +374,15 @@ async function startScreenSharing() {
         videoStreamEl.srcObject = stream;
         videoStreamEl.autoplay = true;
         videoStreamEl.playsInline = true;
-        
+        // 显式调用 play() 以符合浏览器自动播放策略，避免房主端黑屏/不渲染（用户点击「开始共享」后立即调用）
+        videoStreamEl.play().catch((err) => {
+            console.warn('本地预览自动播放被拒绝:', err);
+        });
+
         // 显示 video 容器和本地预览 video，隐藏占位符；房主端用 video 预览，隐藏 canvas
-        if (videoContainer) {
+        if (typeof showVideoContainer === 'function') {
+            showVideoContainer();
+        } else if (videoContainer) {
             videoContainer.style.display = 'flex';
         }
         videoStreamEl.style.display = 'block';

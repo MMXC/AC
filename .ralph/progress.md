@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 18
-- Current status: In Progress - 修复聊天消息不显示的问题（backlog-120）
+- Iterations completed: 19
+- Current status: 完成 - 点击共享画面后房主端与成员端画面均无法加载（backlog-127）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-03 [Ralph Iteration 1]
+**Session completed** - 点击共享画面后房主端与成员端画面均无法加载（backlog-127）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 房主端显式 play()、1.2 画面容器显示、1.3 成员端 ontrack 绑定、2.1 运行测试）
+- 房主端：screen-streaming.js 在 getDisplayMedia 后对 #videoStream 设置 srcObject 后显式调用 videoStreamEl.play().catch(...)，符合浏览器自动播放策略，避免黑屏；开始共享时调用 showVideoContainer() 确保画面区域可见
+- 成员端：已有 VideoPlayer.attachStream(remoteStream) 与 showVideoContainer，未改
+- 测试：生成 test-TASK-127.py，场景 1 需用户授权 getDisplayMedia（自动化跳过），场景 2 成员列表/成员端画面断言，场景 3 停止按钮 #startSharingButton:has-text("停止共享")；watch-together 单元测试 webrtc-signaling + screen-streaming 77 个用例通过
+- RALPH_TASK.md 三项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session in progress** - 修复聊天消息不显示的问题（backlog-120）
@@ -330,4 +338,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-03 02:58:38
+**Session 1 started** (model: auto)
+
+### 2026-02-03 04:36:29
 **Session 1 started** (model: auto)

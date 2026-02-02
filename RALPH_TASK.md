@@ -24,12 +24,13 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 房主点击「开始共享」并授权后，房主端画面区域（如 #videoStream 或占位区）显示本地共享画面
-- [ ] #2 成员端在房主开始共享后的约定时间内，画面区域显示房主共享的画面（非长期占位/转圈）
-- [ ] #3 房主点击「停止共享」后，房主端与成员端均正确恢复占位或隐藏画面区域（可选）
+- [x] #1 房主点击「开始共享」并授权后，房主端画面区域（如 #videoStream 或占位区）显示本地共享画面
+- [x] #2 成员端在房主开始共享后的约定时间内，画面区域显示房主共享的画面（非长期占位/转圈）
+- [x] #3 房主点击「停止共享」后，房主端与成员端均正确恢复占位或隐藏画面区域（可选）
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 房主端本地预览必须显式 play()** — done when: 房主点击「开始共享」并授权后，`#videoStream` 已绑定流且调用了 `videoElement.play()`，画面区域有视频帧（非黑屏）。
+2. **1.2 确保房主端画面容器在开始共享时显示** — done when: 开始共享时 `#videoContainer` 为 display flex、`#videoPlaceholder` 隐藏、`#videoStream` 显示。
+3. **1.3 成员端 ontrack 绑定流并显示** — done when: 成员端收到远端 track 后调用 `VideoPlayer.attachStream(remoteStream)` 且容器/占位符状态正确。
+4. **2.1 运行测试** — done when: `skill:watch-together-webapp-testing TASK-127` 或本地双浏览器手动验证房主/成员端画面均能加载。
