@@ -1,9 +1,10 @@
 ---
 id: TASK-125
 title: 房主发送的消息在成员端不显示
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-02 08:37'
+updated_date: '2026-02-02 14:28'
 labels: []
 dependencies: []
 ---
