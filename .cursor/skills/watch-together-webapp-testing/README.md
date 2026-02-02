@@ -189,8 +189,34 @@ test_command: "skill:watch-together-webapp-testing TASK-32"
 - **MediaStream**：验证媒体流状态
 - **通用场景**：生成基础测试框架供手动完善
 
+## 测试命令推荐：使用 skill: 指定本技能
+
+在 backlog 任务或 newneed.md 中，**测试命令**建议写成：
+
+```text
+skill:watch-together-webapp-testing ${TASK_ID}
+```
+
+这样会：
+
+- **统一错误与输出**：由本技能生成/执行测试，错误消息和断言由技能统一输出。
+- **使用最新页面结构**：技能按「先 open → snapshot -i 获取可交互元素与 ref，再编写/生成测试」流程，基于当前网页结构生成 agent-browser 命令或 Playwright 脚本，避免选择器与页面脱节。
+
+不要写死具体脚本路径或房间 URL；${TASK_ID} 在运行时会由 backlog/ralph 替换为实际任务 ID。
+
+## 从 newneed 生成 backlog 任务
+
+若 newneed.md 中任务已按 **requirement-to-newneed** 技能模板书写（含 **ID**、**描述**、**测试命令**、**成功标准**、**测试用例**、**依赖**），可执行：
+
+```bash
+./.cursor/ralph-scripts/requirement-workflow.sh --decomposed newneed.md
+```
+
+会调用 parse-decomposed-tasks.py 解析 newneed.md 并创建对应 backlog 任务。
+
 ## 参考
 
+- **requirement-to-newneed 技能**：`.cursor/skills/requirement-to-newneed/SKILL.md`（从需求澄清→正交拆分→按模板写入 newneed.md）
 - **agent-browser 技能**：`.cursor/skills/agent-browser/SKILL.md`（先打开页面、snapshot 查看结构，再编写/生成测试命令）
 - 基础技能：`.cursor/skills/webapp-testing/SKILL.md`
 - Playwright 文档：https://playwright.dev/python/
