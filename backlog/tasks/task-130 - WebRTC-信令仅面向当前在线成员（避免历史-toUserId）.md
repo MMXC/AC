@@ -1,9 +1,10 @@
 ---
 id: TASK-130
 title: WebRTC 信令仅面向当前在线成员（避免历史 toUserId）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-03 07:41'
+updated_date: '2026-02-03 07:55'
 labels: []
 dependencies: []
 ---
