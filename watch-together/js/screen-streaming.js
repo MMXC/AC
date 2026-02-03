@@ -686,6 +686,11 @@ async function addPeerConnectionForMember(targetUserId, stream) {
     if (typeof window === 'undefined') return;
     if (!screenStreamState.ws || screenStreamState.ws.readyState !== WebSocket.OPEN) return;
     if (!window.currentRoomId || !window.currentUserId) return;
+    // 仅向当前成员列表中的成员发送信令，不向已离开或不在列表中的 userId 发送
+    const members = typeof getMembersList === 'function' ? getMembersList() || [] : [];
+    if (!members.some(m => m.id === targetUserId) || targetUserId === window.currentUserId) {
+        return;
+    }
     if (webrtcState.peerConnections.has(targetUserId)) {
         clearIceTimeoutForMember(targetUserId);
         closePeerConnectionForMember(targetUserId);
@@ -739,10 +744,17 @@ async function addPeerConnectionForMember(targetUserId, stream) {
     screenStreamState.ws.send(JSON.stringify(offerMessage));
     console.log('已发送 WebRTC Offer 给成员:', targetUserId);
 
-    // ICE 协商超时：长时间未连接则关闭并提示，可恢复时有限次数内重试
+    // ICE 协商超时：长时间未连接则关闭并提示，可恢复时有限次数内重试（仅当目标仍在当前成员列表中时重试）
     const timeoutId = setTimeout(() => {
         webrtcState.iceTimeoutByMember.delete(targetUserId);
         if (pc.connectionState === 'connected' || pc.connectionState === 'closed') return;
+        const members = typeof getMembersList === 'function' ? getMembersList() || [] : [];
+        const stillInList = members.some(m => m.id === targetUserId);
+        if (!stillInList) {
+            closePeerConnectionForMember(targetUserId);
+            webrtcState.retryCountByMember.delete(targetUserId);
+            return;
+        }
         const currentRetries = webrtcState.retryCountByMember.get(targetUserId) || 0;
         closePeerConnectionForMember(targetUserId);
         if (currentRetries < WEBRTC_RETRY_PER_MEMBER_MAX - 1) {

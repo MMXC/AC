@@ -76,6 +76,34 @@ wss.on("connection", (ws, req) => {
         }
         wsConnections.get(roomId).add(ws);
         wsByRoomUser.set(`${roomId}:${userId}`, ws);
+        // 新连接建立时向该客户端发送 SYNC_STATE，使房主/成员无需刷新即可获得完整成员列表
+        const getRoomMembersForSync = appModule.getRoomMembersForSync;
+        if (typeof getRoomMembersForSync === "function") {
+            getRoomMembersForSync(roomId)
+                .then((members) => {
+                if (members && members.length > 0 && ws.readyState === 1) {
+                    ws.send(JSON.stringify({ type: "SYNC_STATE", data: { members } }));
+                }
+            })
+                .catch((err) => console.error("[WebSocket] send SYNC_STATE on connect error:", err));
+        }
+        // 新成员加入时向房间内其他连接广播 MEMBER_JOINED，房主端无需刷新即可在成员列表中显示该成员
+        const getRoomMemberByUserId = appModule.getRoomMemberByUserId;
+        if (typeof getRoomMemberByUserId === "function") {
+            getRoomMemberByUserId(roomId, userId)
+                .then((member) => {
+                if (member && member.userId) {
+                    const nickname = member.nickname != null ? member.nickname : member.userId;
+                    broadcastToRoom(roomId, userId, {
+                        type: "MEMBER_JOINED",
+                        data: { userId: member.userId, nickname },
+                    });
+                    // 同时向全房间广播 SYNC_STATE，确保房主等收到完整成员列表（含新成员）
+                    broadcastSyncStateToRoom(roomId);
+                }
+            })
+                .catch((err) => console.error("[WebSocket] broadcast MEMBER_JOINED on connect error:", err));
+        }
     }
     ws.on("message", (data) => {
         try {
@@ -156,12 +184,16 @@ wss.on("connection", (ws, req) => {
         }
     });
     ws.on("close", () => {
-        if (roomId && userId) {
-            wsByRoomUser.delete(`${roomId}:${userId}`);
-            const connections = wsConnections.get(roomId);
+        const rId = ws.roomId || roomId;
+        const uId = ws.userId || userId;
+        if (rId && uId) {
+            // 成员断开时向房间内其他连接广播 MEMBER_LEFT，房主端无需刷新即可更新成员列表
+            broadcastToRoom(rId, uId, { type: "MEMBER_LEFT", data: { userId: uId } });
+            wsByRoomUser.delete(`${rId}:${uId}`);
+            const connections = wsConnections.get(rId);
             if (connections) {
                 connections.delete(ws);
-                if (connections.size === 0) wsConnections.delete(roomId);
+                if (connections.size === 0) wsConnections.delete(rId);
             }
         }
     });

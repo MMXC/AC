@@ -354,31 +354,49 @@ function handleWebSocketMessage(message) {
             // 同步成员列表
             if (message.data && message.data.members && Array.isArray(message.data.members)) {
                 console.log('同步成员列表:', message.data.members.length, '个成员');
-                const currentUserId = window.currentUserId;
-                
-                // 使用 addMember 和 removeMember 函数更新成员列表（如果可用）
-                if (typeof addMember === 'function' && typeof removeMember === 'function') {
-                    // 获取当前成员列表
+
+                // 优先使用 room.js 提供的 setMembersList 保持单一事实来源
+                const setMembersFn = (typeof setMembersList === 'function')
+                    ? setMembersList
+                    : (typeof window !== 'undefined' && typeof window.setMembersList === 'function'
+                        ? window.setMembersList
+                        : null);
+
+                if (setMembersFn) {
+                    // 将服务器返回的 { userId, nickname } 映射为 setMembersList 期望的 { id, name }
+                    const normalizedMembers = message.data.members.map(member => {
+                        const userId = member.userId;
+                        const nickname = member.nickname != null && member.nickname !== ''
+                            ? member.nickname
+                            : (userId || '访客');
+                        return {
+                            id: userId,
+                            name: nickname,
+                        };
+                    });
+                    setMembersFn(normalizedMembers);
+                    console.log('成员列表已通过 setMembersList 全量同步，当前成员数:', normalizedMembers.length);
+                } else if (typeof addMember === 'function' && typeof removeMember === 'function') {
+                    // 兼容旧实现：使用 addMember / removeMember 增量同步
                     const currentMembers = typeof getMembersList === 'function' ? getMembersList() : [];
-                    
-                    // 创建新成员列表的 userId 集合（用于快速查找）
                     const newMemberIds = new Set(message.data.members.map(m => m.userId));
-                    
-                    // 移除所有不在新列表中的成员（包括当前用户，因为当前用户也会在新列表中）
+
                     currentMembers.forEach(member => {
                         if (!newMemberIds.has(member.id)) {
                             removeMember(member.id);
                         }
                     });
-                    
-                    // 添加或更新所有成员到列表
+
                     message.data.members.forEach(member => {
-                        addMember(member.userId, member.nickname);
+                        const nickname = member.nickname != null && member.nickname !== ''
+                            ? member.nickname
+                            : (member.userId || '访客');
+                        addMember(member.userId, nickname);
                     });
-                    
-                    console.log('成员列表已同步，当前成员数:', message.data.members.length);
+
+                    console.log('成员列表已通过 addMember/removeMember 同步，当前成员数:', message.data.members.length);
                 } else {
-                    console.warn('addMember 或 removeMember 函数不可用，无法同步成员列表');
+                    console.warn('setMembersList / addMember / removeMember 均不可用，无法同步成员列表');
                 }
             }
             // 初始化操作来源状态
@@ -409,16 +427,18 @@ function handleWebSocketMessage(message) {
         case 'MEMBER_JOINED':
             // 成员加入，更新成员列表，并派发事件供房主建立 WebRTC 连接
             console.log('成员加入:', message.data);
-            if (message.data && message.data.userId && message.data.nickname) {
-                if (typeof addMember === 'function') {
-                    addMember(message.data.userId, message.data.nickname);
-                    console.log('已添加成员到列表:', message.data.userId, message.data.nickname);
+            if (message.data && message.data.userId) {
+                const addMemberFn = typeof addMember === 'function' ? addMember : (typeof window !== 'undefined' && window.addMember);
+                const nickname = message.data.nickname != null && message.data.nickname !== '' ? message.data.nickname : (message.data.userId || '访客');
+                if (addMemberFn) {
+                    addMemberFn(message.data.userId, nickname);
+                    console.log('已添加成员到列表:', message.data.userId, nickname);
                 } else {
                     console.warn('addMember 函数不可用，无法更新成员列表');
                 }
                 if (typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('memberJoinedRoom', {
-                        detail: { userId: message.data.userId, nickname: message.data.nickname },
+                        detail: { userId: message.data.userId, nickname },
                     }));
                 }
             }
