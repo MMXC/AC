@@ -24,12 +24,13 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 用户离开房间后，服务端向该房间其他连接发送 MEMBER_LEFT（data.userId 为离开者）
-- [ ] #2 房主端与其它成员端收到 MEMBER_LEFT 后，成员列表在约定时间内移除该用户
-- [ ] #3 离开后再次发往该 toUserId 的 WebRTC 信令应减少（房主端仅向当前列表发信令，见任务 6）
+- [x] #1 用户离开房间后，服务端向该房间其他连接发送 MEMBER_LEFT（data.userId 为离开者）
+- [x] #2 房主端与其它成员端收到 MEMBER_LEFT 后，成员列表在约定时间内移除该用户
+- [x] #3 离开后再次发往该 toUserId 的 WebRTC 信令应减少（房主端仅向当前列表发信令，见任务 6）
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 服务端 WebSocket 断开时广播 MEMBER_LEFT** — done when: 某连接 close 时，向该房间其他连接发送 `{ type: 'MEMBER_LEFT', data: { userId } }`，且不从发送者收包（已断开）。
+2. **1.2 前端已有 MEMBER_LEFT 处理** — done when: chat.js 收到 MEMBER_LEFT 后调用 removeMember(userId) 并派发 memberLeftRoom，room.js 的成员列表 UI 更新（已有实现，仅需确认）。
+3. **2.1 房主仅向当前成员发 WebRTC 信令** — done when: screen-streaming.js 使用 getMembersList() 决定向谁发信令，离开者已从列表移除故不再收信令（已有，仅需确认）。
+4. **2.2 测试/断言** — done when: 运行 `skill:watch-together-webapp-testing` 对应 TASK 或手动：房主+A+B，B 离开后，房主与 A 的成员列表不包含 B。

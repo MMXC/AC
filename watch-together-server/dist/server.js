@@ -156,12 +156,18 @@ wss.on("connection", (ws, req) => {
         }
     });
     ws.on("close", () => {
-        if (roomId && userId) {
-            wsByRoomUser.delete(`${roomId}:${userId}`);
-            const connections = wsConnections.get(roomId);
+        const rId = ws.roomId || roomId;
+        const uId = ws.userId || userId;
+        if (rId && uId) {
+            broadcastToRoom(rId, uId, {
+                type: "MEMBER_LEFT",
+                data: { userId: String(uId) },
+            });
+            wsByRoomUser.delete(`${rId}:${uId}`);
+            const connections = wsConnections.get(rId);
             if (connections) {
                 connections.delete(ws);
-                if (connections.size === 0) wsConnections.delete(roomId);
+                if (connections.size === 0) wsConnections.delete(rId);
             }
         }
     });

@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 18
-- Current status: In Progress - 修复聊天消息不显示的问题（backlog-120）
+- Iterations completed: 19
+- Current status: In Progress - 用户离开房间后服务端广播 MEMBER_LEFT 与前端列表移除（backlog-129）
 
 ## How This Works
 
@@ -14,6 +14,14 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-03 [Ralph Iteration 1]
+**Session 1 completed** - 用户离开房间后服务端广播 MEMBER_LEFT 与前端列表移除（backlog-129）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 服务端 close 时广播 MEMBER_LEFT、1.2 前端已有 MEMBER_LEFT 处理、2.1 房主仅向当前成员发 WebRTC、2.2 测试断言）
+- 服务端：watch-together-server/dist/server.js 在 ws.on("close") 中先 broadcastToRoom(roomId, userId, { type: 'MEMBER_LEFT', data: { userId } })，再清理 wsByRoomUser/wsConnections
+- 前端：chat.js 已有 MEMBER_LEFT → removeMember + memberLeftRoom；room.js removeMember 更新列表；screen-streaming 使用 getMembersList() 且 handleMemberLeftRoom 关闭对应 PC
+- 测试：新增 test-task-129.py / test-TASK-129.py，房主 + 成员 A + 成员 B，B 关闭页后断言房主端与 A 端成员列表不包含「成员B」；测试通过
+- RALPH_TASK.md 三项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session in progress** - 修复聊天消息不显示的问题（backlog-120）
@@ -330,4 +338,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-03 02:58:38
+**Session 1 started** (model: auto)
+
+### 2026-02-03 15:46:02
 **Session 1 started** (model: auto)
