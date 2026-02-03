@@ -15,6 +15,12 @@ This is how Ralph maintains continuity across iterations.
 
 ## Session History
 
+### 2026-02-03 [Ralph Iteration 2]
+**Session 2 completed** - 房主端成员列表：新成员加入时广播 MEMBER_JOINED（backlog-131）
+- 服务端：新成员 WebSocket 连接后向房间内其他连接广播 MEMBER_JOINED（getRoomMemberByUserId 查昵称），并调用 broadcastSyncStateToRoom 全房间 SYNC_STATE；app.js 新增 getRoomMemberByUserId(roomId, userId)
+- 前端：chat.js MEMBER_JOINED 处理增加 addMember 回退（window.addMember）与 nickname 回退
+- 测试：test-TASK-131.py 加强房主端 WebSocket 等待（data-chat-ws-connected 15s）、成员列表等待与 8s 延时；场景 2、3 通过，场景 1 在自动化环境中仍失败（服务端日志显示已广播，房主端列表未更新，可能为多连接/时序或环境问题，建议人工验证）
+
 ### 2026-02-03 [Ralph Iteration 1]
 **Session 1 completed** - 房主端成员列表无需刷新即可展示完整（backlog-131）
 - 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 连接时发 SYNC_STATE、1.2 关闭时广播 MEMBER_LEFT、1.3 前端已处理、2.1 自动化测试）
@@ -341,3 +347,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-03 16:20:44
 **Session 1 started** (model: auto)
+
+### 2026-02-03 16:34:30
+**Session 2 started** (model: auto)

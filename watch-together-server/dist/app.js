@@ -445,4 +445,13 @@ exports.getRoomMembersForSync = async function (roomId) {
     });
     return members.map((m) => ({ userId: m.userId, nickname: m.nickname }));
 };
+
+/** 供 WebSocket 新连接时广播 MEMBER_JOINED 用：按 roomId+userId 查成员昵称 */
+exports.getRoomMemberByUserId = async function (roomId, userId) {
+    const member = await prisma.roomMember.findUnique({
+        where: { roomId_userId: { roomId, userId } },
+    });
+    return member ? { userId: member.userId, nickname: member.nickname } : null;
+};
+
 exports.default = app;

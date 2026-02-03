@@ -87,6 +87,23 @@ wss.on("connection", (ws, req) => {
             })
                 .catch((err) => console.error("[WebSocket] send SYNC_STATE on connect error:", err));
         }
+        // 新成员加入时向房间内其他连接广播 MEMBER_JOINED，房主端无需刷新即可在成员列表中显示该成员
+        const getRoomMemberByUserId = appModule.getRoomMemberByUserId;
+        if (typeof getRoomMemberByUserId === "function") {
+            getRoomMemberByUserId(roomId, userId)
+                .then((member) => {
+                if (member && member.userId) {
+                    const nickname = member.nickname != null ? member.nickname : member.userId;
+                    broadcastToRoom(roomId, userId, {
+                        type: "MEMBER_JOINED",
+                        data: { userId: member.userId, nickname },
+                    });
+                    // 同时向全房间广播 SYNC_STATE，确保房主等收到完整成员列表（含新成员）
+                    broadcastSyncStateToRoom(roomId);
+                }
+            })
+                .catch((err) => console.error("[WebSocket] broadcast MEMBER_JOINED on connect error:", err));
+        }
     }
     ws.on("message", (data) => {
         try {

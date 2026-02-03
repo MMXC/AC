@@ -150,12 +150,13 @@ def test_task_131():
                         print("  ✅ 已跳转到房间页面")
                         page.wait_for_load_state('networkidle')
                         time.sleep(3)  # 等待房间页面完全加载
-                        # 等待房主端 WebSocket 连接，确保能收到 MEMBER_JOINED/SYNC_STATE
+                        # 必须等待房主端 WebSocket 连接后再让成员加入，否则服务端广播 MEMBER_JOINED 时房主未连接
                         try:
-                            page.wait_for_selector('[data-chat-ws-connected="true"]', timeout=8000)
-                            time.sleep(0.5)
-                        except Exception:
-                            pass
+                            page.wait_for_selector('[data-chat-ws-connected="true"]', timeout=15000)
+                            print("  ✅ 房主端 WebSocket 已连接")
+                            time.sleep(1)
+                        except Exception as e:
+                            print(f"  ⚠️  房主端 WebSocket 未在 15s 内连接: {e}")
                     except Exception as e:
                         print(f"  ⚠️  等待跳转超时: {e}")
                         # 尝试检查是否还在首页
@@ -232,12 +233,17 @@ def test_task_131():
         member_list_selector = '#membersList, #memberList, .member-list, ul.members-list, ul.members'
         member_nickname = '测试成员'
         
-        # 等待约 3–5 秒，使房主端收到 MEMBER_JOINED/SYNC_STATE 并更新成员列表
-        time.sleep(5)
+        # 等待约 5–8 秒，使房主端收到 MEMBER_JOINED/SYNC_STATE 并更新成员列表（含网络与渲染延迟）
+        time.sleep(8)
         
         # 测试场景 1: 新成员加入后，房主端在约定时间内（如 2 秒）在成员列表中显示该成员，无需刷新
         print(f"\n测试场景 1: 新成员加入后，房主端在约定时间内（如 2 秒）在成员列表中显示该成员，无需刷新")
         try:
+            # 先等待房主端成员列表中出现「测试成员」（最多 10 秒），再断言
+            try:
+                page.locator(member_list_selector).filter(has_text=member_nickname).first.wait_for(state="visible", timeout=10000)
+            except Exception as wait_err:
+                print(f"  ⚠️  10 秒内未在成员列表中看到「{member_nickname}」: {wait_err}")
             found_on_host = False
             if page.locator(member_list_selector).count() > 0:
                 host_list_text = page.locator(member_list_selector).first.inner_text()

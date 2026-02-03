@@ -409,16 +409,18 @@ function handleWebSocketMessage(message) {
         case 'MEMBER_JOINED':
             // 成员加入，更新成员列表，并派发事件供房主建立 WebRTC 连接
             console.log('成员加入:', message.data);
-            if (message.data && message.data.userId && message.data.nickname) {
-                if (typeof addMember === 'function') {
-                    addMember(message.data.userId, message.data.nickname);
-                    console.log('已添加成员到列表:', message.data.userId, message.data.nickname);
+            if (message.data && message.data.userId) {
+                const addMemberFn = typeof addMember === 'function' ? addMember : (typeof window !== 'undefined' && window.addMember);
+                const nickname = message.data.nickname != null && message.data.nickname !== '' ? message.data.nickname : (message.data.userId || '访客');
+                if (addMemberFn) {
+                    addMemberFn(message.data.userId, nickname);
+                    console.log('已添加成员到列表:', message.data.userId, nickname);
                 } else {
                     console.warn('addMember 函数不可用，无法更新成员列表');
                 }
                 if (typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('memberJoinedRoom', {
-                        detail: { userId: message.data.userId, nickname: message.data.nickname },
+                        detail: { userId: message.data.userId, nickname },
                     }));
                 }
             }
