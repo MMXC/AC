@@ -158,12 +158,10 @@ run_test_command() {
     else
       echo "🔧 docker-compose: 无缓存构建并启动服务（确保测试使用最新代码）..." >&2
     fi
-    if [[ "${DOCKER_COMPOSE_SKIP_BUILD:-}" != "1" ]]; then
-      if [[ "${DOCKER_COMPOSE_USE_CACHE:-}" == "1" ]]; then
-        docker-compose build >&2 || echo "⚠️  docker-compose build 失败，继续尝试 up..." >&2
-      else
-        docker-compose build --no-cache >&2 || echo "⚠️  docker-compose build --no-cache 失败，继续尝试 up..." >&2
-      fi
+    if [[ "${DOCKER_COMPOSE_USE_CACHE:-}" == "1" ]]; then
+      docker-compose build >&2 || echo "⚠️  docker-compose build 失败，继续尝试 up..." >&2
+    else
+      docker-compose build --no-cache >&2 || echo "⚠️  docker-compose build --no-cache 失败，继续尝试 up..." >&2
     fi
     docker-compose up -d >&2 || echo "⚠️  docker-compose up 失败，继续测试..." >&2
     # 等待服务就绪
