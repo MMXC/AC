@@ -21,6 +21,8 @@ function getApiBase() {
 
 // 成员列表数据
 let membersList = [];
+// 成员列表轮询定时器（用于在极端情况下兜底同步成员列表，确保房主端无需刷新即可看到最新成员）
+let membersPollIntervalId = null;
 
 /**
  * 生成成员头像的首字母
@@ -68,6 +70,64 @@ function setMembersList(members) {
         name: m.name || `成员${(m.id || '').substring(0, 8)}`
     }));
     updateMembersDisplay();
+}
+
+/**
+ * 启动成员列表轮询（兜底方案）
+ * - 主要用于在 WebSocket 广播异常或多连接时序问题下，仍能保证成员列表最终与服务端一致
+ * - 轮询频率控制在几秒一次，避免对后端造成压力
+ */
+function startMembersPolling(roomId) {
+    if (!roomId) return;
+
+    // 避免重复启动多个定时器
+    if (membersPollIntervalId) {
+        clearInterval(membersPollIntervalId);
+        membersPollIntervalId = null;
+    }
+
+    if (typeof window !== 'undefined') {
+        window.__membersPollStarted = true;
+        window.__membersPollTickCount = 0;
+    }
+
+    membersPollIntervalId = setInterval(async () => {
+        try {
+            const response = await fetch(`${getApiBase()}/api/v1/rooms/${roomId}`);
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            if (!data.success || !data.data || !Array.isArray(data.data.members)) {
+                return;
+            }
+
+            const roomMembers = data.data.members;
+            setMembersList(roomMembers.map(m => ({
+                id: m.userId,
+                name: m.nickname || `成员${(m.userId || '').substring(0, 8)}`
+            })));
+
+            if (typeof window !== 'undefined') {
+                if (typeof window.__membersPollTickCount !== 'number') {
+                    window.__membersPollTickCount = 0;
+                }
+                window.__membersPollTickCount += 1;
+            }
+        } catch (error) {
+            console.warn('轮询同步成员列表失败:', error);
+        }
+    }, 3000);
+}
+
+/**
+ * 停止成员列表轮询
+ */
+function stopMembersPolling() {
+    if (membersPollIntervalId) {
+        clearInterval(membersPollIntervalId);
+        membersPollIntervalId = null;
+    }
 }
 
 /**
@@ -477,6 +537,9 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         } else {
             addMember(serverUserId, serverNickname);
         }
+
+        // 启动成员列表轮询兜底同步，确保房主端与服务端成员状态最终一致
+        startMembersPolling(roomId);
         
         // 将 userId 设置为全局变量，供其他脚本使用
         if (typeof window !== 'undefined') {
@@ -845,8 +908,11 @@ async function init() {
 
     // 房间有效，更新房间信息
     updateRoomInfo(roomId);
-
-    // 初始化成员列表显示
+    
+    // 启动成员列表轮询兜底同步（即使 WebSocket 广播异常也能最终与服务端状态一致）
+    startMembersPolling(roomId);
+    
+    // 初始化成员列表显示（空状态或稍后由轮询/加入房间更新）
     updateMembersDisplay();
     
     // 将临时 userId 和 roomId 设置为全局变量（tempUserId 已在函数开始处生成）
@@ -946,6 +1012,8 @@ async function init() {
                     // 清除全局变量
                     window.currentUserId = null;
                     window.currentUserNickname = null;
+                    // 离开房间时停止成员轮询
+                    stopMembersPolling();
                 } catch (error) {
                     console.error('离开房间错误:', error);
                 }

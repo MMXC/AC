@@ -14,6 +14,11 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-03 [Ralph Iteration 3]
+**Session 3 completed** - TASK-131 房主端成员列表自动化测试仍未完全收敛（记录兜底方案与失败现象）
+- 代码：在 `chat.js` 中改用 `setMembersList` 全量处理 SYNC_STATE 成员列表；在 `room.js` 中新增成员列表轮询兜底（startMembersPolling/stopMembersPolling），并通过窗口调试变量暴露轮询状态；为 TASK-131 新增文档 `task-131-members-sync-notes.md` 记录问题与设计。
+- 测试：多次运行 `skill:watch-together-webapp-testing TASK-131`，扩展测试脚本以打印 `getMembersList()`、轮询标记与 /api/v1/rooms 返回的成员信息，确认数据库与 API 均包含房主与「测试成员」，但浏览器自动化环境中房主端成员列表与 JS 状态始终仅包含房主。
+- 结论：TASK-131 场景 1 目前仍然失败，表现为 WebSocket/浏览器自动化环境与后端状态脱节；已在 `.ralph/guardrails.md` 添加新的 Sign，提醒后续迭代在遇到类似“服务端正确但自动化 UI 一直不同步”的情况时，优先记录现象并交由后续代理或人工处理，而不是继续叠加复杂补丁。
 
 ### 2026-02-03 [Ralph Iteration 2]
 **Session 2 completed** - 房主端成员列表：新成员加入时广播 MEMBER_JOINED（backlog-131）
@@ -350,3 +355,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-03 16:34:30
 **Session 2 started** (model: auto)
+
+### 2026-02-03 16:54:34
+**Session 3 started** (model: auto)
