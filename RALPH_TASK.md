@@ -23,12 +23,13 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 房主端建立/重试 WebRTC 连接时，仅向 getMembersList() 中且非当前用户的 member.id 发送 Offer
-- [ ] #2 新加入成员在房主端列表更新后能收到房主发出的 WebRTC 信令（Offer），成员端能建立画面流
-- [ ] #3 用户离开后，房主端不再向该 userId 发送信令（服务端「信令目标用户不在线」日志不再出现或仅偶发）
+- [x] #1 房主端建立/重试 WebRTC 连接时，仅向 getMembersList() 中且非当前用户的 member.id 发送 Offer
+- [x] #2 新加入成员在房主端列表更新后能收到房主发出的 WebRTC 信令（Offer），成员端能建立画面流
+- [x] #3 用户离开后，房主端不再向该 userId 发送信令（服务端「信令目标用户不在线」日志不再出现或仅偶发）
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 房主端建立/重试时仅向当前成员列表发 Offer** — done when: startWebRTCPeerConnectionAsHost 与 addPeerConnectionForMember 重试前均仅使用 getMembersList() 中且非 currentUserId 的 member.id 作为目标；重试时若 targetUserId 已不在列表中则不再重试。
+2. **1.2 新成员加入后能收到 Offer** — done when: handleMemberJoinedRoom 在房主正在共享时对新成员调用 addPeerConnectionForMember(userId)，且 getMembersList() 已含该成员（由 MEMBER_JOINED/列表更新保证）。
+3. **1.3 离开后不再向该 userId 发信令** — done when: handleMemberLeftRoom 已关闭对应 PC；重试逻辑在目标已离开时跳过重试，服务端「信令目标用户不在线」日志不再因已离开用户出现。
+4. **2.1 运行测试** — done when: skill:watch-together-webapp-testing 130 或 watch-together 单元测试通过。

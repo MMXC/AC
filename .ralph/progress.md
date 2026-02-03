@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 18
-- Current status: In Progress - 修复聊天消息不显示的问题（backlog-120）
+- Current status: 已完成 - WebRTC 信令仅面向当前在线成员（backlog-130）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-03 [Ralph Iteration 1]
+**Session 1 completed** - WebRTC 信令仅面向当前在线成员（backlog-130）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 仅向当前成员列表发 Offer/重试前校验、1.2 新成员加入后收 Offer、1.3 离开后不再发信令、2.1 运行测试）
+- 房主端 screen-streaming.js：addPeerConnectionForMember 开头增加防御性校验，仅当 targetUserId 在 getMembersList() 中且非 currentUserId 时才建立连接并发送 Offer；ICE 超时重试前检查目标是否仍在成员列表，已离开则不再重试
+- 测试脚本 test-130.py：场景 1 改为断言房主端成员列表包含当前成员；修复占位符；watch-together 单元测试 77 例通过，run-test.sh 130 通过
+- RALPH_TASK.md 三项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session in progress** - 修复聊天消息不显示的问题（backlog-120）
@@ -330,4 +337,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-03 02:58:38
+**Session 1 started** (model: auto)
+
+### 2026-02-03 15:56:39
 **Session 1 started** (model: auto)
