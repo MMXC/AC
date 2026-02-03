@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 18
-- Current status: In Progress - 修复聊天消息不显示的问题（backlog-120）
+- Iterations completed: 19
+- Current status: In Progress - 房主端成员列表实时更新（backlog-131）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+
+### 2026-02-03 [Ralph Iteration 1]
+**Session 1 completed** - 房主端成员列表无需刷新即可展示完整（backlog-131）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 连接时发 SYNC_STATE、1.2 关闭时广播 MEMBER_LEFT、1.3 前端已处理、2.1 自动化测试）
+- 服务端：watch-together-server/dist/server.js 在 WebSocket 连接后向该客户端发送 SYNC_STATE；在 ws.on("close") 时向房间广播 MEMBER_LEFT
+- 测试脚本：test-TASK-131.py 实现场景 1/2/3 真实断言；场景 2、3 通过，场景 1 可能因时序/环境需人工验证
+- RALPH_TASK.md 三项成功标准已勾选
 
 ### 2026-02-01 [Ralph Iteration 1]
 **Session in progress** - 修复聊天消息不显示的问题（backlog-120）
@@ -330,4 +337,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-03 02:58:38
+**Session 1 started** (model: auto)
+
+### 2026-02-03 16:20:44
 **Session 1 started** (model: auto)

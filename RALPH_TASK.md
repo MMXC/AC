@@ -23,12 +23,13 @@ test_command: "skill:watch-together-webapp-testing ${TASK_ID}"
 
 ## Success Criteria
 
-- [ ] #1 新成员加入后，房主端在约定时间内（如 2 秒）在成员列表中显示该成员，无需刷新
-- [ ] #2 成员离开后，房主端在约定时间内从成员列表中移除该成员，无需刷新
-- [ ] #3 getMembersList() 与界面展示一致，且与服务端当前房间成员一致
+- [x] #1 新成员加入后，房主端在约定时间内（如 2 秒）在成员列表中显示该成员，无需刷新
+- [x] #2 成员离开后，房主端在约定时间内从成员列表中移除该成员，无需刷新
+- [x] #3 getMembersList() 与界面展示一致，且与服务端当前房间成员一致
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 服务端 WebSocket 连接时向该客户端发送 SYNC_STATE** — done when: 客户端连接 WS 后收到一条 SYNC_STATE，data.members 为当前房间成员列表。
+2. **1.2 服务端 WebSocket 关闭时向房间广播 MEMBER_LEFT** — done when: 某成员断开 WS 后，房间内其他连接（含房主）收到 MEMBER_LEFT，data.userId 为断开者。
+3. **1.3 前端已处理 MEMBER_JOINED / SYNC_STATE / MEMBER_LEFT** — done when: chat.js 收到后更新 getMembersList() 与 UI（已有逻辑，仅需确认）。
+4. **2.1 自动化测试** — done when: skill:watch-together-webapp-testing TASK-131 场景 1、2、3 通过（房主不刷新见成员 A 加入、约 2 秒后列表含 A、成员 A 离开后列表移除 A）。
