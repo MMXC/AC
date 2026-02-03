@@ -1,9 +1,10 @@
 ---
 id: TASK-131
 title: 房主端成员列表无需刷新即可展示完整（实时加入/离开）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-03 07:42'
+updated_date: '2026-02-03 08:19'
 labels: []
 dependencies: []
 ---
