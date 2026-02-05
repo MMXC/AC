@@ -1,36 +1,38 @@
 ---
 name: requirement-to-newneed
-description: 从自然语言需求出发，先澄清、再正交拆分，最后以 parse-decomposed-tasks.py 可解析的「任务 N」格式写入 newneed.md，供 requirement-workflow.sh --decomposed 使用。
+description: 将澄清后的需求按格式写入 newneed.md（含需求概要与任务结构）。前置流程第二步。当需要「生成 newneed.md」「写需求文档」时使用；供 requirement-workflow.sh --decomposed 使用。
 ---
 
-# Requirement → newneed.md 工作流
+# 生成 newneed.md（Requirement to newneed.md）
 
-## 触发条件
+本技能是 **前置流程的第二步**：将澄清后的需求（来自 **requirement-clarify**）按 `parse-decomposed-tasks.py` 可解析的格式写入 `newneed.md`，供后续 `requirement-workflow.sh --decomposed newneed.md` 使用。
 
-- 用户说“把这个需求拆成任务写进 newneed.md”
-- 用户想直接用 `requirement-workflow.sh --decomposed newneed.md` 创建 backlog 任务
+## 触发场景
 
-## 步骤
+- "生成 newneed.md"、"把这个需求写进 newneed.md"、"创建需求文档"
+- 流程编排指示「前置步骤 2：生成 newneed.md」时
+- 需求已澄清，需要格式化为可被解析的任务结构
 
-1. **澄清需求（可选）**  
-   - 参考 `requirement-clarifier`，补齐：
-     - 技术栈、范围、约束、用户场景
-   - 生成一段「需求概要」，写在 `newneed.md` 顶部。
+## 输入
 
-2. **正交分解需求**  
-   - 参考 `requirement-decomposer`，先在对话里列出若干原子任务：
-     - 每个任务有：标题 + 描述 + 测试命令 + 若干成功标准；
-   - 理清依赖关系（尽量少，必要时用 ID 表达）。
+- **澄清后的需求**：来自 **requirement-clarify** 或用户直接提供的结构化需求
+- **可选：已分解的任务列表**：若需求已通过 **requirement-decompose** 分解，可直接使用
 
-3. **按下述模板转成“任务 N” Markdown 结构并写入 newneed.md**
+## 必做动作
 
-   对每个任务生成（示例）：
+1. **写入需求概要**（如需要）：
+   - 在 `newneed.md` 顶部写入需求概要（技术栈、范围、约束等）
 
-   ### 任务 1: 任务标题
+2. **生成任务结构**：
+   - 若需求尚未分解：先通过 **requirement-decompose** 正交分解为原子子任务
+   - 对每个任务生成以下格式：
 
-   - **ID**: webrtc-a1
+   ```markdown
+   ### 任务 N: 任务标题
+
+   - **ID**: task-id
    - **描述**: 任务的详细描述……
-   - **测试命令**: `npm test -- webrtc-a1`  # 无自动命令时可写 `手动：...`
+   - **测试命令**: `npm test -- task-id`  # 无自动命令时可写 `手动：...`
    - **成功标准**:
      1. [ ] 标准 1
      2. [ ] 标准 2
@@ -39,18 +41,30 @@ description: 从自然语言需求出发，先澄清、再正交拆分，最后�
      - **测试场景**:
        1. 场景描述 1
      - **断言示例**: 无
-   - **依赖**: 无 / webrtc-a1, webrtc-b2
+   - **依赖**: 无 / task-id-1, task-id-2
+   ```
 
-   **模板要求：**
+3. **格式要求**：
+   - 标题用 `### 任务 N: ...`，N 从 1 递增
+   - "成功标准"必须是 `1. [ ] ...` 形式的有序列表（方便 `parse-decomposed-tasks.py` 提取）
+   - 字段名必须是：`**ID**`、`**描述**`、`**测试命令**`、`**成功标准**`、`**测试用例**`、`**依赖**`
+   - 没有内容时写"无"，不要省略字段
 
-   - 标题用 `### 任务 N: ...`，N 从 1 递增；
-   - “成功标准”必须是 `1. [ ] ...` 形式的有序列表（方便 parse-decomposed-tasks.py 提取）；
-   - 字段名必须是：`**ID**`、`**描述**`、`**测试命令**`、`**成功标准**`、`**测试用例**`、`**依赖**`；
-   - 没有内容时写“无”，不要省略字段。
+4. **写入文件**：
+   - 将完整内容写入 `newneed.md`（项目根目录）
 
-4. **提示用户运行工作流**  
+## 与脚本的关系
 
-   在写完 `newneed.md` 后，提示用户可执行：
+- `requirement-workflow.sh --decomposed newneed.md` 会读取本技能生成的 `newneed.md`，解析后创建 backlog 任务。
+- 本技能供「按步调用技能」的前置流程使用：在 **requirement-clarify** 之后、**backlog-create-from-decomposed** 之前调用。
 
-   ./.cursor/ralph-scripts/requirement-workflow.sh --decomposed newneed.md
-   
+## 相关技能
+
+- **requirement-clarify**：上一步，需求澄清。
+- **requirement-decompose**：可选，若需求未分解则先调用此技能。
+- **backlog-create-from-decomposed**：下一步，从 newneed.md 创建 backlog 任务。
+
+## 完成标准
+
+- `newneed.md` 已生成，包含需求概要（如需要）和任务结构。
+- 格式符合 `parse-decomposed-tasks.py` 的解析要求。

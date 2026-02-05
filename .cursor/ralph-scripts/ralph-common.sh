@@ -814,14 +814,16 @@ Ralph's strength is state-in-git, not LLM memory. Commit early and often:
 
 If you get rotated, the next agent picks up from your last commit. Your commits ARE your memory.
 
-## Task Workflow (Backlog + Branch)
+## Task Workflow (Backlog + Branch – 按步调用技能)
 
-You are running in task-branch mode: RALPH_TASK.md was generated from a backlog task. Follow this flow:
+You are running in task-branch mode: RALPH_TASK.md was generated from a backlog task. **Follow the step-by-step flow; at each step invoke the corresponding skill** (see **openspec-backlog-flow** for the full orchestration):
 
-1. **Refine the plan (细化约定)** before coding: If RALPH_TASK.md does not yet have an "Implementation Steps" section with **per-step acceptance**, add it now. List steps (e.g. 1.1 Add route, 1.2 Write handler, 2.1 Run test) and for each step write a short **acceptance** (e.g. "1.1 done when: GET /api/v1/rooms returns 200"). This lets you iterate at the failing step when tests fail.
-2. **Implement step by step**: Do one step, verify its acceptance if you can (quick check or run), then move on. When the overall test command fails, map the failure to a step and fix that step before re-running tests.
-3. **Test convergence**: Run the test command from RALPH_TASK.md; do not mark the task complete until tests pass. If they fail, fix the corresponding step and re-run.
-4. **Test assertions from scenarios (完成前)**: Before marking complete, generate or update the test assertion script so each test scenario has a **real assertion** (not a placeholder). Prefer updating the existing \`tests/test-task-<id>.py\`; for browser-side assertions use the **agent-browser** skill and document commands or a small script.
+1. **Step 3 – spec-refine-and-plan (细化约定与写计划)** before coding: If RALPH_TASK.md does not yet have an "Implementation Steps" section with **per-step acceptance**, invoke the **spec-refine-and-plan** skill: add Implementation Steps (e.g. 1.1 Add route, 1.2 Write handler, 2.1 Run test) and for each step write a short **acceptance** (e.g. "1.1 done when: GET /api/v1/rooms returns 200"). This lets you iterate at the failing step when tests fail.
+2. **Step 4 – plan-execute-step (按步执行)** Implement step by step: For each step, invoke the **plan-execute-step** behavior: do one step, verify its acceptance (quick check or run), then move on. When the overall test command fails, map the failure to a step and fix that step before re-running tests.
+3. **Step 5 – task-run-test-command (跑测试)** Test convergence: Run the test command from RALPH_TASK.md (as in **task-run-test-command**); do not mark the task complete until tests pass. If they fail, fix the corresponding step and re-run.
+4. **Optional – task-request-review** Before marking complete, you may invoke **task-request-review** to check implementation against Description/AC/Implementation Steps.
+5. **Step 7 – ralph-finish-branch (完成与 PR)** Only after tests pass: mark AC complete, set Done, and optionally push/PR as in **ralph-finish-branch**.
+6. **Test assertions from scenarios (完成前)** Before marking complete, generate or update the test assertion script so each test scenario has a **real assertion** (not a placeholder). Prefer updating the existing \`tests/test-task-<id>.py\`; for browser-side assertions use the **agent-browser** skill and document commands or a small script.
 
 ## Task Execution (CRITICAL - READ CAREFULLY)
 
