@@ -1,0 +1,29 @@
+---
+id: TASK-132
+title: 房间页主内容区全屏布局骨架
+status: In Progress
+assignee: []
+created_date: '2026-02-06 21:36'
+updated_date: '2026-02-06 21:39'
+labels: []
+dependencies: []
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+将 join.html 从「左侧边栏 + 右侧内容区」改为内容为主的布局骨架：主内容区（共享 iframe/视频）全屏或近全屏占据可视区域；左侧房间信息、成员列表、聊天改为可收起/浮层或移除固定占位，不再长期占用主区域宽度。先完成布局与主内容区占位，不要求 overlay 控件样式。
+
+**测试用例**:
+
+**测试场景**:
+1. 房主或成员打开 join.html 进入房间，确认主内容区（iframe 区域）为视觉主体
+2. 确认左侧无固定宽侧栏长期遮挡主内容
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 主内容区（.browser-area / iframe 容器）在桌面视口下占据除必要边距外的主要可视区域（如 ≥80% 宽度或全宽）
+- [ ] #2 原左侧边栏不再以固定宽度长期占据左侧，改为可收起、浮层或底部/侧边抽屉入口
+- [ ] #3 页面仍能正常加载房间、展示共享 iframe 与现有功能入口（可暂用临时入口进入成员/聊天）
+<!-- AC:END -->
