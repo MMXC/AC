@@ -10,13 +10,14 @@ description: 任务完成后勾选 AC、标 Done、推送分支并可选创建 P
 ## 触发场景
 
 - "完成"、"标 Done"、"提 PR"、"收尾任务分支"
-- 流程编排指示「步骤 7：完成与 PR」时
+- 流程编排指示「步骤 8：完成与 PR」时
 - 测试已通过，准备收尾并合并或交付
 
 ## 前置条件
 
 - **Test Command 已通过**（由 **task-run-test-command** 验证）。
 - 可选：**task-request-review** 已执行且无 Critical 问题。
+- 可选：**code-reviewer** 已执行且无阻塞问题（与 task-request-review 互补，偏代码质量与 PR 分析）。
 - 当前分支为 `task/TASK-<id>`，且实现与提交已就绪。
 
 ## 必做动作

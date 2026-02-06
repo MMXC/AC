@@ -22,6 +22,7 @@ description: 将澄清后的需求按格式写入 newneed.md（含需求概要�
 
 1. **写入需求概要**（如需要）：
    - 在 `newneed.md` 顶部写入需求概要（技术栈、范围、约束等）
+   - **记录需求类型**：从 **requirement-clarify** 获取 `type` 字段（`feature | page | infra | chore`），写入需求概要
 
 2. **生成任务结构**：
    - 若需求尚未分解：先通过 **requirement-decompose** 正交分解为原子子任务
@@ -53,6 +54,23 @@ description: 将澄清后的需求按格式写入 newneed.md（含需求概要�
 4. **写入文件**：
    - 将完整内容写入 `newneed.md`（项目根目录）
 
+5. **提示后续设计步骤**（当 `type ∈ {feature, page}` 时）：
+   - 在 `newneed.md` 末尾添加占位章节，提示后续步骤 2a 和 2b 将补充设计文档：
+   
+   ```markdown
+   ## Visual Specs (JSON Canvas)
+   
+   > 待步骤 2a 生成：需求可视化建模（用例图/用户流程图）
+   > 文件将保存到：`designs/canvas/<need-id>-*.canvas`
+   
+   ## UI / UX Design System
+   
+   > 待步骤 2b 生成：UI/UX 设计系统文档
+   > 文件将保存到：`designs/ui/<need-id>-design-system.md`
+   ```
+   
+   - 这些占位章节将在步骤 2a 和 2b 执行时被实际内容替换
+
 ## 与脚本的关系
 
 - `requirement-workflow.sh --decomposed newneed.md` 会读取本技能生成的 `newneed.md`，解析后创建 backlog 任务。
@@ -60,8 +78,10 @@ description: 将澄清后的需求按格式写入 newneed.md（含需求概要�
 
 ## 相关技能
 
-- **requirement-clarify**：上一步，需求澄清。
+- **requirement-clarify**：上一步，需求澄清（输出需求类型 `type`）。
 - **requirement-decompose**：可选，若需求未分解则先调用此技能。
+- **json-canvas**：步骤 2a，需求可视化建模（用例图/用户流程图）。
+- **ui-ux-pro-max**：步骤 2b，UI/UX 设计系统生成。
 - **backlog-create-from-decomposed**：下一步，从 newneed.md 创建 backlog 任务。
 
 ## 完成标准

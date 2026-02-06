@@ -32,7 +32,8 @@ description: 按实现计划执行当前步骤并验证该步验收。Ralph 流�
    - 若未通过：在本步内迭代修复，直到该步验收通过，不进入下一步。
 
 4. **提交**：该步验收通过后，执行一次 commit：  
-   `git add -A && git commit -m 'ralph: TASK-<id> <当前步简短描述>'`
+   `git add -A && git commit -m 'ralph: TASK-<id> <当前步简短描述>'`  
+   **可选**：该步验收通过后、提交前，可调用 **code-simplifier** 对本步改动的代码做一次简化与规范，再提交。
 
 5. **更新 .ralph/progress.md**：在 Session History 中简要记录「完成了步骤 X，验收结果」。
 
@@ -44,6 +45,7 @@ description: 按实现计划执行当前步骤并验证该步验收。Ralph 流�
 ## 相关技能
 
 - **spec-refine-and-plan**：上一步，产出实现步骤与每步验收。
+- **code-simplifier**：可选，每步验收通过后、提交前可调用，对本步改动做简化与规范；全部步骤完成后也可在步骤 4.5 做整体简化。
 - **task-run-test-command**：全部步骤完成后跑整体测试。
 - **ralph-git-workflow**：提交信息格式 `ralph: TASK-<id> ...`。
 

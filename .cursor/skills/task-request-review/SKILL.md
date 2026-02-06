@@ -41,11 +41,13 @@ description: 对照任务计划与 AC 对实现做审查，按严重程度列出
 
 ## 与流程的关系
 
-- 本步骤为**可选**：流程编排可配置为「Test 通过后执行 task-request-review，再 ralph-finish-branch」。
+- 本步骤为**可选**：流程编排可配置为「Test 通过后执行 task-request-review，再（可选）code-reviewer，再 ralph-finish-branch」。
+- **task-request-review** 偏计划/AC 符合性；**code-reviewer** 偏代码质量、风险、SOLID、PR 分析，两者互补，可先后执行。
 - 若不执行本技能，也可在 **ralph-finish-branch** 前由人工或 Agent 做一次简要自检。
 
 ## 相关技能
 
+- **code-reviewer**：可选，本步骤之后可调用，做代码质量与 PR 分析（复杂度、风险、SOLID、code smells）。
 - **ralph-finish-branch**：下一步，标 Done、推送、PR。
 - **spec-refine-and-plan**：计划来源；审查时对照的 Steps 与 AC。
 - **task-run-test-command**：通常在本步骤前已跑过测试。

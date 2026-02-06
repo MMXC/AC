@@ -6,7 +6,7 @@
       "x": 280,
       "y": -80,
       "width": 920,
-      "height": 720,
+      "height": 800,
       "label": "AC 项目（AI Coding for web and app）",
       "color": "5"
     },
@@ -61,10 +61,30 @@
       "color": "3"
     },
     {
-      "id": "uccreatebacklog",
+      "id": "ucvisual",
       "type": "text",
       "x": 320,
       "y": 230,
+      "width": 200,
+      "height": 48,
+      "text": "需求可视化建模（可选）",
+      "color": "2"
+    },
+    {
+      "id": "ucdesign",
+      "type": "text",
+      "x": 320,
+      "y": 300,
+      "width": 200,
+      "height": 48,
+      "text": "UI/UX 设计系统（可选）",
+      "color": "2"
+    },
+    {
+      "id": "uccreatebacklog",
+      "type": "text",
+      "x": 320,
+      "y": 370,
       "width": 180,
       "height": 48,
       "text": "创建 backlog 任务",
@@ -74,7 +94,7 @@
       "id": "ucserial",
       "type": "text",
       "x": 320,
-      "y": 300,
+      "y": 440,
       "width": 180,
       "height": 48,
       "text": "串行执行任务",
@@ -121,6 +141,16 @@
       "color": "4"
     },
     {
+      "id": "ucsimplify",
+      "type": "text",
+      "x": 560,
+      "y": 265,
+      "width": 180,
+      "height": 48,
+      "text": "整体简化（可选）",
+      "color": "2"
+    },
+    {
       "id": "uctest",
       "type": "text",
       "x": 560,
@@ -141,6 +171,16 @@
       "color": "4"
     },
     {
+      "id": "uccodereview",
+      "type": "text",
+      "x": 560,
+      "y": 405,
+      "width": 180,
+      "height": 48,
+      "text": "代码质量审查（可选）",
+      "color": "2"
+    },
+    {
       "id": "ucfinish",
       "type": "text",
       "x": 560,
@@ -154,7 +194,7 @@
       "id": "ucmanage",
       "type": "text",
       "x": 320,
-      "y": 400,
+      "y": 540,
       "width": 200,
       "height": 48,
       "text": "管理 backlog 任务",
@@ -164,7 +204,7 @@
       "id": "ucbrowser",
       "type": "text",
       "x": 320,
-      "y": 470,
+      "y": 610,
       "width": 200,
       "height": 48,
       "text": "浏览器/前端测试",
@@ -217,6 +257,22 @@
       "toEnd": "arrow"
     },
     {
+      "id": "eagentvisual",
+      "fromNode": "actoragent",
+      "fromSide": "right",
+      "toNode": "ucvisual",
+      "toSide": "left",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "eagentdesign",
+      "fromNode": "actoragent",
+      "fromSide": "right",
+      "toNode": "ucdesign",
+      "toSide": "left",
+      "toEnd": "arrow"
+    },
+    {
       "id": "eagentcreate",
       "fromNode": "actoragent",
       "fromSide": "right",
@@ -261,6 +317,22 @@
       "fromNode": "actoragent",
       "fromSide": "right",
       "toNode": "ucexec",
+      "toSide": "left",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "eagentsimplify",
+      "fromNode": "actoragent",
+      "fromSide": "right",
+      "toNode": "ucsimplify",
+      "toSide": "left",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "eagentcodereview",
+      "fromNode": "actoragent",
+      "fromSide": "right",
+      "toNode": "uccodereview",
       "toSide": "left",
       "toEnd": "arrow"
     },
@@ -327,8 +399,30 @@
       "toEnd": "none"
     },
     {
-      "id": "enewneedcreate",
+      "id": "enewneedvisual",
       "fromNode": "ucnewneed",
+      "fromSide": "bottom",
+      "toNode": "ucvisual",
+      "toSide": "top",
+      "label": "extend",
+      "color": "2",
+      "fromEnd": "none",
+      "toEnd": "none"
+    },
+    {
+      "id": "enewneedddesign",
+      "fromNode": "ucnewneed",
+      "fromSide": "bottom",
+      "toNode": "ucdesign",
+      "toSide": "top",
+      "label": "extend",
+      "color": "2",
+      "fromEnd": "none",
+      "toEnd": "none"
+    },
+    {
+      "id": "evisualcreate",
+      "fromNode": "ucvisual",
       "fromSide": "bottom",
       "toNode": "uccreatebacklog",
       "toSide": "top",
@@ -336,6 +430,28 @@
       "color": "5",
       "fromEnd": "none",
       "toEnd": "none"
+    },
+    {
+      "id": "edesigcreate",
+      "fromNode": "ucdesign",
+      "fromSide": "bottom",
+      "toNode": "uccreatebacklog",
+      "toSide": "top",
+      "label": "include",
+      "color": "5",
+      "fromEnd": "none",
+      "toEnd": "none"
+    },
+    {
+      "id": "enewneedcreate",
+      "fromNode": "ucnewneed",
+      "fromSide": "right",
+      "toNode": "uccreatebacklog",
+      "toSide": "left",
+      "label": "include",
+      "color": "5",
+      "fromEnd": "none",
+      "toEnd": "arrow"
     },
     {
       "id": "ecreateserial",
@@ -393,8 +509,19 @@
       "toEnd": "none"
     },
     {
-      "id": "eexectest",
+      "id": "eexecsimplify",
       "fromNode": "ucexec",
+      "fromSide": "bottom",
+      "toNode": "ucsimplify",
+      "toSide": "top",
+      "label": "extend",
+      "color": "2",
+      "fromEnd": "none",
+      "toEnd": "none"
+    },
+    {
+      "id": "esimplifytest",
+      "fromNode": "ucsimplify",
       "fromSide": "bottom",
       "toNode": "uctest",
       "toSide": "top",
@@ -402,6 +529,17 @@
       "color": "5",
       "fromEnd": "none",
       "toEnd": "none"
+    },
+    {
+      "id": "eexectest",
+      "fromNode": "ucexec",
+      "fromSide": "right",
+      "toNode": "uctest",
+      "toSide": "left",
+      "label": "include",
+      "color": "5",
+      "fromEnd": "none",
+      "toEnd": "arrow"
     },
     {
       "id": "etestreview",
@@ -415,8 +553,19 @@
       "toEnd": "none"
     },
     {
-      "id": "ereviewfinish",
+      "id": "ereviewcodereview",
       "fromNode": "ucreview",
+      "fromSide": "bottom",
+      "toNode": "uccodereview",
+      "toSide": "top",
+      "label": "extend",
+      "color": "2",
+      "fromEnd": "none",
+      "toEnd": "none"
+    },
+    {
+      "id": "ecodereviewfinish",
+      "fromNode": "uccodereview",
       "fromSide": "bottom",
       "toNode": "ucfinish",
       "toSide": "top",
@@ -424,6 +573,17 @@
       "color": "5",
       "fromEnd": "none",
       "toEnd": "none"
+    },
+    {
+      "id": "ereviewfinish",
+      "fromNode": "ucreview",
+      "fromSide": "right",
+      "toNode": "ucfinish",
+      "toSide": "left",
+      "label": "include",
+      "color": "5",
+      "fromEnd": "none",
+      "toEnd": "arrow"
     },
     {
       "id": "etestfinish",
