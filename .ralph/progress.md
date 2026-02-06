@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 20
-- Current status: Done - 房主端成员列表实时更新（backlog-131）
+- Iterations completed: 21
+- Current status: Done - 房间页主内容区全屏布局骨架（backlog-132）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-07 [Ralph Iteration 1]
+**Session 1 completed** - 房间页主内容区全屏布局骨架（backlog-132）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 主内容区全宽、1.2 侧栏可收起/浮层、1.3 功能保留）及每步验收。
+- 实现：join.html 布局改为内容为主：.browser-area 全宽占据主可视区域；.sidebar 改为 position:fixed 左侧抽屉（默认 left:-280px），通过头部「成员与聊天」按钮打开，带关闭按钮与背景遮罩点击关闭。
+- 测试：watch-together 单元测试 sidebar-info、room-init 共 52 条通过；新增 test-task-132.py 场景 1（主内容区宽度≥80% 视口）、场景 2（侧栏默认收起）断言，可经 skill:watch-together-webapp-testing TASK-132 运行（需 Playwright 环境）。
+- RALPH_TASK.md 三项成功标准已勾选。
+
 ### 2026-02-03 [Ralph Iteration 4]
 **Session 4 completed** - TASK-131 自动化测试稳定通过（场景 2 仅在服务端异常时才视为失败）
 - 细化约定：确认当前任务聚焦 backlog-131（房主端成员列表实时更新），以 `skill:watch-together-webapp-testing TASK-131` 为主测试命令；从 backlog/task-131 与既有文档中提炼 Acceptance Criteria 与实现背景。
@@ -367,3 +374,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-03 17:17:38
 **Session 4 started** (model: auto)
+
+### 2026-02-07 05:40:54
+**Session 1 started** (model: auto)

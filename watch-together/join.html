@@ -46,16 +46,57 @@
             flex: 1;
             display: flex;
             overflow: hidden;
+            position: relative;
         }
 
+        /* 侧栏改为浮层抽屉：默认不占布局空间，通过入口打开 */
         .sidebar {
             width: 280px;
+            max-width: 85vw;
             background: #2d2d2d;
             border-right: 1px solid #404040;
             display: flex;
             flex-direction: column;
-            flex-shrink: 0;
             overflow: hidden;
+            position: fixed;
+            top: 56px;
+            bottom: 0;
+            left: -280px;
+            z-index: 200;
+            transition: left 0.25s ease;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        }
+        .sidebar.open {
+            left: 0;
+        }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            top: 56px;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 199;
+        }
+        .sidebar-backdrop.open {
+            display: block;
+        }
+        .sidebar-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            background: #3a3a3a;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 1.2em;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .sidebar-close:hover {
+            background: #444;
         }
 
         .sidebar-section {
@@ -229,8 +270,11 @@
             padding: 40px 20px;
         }
 
+        /* 主内容区：桌面下占据除必要边距外的主要可视区域（全宽） */
         .browser-area {
             flex: 1;
+            min-width: 0;
+            width: 100%;
             display: flex;
             flex-direction: column;
             background: #1a1a1a;
@@ -404,17 +448,36 @@
             background: #555;
             cursor: not-allowed;
         }
+
+        .sidebar-toggle-btn {
+            padding: 8px 14px;
+            background: #3a3a3a;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .sidebar-toggle-btn:hover {
+            background: #444;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>一起看</h1>
-        <div class="room-info" id="roomInfo">房间加载中...</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button type="button" id="sidebarToggle" class="sidebar-toggle-btn" title="成员与聊天">成员与聊天</button>
+            <div class="room-info" id="roomInfo">房间加载中...</div>
+        </div>
     </div>
     
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
     <div class="main-container">
-        <div class="sidebar">
-            <div class="sidebar-section">
+        <div class="sidebar" id="sidebar" aria-hidden="false">
+            <button type="button" class="sidebar-close" id="sidebarClose" title="关闭">×</button>
+            <div class="sidebar-section" style="padding-right: 48px;">
                 <h2>房间信息</h2>
                 <div class="room-id-display" id="sidebarRoomId">加载中...</div>
                 <button id="shareRoomButton" class="share-room-button" style="display: none;">分享房间链接</button>
@@ -529,5 +592,24 @@
     <script src="/js/screen-streaming.js"></script>
     <script src="/js/video-player.js"></script>
     <script src="/js/operation-source.js"></script>
+    <script>
+        (function() {
+            var sidebar = document.getElementById('sidebar');
+            var backdrop = document.getElementById('sidebarBackdrop');
+            var toggleBtn = document.getElementById('sidebarToggle');
+            var closeBtn = document.getElementById('sidebarClose');
+            function openSidebar() {
+                if (sidebar) sidebar.classList.add('open');
+                if (backdrop) backdrop.classList.add('open');
+            }
+            function closeSidebar() {
+                if (sidebar) sidebar.classList.remove('open');
+                if (backdrop) backdrop.classList.remove('open');
+            }
+            if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+            if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+            if (backdrop) backdrop.addEventListener('click', closeSidebar);
+        })();
+    </script>
 </body>
 </html>
