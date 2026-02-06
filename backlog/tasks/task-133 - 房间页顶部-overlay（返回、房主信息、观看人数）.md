@@ -1,9 +1,10 @@
 ---
 id: TASK-133
 title: 房间页顶部 overlay（返回、房主信息、观看人数）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-06 21:37'
+updated_date: '2026-02-06 21:49'
 labels: []
 dependencies: []
 ---
