@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 20
-- Current status: Done - 房主端成员列表实时更新（backlog-131）
+- Iterations completed: 21
+- Current status: Done - 房间页顶部 overlay（backlog-133）
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-07 [Ralph Iteration 1]
+**Session 1 completed** - 房间页顶部 overlay（backlog-133）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 overlay 容器与样式、1.2 返回按钮、1.3 房主/房间名、1.4 观看人数、2.1 测试）及每步验收。
+- 实现：在 join.html 的 .browser-area 顶部增加 .room-top-overlay（半透明/毛玻璃），含 #roomOverlayBack、#roomOverlayRoomName、#roomOverlayMemberCount；room.js 中增加 updateRoomTopOverlay()、leaveRoomAndBack()，从 validation.room.name / roomData.name 设置 roomDisplayName，在 updateMembersDisplay() 中同步人数，init 时绑定返回按钮并设置 overlay 初始值。
+- 测试：新增 test-TASK-133.py，场景 1 断言顶部有返回、房间名、人数，场景 2 断言点击返回后离开房间页；docker compose build watch-together 后 run-test.sh TASK-133 通过（2 通过 0 失败）。
+- RALPH_TASK.md 三项成功标准已勾选；test_command 设为 run-test.sh TASK-133。
+
 ### 2026-02-03 [Ralph Iteration 4]
 **Session 4 completed** - TASK-131 自动化测试稳定通过（场景 2 仅在服务端异常时才视为失败）
 - 细化约定：确认当前任务聚焦 backlog-131（房主端成员列表实时更新），以 `skill:watch-together-webapp-testing TASK-131` 为主测试命令；从 backlog/task-131 与既有文档中提炼 Acceptance Criteria 与实现背景。
@@ -367,3 +374,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-03 17:17:38
 **Session 4 started** (model: auto)
+
+### 2026-02-07 05:50:17
+**Session 1 started** (model: auto)

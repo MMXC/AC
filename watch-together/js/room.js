@@ -23,6 +23,8 @@ function getApiBase() {
 let membersList = [];
 // 成员列表轮询定时器（用于在极端情况下兜底同步成员列表，确保房主端无需刷新即可看到最新成员）
 let membersPollIntervalId = null;
+// 房间展示名（用于顶部 overlay，来自 API room.name 或房主昵称）
+let roomDisplayName = '房间';
 
 /**
  * 生成成员头像的首字母
@@ -200,6 +202,49 @@ function updateMembersDisplay() {
                 });
             }
         });
+    }
+
+    // 同步顶部 overlay 观看人数
+    updateRoomTopOverlay();
+}
+
+/**
+ * 更新房间页顶部 overlay：房主/房间名、观看人数（与成员列表同步）
+ */
+function updateRoomTopOverlay() {
+    if (typeof document === 'undefined') return;
+    const nameEl = document.getElementById('roomOverlayRoomName');
+    const countEl = document.getElementById('roomOverlayMemberCount');
+    if (nameEl) {
+        nameEl.textContent = roomDisplayName || '房间';
+    }
+    if (countEl) {
+        const n = Array.isArray(membersList) ? membersList.length : 0;
+        countEl.textContent = n + ' 人';
+    }
+}
+
+/**
+ * 离开房间并返回上一页或首页（顶部 overlay 返回按钮）
+ */
+async function leaveRoomAndBack() {
+    const roomId = typeof window !== 'undefined' ? window.currentRoomId : null;
+    const userId = typeof window !== 'undefined' ? window.currentUserId : null;
+    if (roomId && userId) {
+        try {
+            await fetch(`${getApiBase()}/api/v1/rooms/${roomId}/leave`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }),
+            });
+        } catch (e) {
+            console.warn('离开房间请求失败:', e);
+        }
+    }
+    if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = (window.location.origin || '') + '/';
     }
 }
 
@@ -515,6 +560,10 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         const roomData = joinData.data.room || {};
         const roomCurrentUrl = roomData.currentUrl;
         const roomHostId = roomData.hostId;
+        if (roomData.name) {
+            roomDisplayName = roomData.name;
+            updateRoomTopOverlay();
+        }
         // 优先使用服务器返回的 isHost 字段，如果没有则通过比较 userId 和 hostId 判断
         const isHost = joinData.data.isHost !== undefined ? joinData.data.isHost : (serverUserId === roomHostId);
         
@@ -908,12 +957,22 @@ async function init() {
 
     // 房间有效，更新房间信息
     updateRoomInfo(roomId);
-    
+    if (validation.room && validation.room.name) {
+        roomDisplayName = validation.room.name;
+    }
+    updateRoomTopOverlay();
+
     // 启动成员列表轮询兜底同步（即使 WebSocket 广播异常也能最终与服务端状态一致）
     startMembersPolling(roomId);
     
     // 初始化成员列表显示（空状态或稍后由轮询/加入房间更新）
     updateMembersDisplay();
+
+    // 顶部 overlay 返回按钮：点击离开房间并返回上一页或首页
+    const overlayBackBtn = document.getElementById('roomOverlayBack');
+    if (overlayBackBtn) {
+        overlayBackBtn.addEventListener('click', leaveRoomAndBack);
+    }
     
     // 将临时 userId 和 roomId 设置为全局变量（tempUserId 已在函数开始处生成）
     if (typeof window !== 'undefined') {
