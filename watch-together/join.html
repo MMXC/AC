@@ -404,6 +404,88 @@
             background: #555;
             cursor: not-allowed;
         }
+
+        /* 底部聊天抽屉（可收起） */
+        .chat-trigger-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #2d2d2d;
+            border-top: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+        .chat-trigger-bar .chat-toggle-btn {
+            padding: 10px 24px;
+            background: #4a9eff;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-trigger-bar .chat-toggle-btn:hover {
+            background: #3a8eef;
+        }
+        .chat-drawer {
+            position: fixed;
+            bottom: 48px;
+            left: 0;
+            right: 0;
+            height: 0;
+            max-height: 40vh;
+            background: #2d2d2d;
+            border-top: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: height 0.25s ease-out;
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        }
+        .chat-drawer.open {
+            height: 40vh;
+        }
+        .chat-drawer-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            background: #2d2d2d;
+        }
+        .chat-drawer-header h2 {
+            font-size: 1em;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+        }
+        .chat-drawer-close {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            color: #aaa;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .chat-drawer-close:hover {
+            background: #3a3a3a;
+            color: #fff;
+        }
+        .chat-drawer .chat-messages {
+            flex: 1;
+            min-height: 0;
+        }
     </style>
 </head>
 <body>
@@ -457,26 +539,6 @@
                     <li class="members-empty">暂无成员</li>
                 </ul>
             </div>
-            <div class="chat-section">
-                <div class="sidebar-section" style="padding: 15px; border-bottom: 1px solid #404040; flex-shrink: 0;">
-                    <h2>聊天</h2>
-                </div>
-                <div class="chat-messages" id="chatMessages">
-                    <div class="chat-empty">暂无消息</div>
-                </div>
-                <div class="chat-input-container">
-                    <div class="chat-input-wrapper">
-                        <textarea 
-                            id="chatInput" 
-                            class="chat-input" 
-                            placeholder="输入消息..." 
-                            rows="2"
-                            maxlength="500"
-                        ></textarea>
-                        <button id="chatSendButton" class="chat-send-button">发送</button>
-                    </div>
-                </div>
-            </div>
         </div>
         <div class="browser-area">
             <div class="iframe-container">
@@ -519,6 +581,59 @@
             </div>
         </div>
     </div>
+
+    <!-- 底部聊天入口与抽屉（可收起） -->
+    <div class="chat-trigger-bar" id="chatTriggerBar">
+        <button type="button" class="chat-toggle-btn" id="chatToggleBtn" aria-expanded="false">评论/聊天</button>
+    </div>
+    <div class="chat-drawer" id="chatDrawer" aria-hidden="true">
+        <div class="chat-drawer-header">
+            <h2>聊天</h2>
+            <button type="button" class="chat-drawer-close" id="chatDrawerClose">收起</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-empty">暂无消息</div>
+        </div>
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="输入消息..." 
+                    rows="2"
+                    maxlength="500"
+                ></textarea>
+                <button id="chatSendButton" class="chat-send-button">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        var drawer = document.getElementById('chatDrawer');
+        var toggleBtn = document.getElementById('chatToggleBtn');
+        var closeBtn = document.getElementById('chatDrawerClose');
+        if (drawer && toggleBtn) {
+            function openDrawer() {
+                drawer.classList.add('open');
+                drawer.setAttribute('aria-hidden', 'false');
+                toggleBtn.setAttribute('aria-expanded', 'true');
+                toggleBtn.textContent = '收起聊天';
+            }
+            function closeDrawer() {
+                drawer.classList.remove('open');
+                drawer.setAttribute('aria-hidden', 'true');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+                toggleBtn.textContent = '评论/聊天';
+            }
+            toggleBtn.addEventListener('click', function() {
+                if (drawer.classList.contains('open')) closeDrawer();
+                else openDrawer();
+            });
+            if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+        }
+    })();
+    </script>
     
     <script src="/js/room.js"></script>
     <!-- WebRTC 信令工具函数（提供 createOfferMessage / createAnswerMessage 等） -->

@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 20
-- Current status: Done - 房主端成员列表实时更新（backlog-131）
+- Iterations completed: 21
+- Current status: Done - 房间页聊天以底部/浮层展示且可收起（backlog-135）
 
 ## How This Works
 
@@ -14,6 +14,12 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-07 [Ralph Iteration 1]
+**Session 1 completed** - 房间页聊天/评论以底部或 overlay 展示且可收起（backlog-135）
+- 细化约定：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 底部抽屉/浮层、1.2 底部「评论/聊天」入口、1.3 展开后与 chat.js 逻辑一致、2.1 可选测试）。
+- 实现：join.html 从侧栏移除 .chat-section；新增底部固定条 .chat-trigger-bar 与「评论/聊天」按钮、底部抽屉 .chat-drawer（默认 height:0，展开 40vh），内含 #chatMessages、#chatInput、#chatSendButton；内联脚本控制展开/收起与 aria 状态。chat.js 未改，仍绑定相同 ID。
+- 测试：docker compose up -d 后运行 fix-frontend 通过；三项成功标准已勾选。
+
 ### 2026-02-03 [Ralph Iteration 4]
 **Session 4 completed** - TASK-131 自动化测试稳定通过（场景 2 仅在服务端异常时才视为失败）
 - 细化约定：确认当前任务聚焦 backlog-131（房主端成员列表实时更新），以 `skill:watch-together-webapp-testing TASK-131` 为主测试命令；从 backlog/task-131 与既有文档中提炼 Acceptance Criteria 与实现背景。
@@ -367,3 +373,6 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-03 17:17:38
 **Session 4 started** (model: auto)
+
+### 2026-02-07 06:05:09
+**Session 1 started** (model: auto)
