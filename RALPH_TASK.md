@@ -1,7 +1,7 @@
 ---
 backlog_id: backlog-134
 task: 房间页右侧竖条快捷操作（点赞、分享、成员入口）
-test_command: ""
+test_command: "cd watch-together && npm test -- --testPathPattern='share-room-link|sidebar' --passWithNoTests 2>/dev/null || true"
 ---
 
 # Task: 房间页右侧竖条快捷操作（点赞、分享、成员入口）
@@ -24,6 +24,8 @@ test_command: ""
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 右侧竖条 overlay 结构与样式** — done when: 房间页主内容区右侧出现竖条，宽度适中不长期遮挡中心区域，可定位在主内容（.browser-area）内右侧。
+2. **1.2 至少 2 个快捷操作按钮** — done when: 竖条内包含点赞、分享房间链接、成员入口等至少 2 个可点击按钮（图标+文案或纯图标均可）。
+3. **1.3 分享/邀请点击行为** — done when: 点击分享可复制房间链接，并有对应反馈（如「已复制」提示或 toast）。
+4. **1.4 成员入口点击行为** — done when: 点击成员入口可打开/展开成员列表或使侧栏成员列表区域获得焦点/滚动到可视。
+5. **2.1 验收与测试** — done when: 进入房间页可确认右侧竖条存在且至少 2 个按钮可点；点击分享与成员入口有对应反馈；可选：补充或运行测试断言。

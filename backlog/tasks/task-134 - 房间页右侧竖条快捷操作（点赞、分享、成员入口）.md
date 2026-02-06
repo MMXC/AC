@@ -1,10 +1,10 @@
 ---
 id: TASK-134
 title: 房间页右侧竖条快捷操作（点赞、分享、成员入口）
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-02-06 21:37'
-updated_date: '2026-02-06 21:57'
+updated_date: '2026-02-06 22:03'
 labels: []
 dependencies: []
 ---

@@ -1,9 +1,10 @@
 ---
 id: TASK-135
 title: 房间页聊天/评论以底部或 overlay 展示且可收起
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-06 21:37'
+updated_date: '2026-02-06 22:04'
 labels: []
 dependencies: []
 ---

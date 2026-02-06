@@ -404,6 +404,61 @@
             background: #555;
             cursor: not-allowed;
         }
+
+        /* 右侧竖条快捷操作 overlay：不长期遮挡主内容中心 */
+        .browser-area {
+            position: relative;
+        }
+        .room-quick-actions {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 6px;
+            background: rgba(45, 45, 45, 0.92);
+            border-left: 1px solid #404040;
+            border-radius: 12px 0 0 12px;
+            z-index: 20;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+        }
+        .room-quick-actions .quick-action-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #3a3a3a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .room-quick-actions .quick-action-btn:hover {
+            background: #4a9eff;
+            color: #fff;
+            border-color: #4a9eff;
+        }
+        .room-quick-actions .quick-action-btn:disabled {
+            opacity: 0.7;
+            cursor: default;
+        }
+        .room-quick-actions .quick-action-btn[title] {
+            font-size: 0.85em;
+        }
+        .sidebar-section.quick-actions-highlight,
+        .sidebar-section.quick-actions-highlight h2 {
+            transition: background 0.2s;
+        }
+        .sidebar-section.quick-actions-highlight {
+            background: rgba(74, 158, 255, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -451,7 +506,7 @@
                     </button>
                 </div>
             </div>
-            <div class="sidebar-section" style="flex: 0 0 auto; max-height: 200px; overflow-y: auto;">
+            <div class="sidebar-section" id="membersSection" style="flex: 0 0 auto; max-height: 200px; overflow-y: auto;">
                 <h2>成员列表</h2>
                 <ul class="members-list" id="membersList">
                     <li class="members-empty">暂无成员</li>
@@ -515,6 +570,12 @@
                         <h3>等待画面流</h3>
                         <p>房主设置网页后，画面将在这里显示</p>
                     </div>
+                </div>
+                <!-- 右侧竖条快捷操作：点赞、分享、成员入口 -->
+                <div class="room-quick-actions" id="roomQuickActions" data-right-sidebar="true">
+                    <button type="button" class="quick-action-btn" id="quickActionLike" title="点赞" aria-label="点赞">👍</button>
+                    <button type="button" class="quick-action-btn" id="quickActionShare" title="分享房间链接" aria-label="分享房间链接">🔗</button>
+                    <button type="button" class="quick-action-btn" id="quickActionMembers" title="成员列表" aria-label="打开成员列表">👥</button>
                 </div>
             </div>
         </div>
