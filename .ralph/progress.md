@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 20
-- Current status: Done - 房主端成员列表实时更新（backlog-131）
+- Iterations completed: 21
+- Current status: host-sync-state-send-offer-to-new-members 步骤 4 已完成，待手动验收（步骤 5）
 
 ## How This Works
 
@@ -370,3 +370,16 @@ This is how Ralph maintains continuity across iterations.
 
 ### 2026-02-07 05:58:48
 **Session 1 started** (model: auto)
+
+### 2026-02-07 [host-sync-state-send-offer-to-new-members]
+**Session completed** - 房主收到 SYNC_STATE 时向尚无 PeerConnection 的成员补发 Offer（从步骤 3 开始）
+- **步骤 3 完成**：RALPH_TASK.md 已写入 Description、AC、Test Command、Implementation Steps（1.1 chat 派发 syncStateMembersUpdated、1.2 screen-streaming 监听并补发 Offer、2.1 验收）。
+- **步骤 4 完成**：1.1 chat.js 在 SYNC_STATE 分支中 setMembersFn(normalizedMembers) 后派发 `syncStateMembersUpdated`，addMember/removeMember 兼容分支同样派发；1.2 screen-streaming.js 新增 `handleSyncStateMembersUpdated`，监听 `syncStateMembersUpdated`，房主且正在共享时对 getMembersList() 中除自己外且尚无 PC 的成员逐个调用 addPeerConnectionForMember 补发 Offer。
+- **下一步**：步骤 5 手动验收（房主开共享→新成员加入→成员端几秒内出现画面）。
+
+### 2026-02-07 [add-debug-logs-for-video-and-chat]
+**Session completed** - 添加前端与后端排查日志（画面未显示、消息未显示）
+- **后端**：watch-together-server/dist/server.js — CHAT_MESSAGE 分支统计 sentCount 并打印 [排查] CHAT_MESSAGE 收到 roomId userId contentLen 已广播到 N 个连接；sendToUser 改为返回 boolean，WEBRTC 转发成功后打印 [排查] WEBRTC 信令已转发 type toUserId。
+- **前端 chat**：chat.js — CHAT_MESSAGE 分支末尾打印 [排查] 聊天消息已加入历史并触发渲染；renderMessage 开头打印 [排查] renderMessage 被调用，!chatMessages 时打印 [排查] chatMessages 元素不存在，appendChild 后打印 [排查] 消息已挂载到 DOM。
+- **前端 screen-streaming**：screen-streaming.js — handleWebRTCOffer 开头 [排查] 成员端收到 WEBRTC_OFFER；发送 Answer 后 [排查] 成员端已发送 WebRTC Answer；ontrack 内 [排查] 成员端收到 WebRTC 远端 track，附加流后 [排查] 成员端已附加远端流到 VideoPlayer/video。
+- **验收**：手动进房发消息、房主开共享，观察控制台与服务端 [排查] 日志，可据此判断消息与画面链路的断点。

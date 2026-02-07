@@ -74,6 +74,7 @@ function initScreenStreaming() {
         window.addEventListener('memberJoinedRoom', handleMemberJoinedRoom);
         window.addEventListener('memberLeftRoom', handleMemberLeftRoom);
         window.addEventListener('videoPlayerStreamEnded', handleVideoPlayerStreamEnded);
+        window.addEventListener('syncStateMembersUpdated', handleSyncStateMembersUpdated);
     }
     
     // 监听 WebSocket 连接事件（从 chat.js）
@@ -220,6 +221,8 @@ function handleWebSocketDisconnected(event) {
  */
 function handleWebSocketMessage(event) {
     try {
+        // 无 data 的 message 事件（如 ping/空帧或异常派发）静默忽略，避免控制台持续报错
+        if (event == null || event.data == null) return;
         // 检查 event.data 类型：如果已经是对象则直接使用，如果是字符串则解析
         let message;
         if (typeof event.data === 'string') {
@@ -227,7 +230,6 @@ function handleWebSocketMessage(event) {
         } else if (typeof event.data === 'object' && event.data !== null) {
             message = event.data;
         } else {
-            console.error('无效的 WebSocket 消息格式:', typeof event.data);
             return;
         }
         
@@ -809,6 +811,26 @@ function handleMemberJoinedRoom(event) {
 }
 
 /**
+ * 房主端：收到 SYNC_STATE 且正在共享时，对列表中尚无 PeerConnection 的成员补发 WebRTC Offer
+ * 解决 MEMBER_JOINED 未到达或晚于 SYNC_STATE 时新成员收不到画面的问题
+ */
+function handleSyncStateMembersUpdated() {
+    if (!window.isHost || !screenStreamState.isStreaming) return;
+    const stream = webrtcState.localStream || screenStreamState.mediaStream;
+    if (!stream) return;
+    const members = typeof getMembersList === 'function' ? getMembersList() || [] : [];
+    const currentUserId = window.currentUserId;
+    for (const member of members) {
+        if (!member || !member.id || member.id === currentUserId) continue;
+        if (webrtcState.peerConnections.has(member.id)) continue;
+        const memberId = member.id;
+        addPeerConnectionForMember(memberId, stream).catch(err => {
+            console.error('SYNC_STATE 后为成员建立 WebRTC 连接失败:', memberId, err);
+        });
+    }
+}
+
+/**
  * 房主端：成员离开房间时关闭对该成员的 PeerConnection
  */
 function handleMemberLeftRoom(event) {
@@ -1134,6 +1156,7 @@ function showScreenSharingError(title, message, isRecoverable = false) {
 async function handleWebRTCOffer(message) {
     if (typeof window === 'undefined') return;
     if (!window.currentUserId || !window.currentRoomId) return;
+    console.log('[排查] 成员端收到 WEBRTC_OFFER', message && message.fromUserId);
 
     // 只处理发给当前成员的 Offer，且当前成员不是房主
     if (message.toUserId !== window.currentUserId) return;
@@ -1171,7 +1194,7 @@ async function handleWebRTCOffer(message) {
     }
 
     pc.ontrack = (event) => {
-        console.log('成员端收到 WebRTC 远端 track');
+        console.log('[排查] 成员端收到 WebRTC 远端 track');
         // 正确获取 event.streams[0]；若无则用 event.track 构造 MediaStream（#1）
         const remoteStream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
         webrtcState.remoteStream = remoteStream;
@@ -1179,12 +1202,14 @@ async function handleWebRTCOffer(message) {
         // 调用 VideoPlayer.attachStream(stream) 将远端流传入，成员端 <video> 实时播放房主共享画面（#2 #3）
         if (typeof window !== 'undefined' && window.VideoPlayer && typeof window.VideoPlayer.attachStream === 'function') {
             window.VideoPlayer.attachStream(remoteStream);
+            console.log('[排查] 成员端已附加远端流到 VideoPlayer');
         } else if (videoElement) {
             videoElement.srcObject = remoteStream;
             videoElement.style.display = 'block';
             videoElement.play().catch(err => {
                 console.error('播放视频失败:', err);
             });
+            console.log('[排查] 成员端已附加远端流到 video 元素');
         }
         // 成员端：显示「正在播放房主画面」状态文案
         showMemberViewingStatusLabel();
@@ -1254,7 +1279,7 @@ async function handleWebRTCOffer(message) {
     });
 
     screenStreamState.ws.send(JSON.stringify(answerMessage));
-    console.log('成员端已发送 WebRTC Answer 给房主:', message.fromUserId);
+    console.log('[排查] 成员端已发送 WebRTC Answer 给房主:', message.fromUserId);
 
     // ICE 协商超时：长时间未连接则退出并提示用户检查网络
     if (webrtcState.iceTimeoutHandle) {

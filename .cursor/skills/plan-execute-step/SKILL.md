@@ -35,7 +35,12 @@ description: 按实现计划执行当前步骤并验证该步验收。Ralph 流�
    `git add -A && git commit -m 'ralph: TASK-<id> <当前步简短描述>'`  
    **可选**：该步验收通过后、提交前，可调用 **code-simplifier** 对本步改动的代码做一次简化与规范，再提交。
 
-5. **更新 .ralph/progress.md**：在 Session History 中简要记录「完成了步骤 X，验收结果」。
+5. **将本步结论总结追加到 .ralph/progress.md**（约定必做）：
+   - **追加到 progress.md 文件末尾**（即 Session History 段落末尾），勿插入在段落开头或 Summary 下。
+   - 追加一条**步骤结论**，格式示例：
+     - `**Step X.Y completed** - <一句话：做了什么>`  
+     - 下一行起：该步做了什么（文件/改动要点）、验收结果（通过/失败）、若失败则写阻塞原因；若有下一步则写「下一步：Step X.Y+1」。
+   - 这样每步做完后的结论都留在 progress.md 末尾，便于轮换后接续与排查。
 
 ## 与 Test Command 的关系
 
@@ -53,4 +58,6 @@ description: 按实现计划执行当前步骤并验证该步验收。Ralph 流�
 
 - 当前步动作已做完。
 - 该步验收已通过并有记录。
-- 已提交并更新 progress；若还有下一步则明确下一步序号。
+- 已提交。
+- **已将该步结论总结追加到 .ralph/progress.md 末尾**（步骤 X.Y completed + 做了什么、验收结果、下一步或阻塞原因）。
+- 若还有下一步则明确下一步序号。

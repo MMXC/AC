@@ -122,6 +122,8 @@ Progress is tracked in THIS FILE, not in LLM context.
 When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
+**Convention**: After each implementation step (plan-execute-step), append a **step conclusion** to Session History: \`**Step X.Y completed** - <what was done>\`, then bullets (changes, acceptance result, next step or blocker). Before signaling complete, add a \`**Session N completed**\` block. Step conclusions + session block preserve continuity.
+
 ## Session History
 
 EOF

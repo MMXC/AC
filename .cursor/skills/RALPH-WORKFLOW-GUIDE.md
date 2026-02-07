@@ -227,7 +227,7 @@ git checkout -b task/TASK-129 main
 - 验证该步验收（调接口、跑测试、检查文件）
 - 通过：提交 `git commit -m 'ralph: TASK-129 步骤 1.1 完成'`
 - 未通过：在本步内迭代修复，直到验收通过
-- 更新 `.ralph/progress.md`
+- **将本步结论总结追加到 `.ralph/progress.md`**（约定）：**追加到 progress.md 文件末尾**（Session History 段落末尾），勿写入段落开头或 Summary 下；追加 `**Step X.Y completed** - <做了什么>`，以及该步改动要点、验收结果、下一步或阻塞原因
 
 **示例**（步骤 1.1）：
 ```bash

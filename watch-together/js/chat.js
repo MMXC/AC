@@ -376,6 +376,10 @@ function handleWebSocketMessage(message) {
                     });
                     setMembersFn(normalizedMembers);
                     console.log('成员列表已通过 setMembersList 全量同步，当前成员数:', normalizedMembers.length);
+                    // 派发事件供房主在 SYNC_STATE 后对尚无 PeerConnection 的成员补发 WebRTC Offer
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('syncStateMembersUpdated', { detail: {} }));
+                    }
                 } else if (typeof addMember === 'function' && typeof removeMember === 'function') {
                     // 兼容旧实现：使用 addMember / removeMember 增量同步
                     const currentMembers = typeof getMembersList === 'function' ? getMembersList() : [];
@@ -395,6 +399,9 @@ function handleWebSocketMessage(message) {
                     });
 
                     console.log('成员列表已通过 addMember/removeMember 同步，当前成员数:', message.data.members.length);
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('syncStateMembersUpdated', { detail: {} }));
+                    }
                 } else {
                     console.warn('setMembersList / addMember / removeMember 均不可用，无法同步成员列表');
                 }
@@ -412,6 +419,7 @@ function handleWebSocketMessage(message) {
             console.log('收到聊天消息:', message.data);
             addMessageToHistory(message.data);
             renderMessage(message.data);
+            console.log('[排查] 聊天消息已加入历史并触发渲染', message.data && message.data.id);
             break;
 
         case 'CONNECTED':
@@ -566,8 +574,12 @@ function addMessageToHistory(message) {
  * 渲染单条消息
  */
 function renderMessage(message) {
+    console.log('[排查] renderMessage 被调用', message && message.id);
     const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
+    if (!chatMessages) {
+        console.warn('[排查] chatMessages 元素不存在，无法渲染消息');
+        return;
+    }
 
     // 检查消息是否已渲染（避免重复渲染）
     if (message.id) {
@@ -613,6 +625,7 @@ function renderMessage(message) {
     messageEl.appendChild(contentEl);
 
     chatMessages.appendChild(messageEl);
+    console.log('[排查] 消息已挂载到 DOM', message.id);
 
     // 滚动到底部
     scrollChatToBottom();

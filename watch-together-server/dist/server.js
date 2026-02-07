@@ -27,12 +27,12 @@ function sendToUser(roomId, toUserId, message) {
     const ws = wsByRoomUser.get(key);
     if (ws && ws.readyState === 1) {
         ws.send(typeof message === "string" ? message : JSON.stringify(message));
+        return true;
     }
-    else {
-        console.warn(
-            `[WebRTC] 信令目标用户不在线: roomId=${roomId}, toUserId=${toUserId}`
-        );
-    }
+    console.warn(
+        `[WebRTC] 信令目标用户不在线: roomId=${roomId}, toUserId=${toUserId}`
+    );
+    return false;
 }
 /** 向房间内除 excludeUserId 外的所有连接广播消息（用于 MEMBER_JOINED / MEMBER_LEFT） */
 function broadcastToRoom(roomId, excludeUserId, message) {
@@ -126,12 +126,16 @@ wss.on("connection", (ws, req) => {
                     },
                 });
                 const connections = wsConnections.get(connRoomId);
+                let sentCount = 0;
                 if (connections) {
                     connections.forEach((sock) => {
-                        if (sock.readyState === 1)
+                        if (sock.readyState === 1) {
                             sock.send(payload);
+                            sentCount++;
+                        }
                     });
                 }
+                console.log("[排查] CHAT_MESSAGE 收到 roomId=%s userId=%s contentLen=%d 已广播到 %d 个连接", connRoomId, message.userId, String(message.content).trim().length, sentCount);
                 return;
             }
             if (WEBRTC_SIGNAL_TYPES.includes(type)) {
@@ -151,7 +155,9 @@ wss.on("connection", (ws, req) => {
                     }
                 }
                 if (toUserId != null && toUserId !== "") {
-                    sendToUser(msgRoomId, toUserId, message);
+                    const sent = sendToUser(msgRoomId, toUserId, message);
+                    if (sent)
+                        console.log("[排查] WEBRTC 信令已转发 type=%s toUserId=%s", type, toUserId);
                 }
                 else {
                     const connections = wsConnections.get(msgRoomId);
