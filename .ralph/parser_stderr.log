@@ -153,3 +153,5 @@ w: WritableIterable is closed
 [03:50:01] cursor-agent exited with code: 1
 w: Connection stalled
 [02:59:28] cursor-agent exited with code: 1
+w: [canceled] http/2 stream closed with error code CANCEL (0x8)
+[06:21:04] cursor-agent exited with code: 1

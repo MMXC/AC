@@ -24,6 +24,7 @@ test_command: ""
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 移动端无横向溢出** — 在 join.html 增加 @media (max-width: 480px) 样式：body/main-container 禁止横向滚动，主内容区与侧栏不撑出视口。Done when: 375px 视口下无横向滚动条、无内容溢出。
+2. **1.2 移动端布局：主内容区为主体** — 小屏时 main-container 为单列，browser-area 占据主要可视区域；侧栏改为抽屉或折叠。Done when: 375px 下主内容区（iframe/视频区）为视觉主体、可读可用。
+3. **1.3 顶部 overlay、右侧操作、聊天入口可见可点** — 顶部 header 保留并增加返回入口；小屏时侧栏以抽屉/面板形式由「右侧操作」按钮打开，聊天入口在抽屉内可点击。Done when: 375px 下依次可点击顶部返回、打开侧栏（右侧操作）、聊天输入/发送无错位与遮挡。
+4. **2.1 验收** — 人工或自动化在 375px 视口打开房间页，确认三项成功标准。Done when: 三项 AC 通过。

@@ -19,6 +19,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            overflow-x: hidden;
         }
 
         .header {
@@ -403,6 +404,83 @@
         .share-room-button:disabled {
             background: #555;
             cursor: not-allowed;
+        }
+
+        /* 375px / 移动端视口适配：无横向滚动，侧栏抽屉，主内容区为主体 */
+        @media (max-width: 480px) {
+            body { min-width: 0; }
+            .main-container {
+                flex: 1;
+                min-width: 0;
+                overflow: hidden;
+            }
+            .browser-area {
+                flex: 1;
+                min-width: 0;
+                min-height: 0;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                width: 280px;
+                max-width: 90vw;
+                height: 100%;
+                transform: translateX(100%);
+                transition: transform 0.2s ease;
+                z-index: 100;
+                box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 99;
+            }
+            .sidebar-overlay.visible {
+                display: block;
+            }
+            .header {
+                flex-wrap: wrap;
+                gap: 8px;
+                min-height: 48px;
+            }
+            .header h1 { font-size: 1em; }
+            .room-info { font-size: 0.8em; }
+            .sidebar-close-btn {
+                display: block;
+                margin: 12px 20px 0 auto;
+                padding: 8px 16px;
+                background: #3a3a3a;
+                border: 1px solid #404040;
+                border-radius: 6px;
+                color: #fff;
+                font-size: 0.9em;
+                cursor: pointer;
+            }
+            .sidebar-toggle-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 8px 14px;
+                background: #3a3a3a;
+                border: 1px solid #404040;
+                border-radius: 6px;
+                color: #fff;
+                font-size: 0.9em;
+                cursor: pointer;
+            }
+        }
+        @media (min-width: 481px) {
+            .sidebar-close-btn { display: none; }
+            .sidebar-toggle-btn { display: none; }
         }
     </style>
 </head>
