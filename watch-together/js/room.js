@@ -815,6 +815,25 @@ async function copyRoomLink() {
 }
 
 /**
+ * 右侧竖条快捷操作：短暂 toast 提示
+ */
+function showQuickToast(message) {
+    if (typeof document === 'undefined') return;
+    const existing = document.getElementById('quickActionsToast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'quickActionsToast';
+    toast.setAttribute('role', 'status');
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(45,45,45,0.95);border:1px solid #404040;border-radius:8px;color:#fff;font-size:0.9em;z-index:10001;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.2s;';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 200);
+    }, 2000);
+}
+
+/**
  * 更新房间 URL（仅房主可以调用）
  */
 async function updateRoomUrl(roomId, userId, url) {
@@ -1127,6 +1146,42 @@ async function init() {
                 // 如果复制失败，显示提示框
                 const roomLink = generateRoomLink(window.currentRoomId);
                 alert(`复制失败，请手动复制链接：\n${roomLink}`);
+            }
+        });
+    }
+
+    // 右侧竖条快捷操作：点赞、分享、成员入口
+    const quickActionLike = document.getElementById('quickActionLike');
+    if (quickActionLike) {
+        quickActionLike.addEventListener('click', () => {
+            showQuickToast('已点赞');
+        });
+    }
+    const quickActionShare = document.getElementById('quickActionShare');
+    if (quickActionShare) {
+        quickActionShare.addEventListener('click', async () => {
+            const success = await copyRoomLink();
+            if (success) {
+                showQuickToast('链接已复制');
+                quickActionShare.disabled = true;
+                setTimeout(() => { quickActionShare.disabled = false; }, 2000);
+            } else {
+                const roomLink = generateRoomLink(window.currentRoomId);
+                alert(`复制失败，请手动复制：\n${roomLink}`);
+            }
+        });
+    }
+    const quickActionMembers = document.getElementById('quickActionMembers');
+    if (quickActionMembers) {
+        quickActionMembers.addEventListener('click', () => {
+            const membersSection = document.getElementById('membersSection');
+            const target = membersSection || document.getElementById('membersList');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                if (membersSection) {
+                    membersSection.classList.add('quick-actions-highlight');
+                    setTimeout(() => membersSection.classList.remove('quick-actions-highlight'), 1500);
+                }
             }
         });
     }
