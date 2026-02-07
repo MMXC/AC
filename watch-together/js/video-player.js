@@ -51,6 +51,7 @@ function initVideoPlayer() {
  * @param {MediaStream} stream - 要播放的媒体流
  */
 function attachStream(stream) {
+    console.log('[排查] VideoPlayer.attachStream 被调用', stream && stream.id, stream && stream.getTracks && stream.getTracks().length);
     if (!stream || !(stream instanceof MediaStream)) {
         console.error('VideoPlayer: attachStream 需要传入有效的 MediaStream 对象');
         return;
@@ -108,6 +109,7 @@ function attachStream(stream) {
         
         // 设置 video 元素的 srcObject（这会自动开始播放）
         videoElement.srcObject = stream;
+        console.log('[排查] VideoPlayer 已设置 video.srcObject，轨道数:', stream.getTracks().length);
         
         // 播放视频
         videoElement.play().catch(error => {

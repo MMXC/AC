@@ -454,16 +454,18 @@ function handleWebSocketMessage(message) {
             break;
         case 'MEMBER_LEFT':
             // 成员离开，更新成员列表，并派发事件供房主关闭对应 WebRTC 连接
-            console.log('成员离开:', message.data);
+            console.log('[排查] MEMBER_LEFT 收到', message.data);
             if (message.data && message.data.userId) {
+                const leftUserId = message.data.userId;
                 if (typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('memberLeftRoom', {
-                        detail: { userId: message.data.userId },
+                        detail: { userId: leftUserId },
                     }));
                 }
-                if (typeof removeMember === 'function') {
-                    removeMember(message.data.userId);
-                    console.log('已从列表中移除成员:', message.data.userId);
+                const removeMemberFn = typeof removeMember === 'function' ? removeMember : (typeof window !== 'undefined' && window.removeMember);
+                if (removeMemberFn) {
+                    removeMemberFn(leftUserId);
+                    console.log('[排查] 已从成员列表移除', leftUserId);
                 } else {
                     console.warn('removeMember 函数不可用，无法更新成员列表');
                 }

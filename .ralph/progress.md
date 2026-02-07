@@ -390,3 +390,11 @@ This is how Ralph maintains continuity across iterations.
 - **后端**：sendToUser 改为按房间内 sock.userId === toUserId 向该用户**所有连接**发送（不再用 wsByRoomUser 单条）；broadcastToRoom 改为按 sock.userId === excludeUserId 跳过（不再用 wsByRoomUser 单条）。
 - **前端**：chat.js handleWebSocketMessage 开头增加 [排查] chat handleWebSocketMessage 被调用 type=...；CHAT_MESSAGE 分支入口增加 [排查] 进入 CHAT_MESSAGE 分支。
 - **预期**：成员端应能收到 WEBRTC_OFFER（发到该用户所有 WS，含 chat），消息广播仍到所有连接，chat WS 会收到并出现「收到聊天消息」等日志。
+
+### 2026-02-07 [member-webrtc-offer-by-screen-streaming-and-member-left]
+**Session completed** - 成员端 Offer 由 screen-streaming 处理以出画面；MEMBER_LEFT 列表更新与排查日志
+- **根因（成员端无画面）**：成员端 WEBRTC_OFFER 被 webrtc-manager 先处理，其 createPeerConnection 未设置 ontrack，远端流从未附加到 video，故无画面。screen-streaming 的 handleWebRTCOffer 有完整 ontrack + VideoPlayer 流程但未被调用。
+- **webrtc-manager.js**：成员端（!window.isHost）收到 WebRTC 消息时，若存在 window.handleWebRTCSignalingMessage 则委托其处理并 return，不再走本模块 handleOffer（无 ontrack）；房主端仍由本模块处理 ANSWER/ICE。
+- **video-player.js**：attachStream 入口增加 [排查] VideoPlayer.attachStream 被调用；设置 video.srcObject 后增加 [排查] VideoPlayer 已设置 video.srcObject，轨道数。
+- **chat.js MEMBER_LEFT**：增加 [排查] MEMBER_LEFT 收到；removeMember 使用 removeMember ?? window.removeMember 兜底；增加 [排查] 已从成员列表移除。
+- **预期**：成员端应出现「[排查] 成员端收到 WEBRTC_OFFER」→ Answer → 远端 track → VideoPlayer.attachStream → 画面；房主端收到 MEMBER_LEFT 后列表移除该用户，不再向该用户发信令。
