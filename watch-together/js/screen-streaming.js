@@ -1434,7 +1434,18 @@ if (typeof window !== 'undefined') {
         WEBRTC_END: 'WEBRTC_END',
         WEBRTC_ERROR: 'WEBRTC_ERROR'
     };
-    window.handleWebRTCSignalingMessage = function (message) {
+    window.handleWebRTCSignalingMessage = function (messageOrEvent) {
+        // 防御：若被误传 MessageEvent（type===“message”、有 data），先解析为 message 再处理
+        var message = messageOrEvent;
+        if (messageOrEvent && messageOrEvent.type === 'message' && messageOrEvent.data != null) {
+            try {
+                message = typeof messageOrEvent.data === 'string'
+                    ? JSON.parse(messageOrEvent.data)
+                    : (messageOrEvent.data && typeof messageOrEvent.data === 'object' ? messageOrEvent.data : null);
+            } catch (e) {
+                return;
+            }
+        }
         console.log('[排查] screen-streaming handleWebRTCSignalingMessage 被调用 type=', message && message.type);
         if (!message || !message.type) return;
 
