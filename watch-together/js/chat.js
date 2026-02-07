@@ -339,7 +339,7 @@ function connectWebSocket() {
  */
 function handleWebSocketMessage(message) {
     console.log('收到 WebSocket 消息:', message.type, message);
-    
+    console.log('[排查] chat handleWebSocketMessage 被调用 type=', message && message.type);
     switch (message.type) {
         case 'SYNC_STATE':
             // 同步状态，加载消息历史
@@ -416,6 +416,7 @@ function handleWebSocketMessage(message) {
 
         case 'CHAT_MESSAGE':
             // 收到新消息
+            console.log('[排查] 进入 CHAT_MESSAGE 分支');
             console.log('收到聊天消息:', message.data);
             addMessageToHistory(message.data);
             renderMessage(message.data);

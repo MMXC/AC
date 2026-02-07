@@ -22,26 +22,38 @@ const WEBRTC_SIGNAL_TYPES = [
     "WEBRTC_ERROR",
 ];
 const SCREEN_STREAM_BROADCAST_TYPES = ["SCREEN_STREAM_START", "SCREEN_STREAM_STOP"];
+/** 向该用户在房间内的所有连接发送（同一用户可能有 chat + sync 两个 WS，需都发到才能被处理信令的 chat WS 收到） */
 function sendToUser(roomId, toUserId, message) {
-    const key = `${roomId}:${toUserId}`;
-    const ws = wsByRoomUser.get(key);
-    if (ws && ws.readyState === 1) {
-        ws.send(typeof message === "string" ? message : JSON.stringify(message));
-        return true;
+    const connections = wsConnections.get(roomId);
+    if (!connections) {
+        console.warn(
+            `[WebRTC] 信令目标用户不在线: roomId=${roomId}, toUserId=${toUserId}`
+        );
+        return false;
     }
-    console.warn(
-        `[WebRTC] 信令目标用户不在线: roomId=${roomId}, toUserId=${toUserId}`
-    );
-    return false;
+    const payload = typeof message === "string" ? message : JSON.stringify(message);
+    let sentCount = 0;
+    connections.forEach((sock) => {
+        if (sock.userId === toUserId && sock.readyState === 1) {
+            sock.send(payload);
+            sentCount++;
+        }
+    });
+    if (sentCount === 0) {
+        console.warn(
+            `[WebRTC] 信令目标用户不在线: roomId=${roomId}, toUserId=${toUserId}`
+        );
+        return false;
+    }
+    return true;
 }
 /** 向房间内除 excludeUserId 外的所有连接广播消息（用于 MEMBER_JOINED / MEMBER_LEFT） */
 function broadcastToRoom(roomId, excludeUserId, message) {
     const connections = wsConnections.get(roomId);
     if (!connections) return;
     const payload = typeof message === "string" ? message : JSON.stringify(message);
-    const skipWs = excludeUserId ? wsByRoomUser.get(`${roomId}:${excludeUserId}`) : null;
     connections.forEach((sock) => {
-        if (sock === skipWs) return;
+        if (excludeUserId && sock.userId === excludeUserId) return;
         if (sock.readyState === 1) sock.send(payload);
     });
 }

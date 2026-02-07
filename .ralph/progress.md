@@ -383,3 +383,10 @@ This is how Ralph maintains continuity across iterations.
 - **前端 chat**：chat.js — CHAT_MESSAGE 分支末尾打印 [排查] 聊天消息已加入历史并触发渲染；renderMessage 开头打印 [排查] renderMessage 被调用，!chatMessages 时打印 [排查] chatMessages 元素不存在，appendChild 后打印 [排查] 消息已挂载到 DOM。
 - **前端 screen-streaming**：screen-streaming.js — handleWebRTCOffer 开头 [排查] 成员端收到 WEBRTC_OFFER；发送 Answer 后 [排查] 成员端已发送 WebRTC Answer；ontrack 内 [排查] 成员端收到 WebRTC 远端 track，附加流后 [排查] 成员端已附加远端流到 VideoPlayer/video。
 - **验收**：手动进房发消息、房主开共享，观察控制台与服务端 [排查] 日志，可据此判断消息与画面链路的断点。
+
+### 2026-02-07 [fix-sendToUser-multi-ws-per-user]
+**Session completed** - 修复同一用户多 WebSocket 导致信令/消息未达处理端
+- **根因**：同一用户有 chat 与 sync 两个 WebSocket（同 roomId+userId），服务端 wsByRoomUser 只存一个（后连覆盖），sendToUser 只发到该条连接；若存的是 sync WS，则 WEBRTC_OFFER 发到 sync，前端却在 chat WS 上处理信令，故成员端收不到 Offer。CHAT_MESSAGE 虽广播到所有连接，若用户看的是未收到的那条连接的控制台也会表现为「未出现收到聊天消息」。
+- **后端**：sendToUser 改为按房间内 sock.userId === toUserId 向该用户**所有连接**发送（不再用 wsByRoomUser 单条）；broadcastToRoom 改为按 sock.userId === excludeUserId 跳过（不再用 wsByRoomUser 单条）。
+- **前端**：chat.js handleWebSocketMessage 开头增加 [排查] chat handleWebSocketMessage 被调用 type=...；CHAT_MESSAGE 分支入口增加 [排查] 进入 CHAT_MESSAGE 分支。
+- **预期**：成员端应能收到 WEBRTC_OFFER（发到该用户所有 WS，含 chat），消息广播仍到所有连接，chat WS 会收到并出现「收到聊天消息」等日志。
