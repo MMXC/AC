@@ -245,6 +245,12 @@ function handleWebSocketMessage(event) {
         } else if (message.type === 'SCREEN_STREAM_ERROR') {
             // 画面流错误
             handleScreenStreamError(message.data);
+        } else if (typeof window !== 'undefined' && !window.isHost && message.type && String(message.type).startsWith('WEBRTC_')) {
+            // 成员端：在本模块自己的 message 监听里直接处理 WebRTC 信令（备用路径，确保 Offer 被处理）
+            if (typeof window.handleWebRTCSignalingMessage === 'function') {
+                console.log('[排查] screen-streaming 收到 WebRTC 消息 type=', message.type);
+                window.handleWebRTCSignalingMessage(message);
+            }
         }
     } catch (error) {
         console.error('处理 WebSocket 消息错误:', error);
@@ -1158,6 +1164,11 @@ async function handleWebRTCOffer(message) {
     if (!window.currentUserId || !window.currentRoomId) return;
     console.log('[排查] 成员端收到 WEBRTC_OFFER', message && message.fromUserId);
 
+    // 防重入：同一房主已存在 PC 则忽略重复 Offer（screen-streaming 与 webrtc-manager 可能各触发一次）
+    if (webrtcState.peerConnection && webrtcState.targetUserId === message.fromUserId) {
+        console.log('[排查] 成员端已存在对该房主的 PC，忽略重复 Offer');
+        return;
+    }
     // 只处理发给当前成员的 Offer，且当前成员不是房主
     if (message.toUserId !== window.currentUserId) return;
     if (window.isHost) return;
@@ -1424,6 +1435,7 @@ if (typeof window !== 'undefined') {
         WEBRTC_ERROR: 'WEBRTC_ERROR'
     };
     window.handleWebRTCSignalingMessage = function (message) {
+        console.log('[排查] screen-streaming handleWebRTCSignalingMessage 被调用 type=', message && message.type);
         if (!message || !message.type) return;
 
         switch (message.type) {

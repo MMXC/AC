@@ -52,8 +52,10 @@ function handleWebRTCSignalingMessage(event) {
         if (!message.type || !message.type.startsWith('WEBRTC_')) {
             return;
         }
+        console.log('[排查] webrtc-manager 收到 WebRTC type=', message.type, 'isHost=', typeof window !== 'undefined' ? window.isHost : 'n/a');
         // 成员端：由 screen-streaming 统一处理（含 ontrack 与 VideoPlayer），避免 webrtc-manager 无 ontrack 导致无画面
         if (typeof window !== 'undefined' && !window.isHost && typeof window.handleWebRTCSignalingMessage === 'function') {
+            console.log('[排查] webrtc-manager 成员端委托 screen-streaming 处理');
             window.handleWebRTCSignalingMessage(message);
             return;
         }
