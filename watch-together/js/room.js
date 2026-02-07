@@ -562,23 +562,14 @@ async function joinRoomWithNickname(roomId, userId, nickname) {
         if (nicknameDisplay) nicknameDisplay.style.display = 'block';
         if (currentNickname) currentNickname.textContent = serverNickname;
         
-        // 处理 URL 加载逻辑（根据角色区分）
+        // 主区域显示逻辑：房主与成员均只显示视频占位（不显示 iframe/URL）
         if (isHost) {
-            // 房主端逻辑
-            showShareRoomButton(); // 显示分享按钮
-            if (roomCurrentUrl) {
-                // 房主首次进入房间时，真实 iframe 自动加载 currentUrl，且有"修改 URL"按钮
-                console.log('房主进入房间，房间已有 URL，自动加载:', roomCurrentUrl);
-                loadUrlIntoIframe(roomCurrentUrl);
-                hideUrlInputContainer();
-                showUrlControlButton(); // 显示"修改 URL"按钮
-            } else {
-                // 房间没有 URL，显示 URL 输入框
-                console.log('房主进入房间，房间没有 URL，显示 URL 输入框');
-                showUrlInputContainer();
-                hideUrlControlButton();
-                hideVideoContainer();
-            }
+            showShareRoomButton();
+            hideUrlInputContainer();
+            hideUrlControlButton();
+            hideBrowserFrame();
+            showVideoContainer();
+            updateVideoPlaceholder('等待画面流', '点击「开始共享」后，画面将在这里显示');
         } else {
             // 普通成员端逻辑：不显示 URL 输入框，只显示画面容器占位
             console.log('普通成员进入房间，显示画面容器占位');
@@ -1058,75 +1049,7 @@ async function init() {
         });
     }
 
-    // URL 输入框相关事件（仅房主可见）
-    const urlInput = document.getElementById('urlInput');
-    const loadUrlButton = document.getElementById('loadUrlButton');
-    
-    const handleLoadUrl = async () => {
-        if (!window.currentUserId || !window.currentRoomId) {
-            alert('请先加入房间');
-            return;
-        }
-        
-        // 只有房主才能加载 URL
-        if (!window.isHost) {
-            alert('只有房主可以设置网页地址');
-            return;
-        }
-        
-        const url = urlInput?.value.trim();
-        if (!url) {
-            alert('请输入网页地址');
-            return;
-        }
-        
-        if (!isValidUrl(url)) {
-            alert('无效的 URL。请提供有效的 http:// 或 https:// 网址。');
-            return;
-        }
-        
-        if (loadUrlButton) {
-            loadUrlButton.disabled = true;
-            loadUrlButton.textContent = '加载中...';
-        }
-        
-        const result = await updateRoomUrl(window.currentRoomId, window.currentUserId, url);
-        
-        if (loadUrlButton) {
-            loadUrlButton.disabled = false;
-            loadUrlButton.textContent = '加载网页';
-        }
-        
-        if (!result.success) {
-            alert('加载失败：' + (result.error || '请稍后重试'));
-        }
-    };
-    
-    if (loadUrlButton) {
-        loadUrlButton.addEventListener('click', handleLoadUrl);
-    }
-    
-    if (urlInput) {
-        urlInput.addEventListener('keydown', async (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                await handleLoadUrl();
-            }
-        });
-    }
-
-    // "修改 URL"按钮事件（仅房主可见）
-    const changeUrlButton = document.getElementById('changeUrlButton');
-    if (changeUrlButton) {
-        changeUrlButton.addEventListener('click', () => {
-            // 显示 URL 输入框，并预填当前 URL
-            if (urlInput && window.roomCurrentUrl) {
-                urlInput.value = window.roomCurrentUrl;
-            }
-            showUrlInputContainer();
-            hideUrlControlButton();
-        });
-    }
+    // URL 输入/修改按钮已移除：房主端与成员端统一只显示视频占位
 
     // 分享房间链接按钮事件（仅房主可见）
     const shareRoomButton = document.getElementById('shareRoomButton');

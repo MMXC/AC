@@ -24,9 +24,9 @@ function isValidHttpUrl(urlString) {
 }
 
 /**
- * 创建房间
+ * 创建房间（不再传 URL，房间仅用于屏幕共享）
  */
-async function createRoom(roomName, hostNickname, url) {
+async function createRoom(roomName, hostNickname) {
     try {
         // 构建请求体，只包含非空字段
         const requestBody = {};
@@ -36,12 +36,7 @@ async function createRoom(roomName, hostNickname, url) {
         if (hostNickname && hostNickname.trim()) {
             requestBody.hostNickname = hostNickname.trim();
         }
-        // URL 为必填字段，必须是合法的 http/https 地址
-        if (!url || !url.trim() || !isValidHttpUrl(url.trim())) {
-            throw new Error('请输入有效的 http:// 或 https:// 链接');
-        }
-        requestBody.url = url.trim();
-        
+
         const response = await fetch(`${API_BASE}/api/v1/rooms`, {
             method: 'POST',
             headers: {
@@ -127,7 +122,6 @@ if (typeof document !== 'undefined') {
         const roomNameDisplayEl = document.getElementById('roomNameDisplay');
         const roomLinkEl = document.getElementById('roomLink');
         const copyBtn = document.getElementById('copyBtn');
-        const targetUrlInput = document.getElementById('targetUrl');
 
         // 表单提交处理
         form.addEventListener('submit', async (e) => {
@@ -139,26 +133,17 @@ if (typeof document !== 'undefined') {
 
             const roomName = document.getElementById('roomName').value.trim();
             const hostNickname = document.getElementById('hostNickname').value.trim();
-            const targetUrl = targetUrlInput.value.trim();
-
-            // 前端校验 URL 必填且为合法 http/https
-            if (!targetUrl || !isValidHttpUrl(targetUrl)) {
-                error.textContent = '请输入有效的 http:// 或 https:// 链接';
-                error.classList.add('show');
-                return;
-            }
 
             loading.classList.add('show');
             createBtn.disabled = true;
 
             try {
-                // 创建房间
-                const room = await createRoom(roomName, hostNickname, targetUrl);
+                // 创建房间（不再传 URL）
+                const room = await createRoom(roomName, hostNickname);
 
                 // 从响应中获取必要信息（兼容旧字段）
                 const roomId = room.roomId || room.id;
                 const hostUserId = room.hostUserId || room.hostId;
-                const currentUrl = room.currentUrl || targetUrl;
 
                 // 生成房间链接（用于展示和回退）
                 const roomLink = generateRoomLink(roomId);
@@ -170,9 +155,6 @@ if (typeof document !== 'undefined') {
                         if (hostUserId) {
                             window.localStorage.setItem('watch-together.userId', hostUserId);
                             window.localStorage.setItem('watch-together.isHost', 'true');
-                        }
-                        if (currentUrl) {
-                            window.localStorage.setItem('watch-together.currentUrl', currentUrl);
                         }
                         // 保存房主昵称，供跳转后自动读取
                         if (hostNickname && hostNickname.trim()) {

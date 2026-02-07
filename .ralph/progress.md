@@ -398,3 +398,13 @@ This is how Ralph maintains continuity across iterations.
 - **video-player.js**：attachStream 入口增加 [排查] VideoPlayer.attachStream 被调用；设置 video.srcObject 后增加 [排查] VideoPlayer 已设置 video.srcObject，轨道数。
 - **chat.js MEMBER_LEFT**：增加 [排查] MEMBER_LEFT 收到；removeMember 使用 removeMember ?? window.removeMember 兜底；增加 [排查] 已从成员列表移除。
 - **预期**：成员端应出现「[排查] 成员端收到 WEBRTC_OFFER」→ Answer → 远端 track → VideoPlayer.attachStream → 画面；房主端收到 MEMBER_LEFT 后列表移除该用户，不再向该用户发信令。
+
+### 2026-02-07 [host-remove-iframe-url-create-room-no-url]
+**Session completed** - 房主端去掉 iframe/URL，统一为视频占位；创建房间去掉 URL 输入（openspec-backlog-flow 步骤 3→4）
+- **任务**：房主端不加载 URL 网页、不显示 URL 输入与「修改 URL」；创建房间页不再包含「目标网址 URL」；服务端创建房间 API 将 url 改为可选。
+- **步骤 1**：index.html 移除「目标网址 URL」表单项；create-room.js 不再传/校验 url，createRoom(roomName, hostNickname)，本地存储不再存 currentUrl。
+- **步骤 2**：watch-together-server/dist/app.js POST /api/v1/rooms 中 url 改为可选，无 url 或无效时 currentUrl 为 null，返回 data.currentUrl 可为 null。
+- **步骤 3**：join.html 移除 urlInputContainer、urlControlContainer；保留 iframe 节点但 display:none 且不再设置 src；video-container 占位文案改为「房主开始共享后，画面将在这里显示」。
+- **步骤 4**：room.js 房主进入房间后与成员端一致：hideUrlInputContainer、hideUrlControlButton、hideBrowserFrame、showVideoContainer，updateVideoPlaceholder('等待画面流','点击「开始共享」后，画面将在这里显示')。
+- **步骤 5**：room.js 移除 URL 输入框/加载网页/修改 URL 按钮的事件绑定（urlInput、loadUrlButton、changeUrlButton）。
+- **验收**：创建房间无 URL 输入→进房后房主与成员均只见视频占位→房主开始共享后画面在视频区域显示。

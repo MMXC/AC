@@ -278,15 +278,13 @@ app.post('/api/v1/rooms/:roomId/leave', async (req, res) => {
 app.post('/api/v1/rooms', async (req, res) => {
     try {
         const { name, hostNickname, url } = req.body || {};
-        if (!url || typeof url !== 'string' || !url.trim() || !isValidHttpUrl(url.trim())) {
-            return res.status(400).json({
-                success: false,
-                error: { code: 'INVALID_URL', message: 'url is required and must be a valid http or https URL' },
-            });
-        }
         const roomName = (name != null && String(name).trim()) ? String(name).trim() : '未命名房间';
         const hostNick = (hostNickname != null && String(hostNickname).trim()) ? String(hostNickname).trim() : null;
-        const currentUrl = url.trim();
+        // url 可选：有且合法则保存，否则 currentUrl 为 null
+        let currentUrl = null;
+        if (url != null && typeof url === 'string' && url.trim() && isValidHttpUrl(url.trim())) {
+            currentUrl = url.trim();
+        }
         const room = await prisma.room.create({
             data: {
                 name: roomName,
@@ -311,7 +309,7 @@ app.post('/api/v1/rooms', async (req, res) => {
                 roomId: room.id,
                 hostId: hostMember.id,
                 hostUserId: hostMember.userId,
-                currentUrl,
+                currentUrl: room.currentUrl ?? null,
                 name: room.name,
                 inviteLink,
                 members,

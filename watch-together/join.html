@@ -529,7 +529,7 @@
                     </button>
                 </div>
             </div>
-            <div class="sidebar-section" id="membersSection" style="flex: 0 0 auto; max-height: 200px; overflow-y: auto;">
+            <div class="sidebar-section" style="flex: 0 0 auto; max-height: 200px; overflow-y: auto;">
                 <h2>成员列表</h2>
                 <ul class="members-list" id="membersList">
                     <li class="members-empty">暂无成员</li>
@@ -558,47 +558,21 @@
         </div>
         <div class="browser-area">
             <div class="iframe-container">
-                <div class="loading" id="loading">正在加载网页...</div>
+                <div class="loading" id="loading" style="display: none;">正在加载...</div>
                 <div class="error" id="error" style="display: none;">
                     <h3>加载失败</h3>
                     <p id="errorMessage"></p>
                 </div>
-                <div id="urlInputContainer" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 600px; padding: 30px; background: #2d2d2d; border-radius: 8px; border: 1px solid #404040;">
-                    <h3 style="margin-bottom: 15px; color: #fff; font-size: 1.2em;">设置要观看的网页</h3>
-                    <p style="color: #aaa; font-size: 0.9em; margin-bottom: 20px;">作为房主，请输入要分享的网页地址</p>
-                    <input 
-                        type="text" 
-                        id="urlInput" 
-                        placeholder="https://www.example.com" 
-                        style="width: 100%; padding: 12px; background: #3a3a3a; border: 1px solid #404040; border-radius: 6px; color: #fff; font-size: 1em; margin-bottom: 15px; font-family: inherit;"
-                    />
-                    <div style="display: flex; gap: 10px;">
-                        <button 
-                            id="loadUrlButton" 
-                            style="flex: 1; padding: 12px; background: #4a9eff; border: none; border-radius: 6px; color: #fff; font-size: 1em; font-weight: 600; cursor: pointer; transition: background 0.2s;"
-                        >
-                            加载网页
-                        </button>
-                    </div>
-                </div>
-                <div class="url-control-container" id="urlControlContainer">
-                    <button class="url-control-button" id="changeUrlButton">修改 URL</button>
-                </div>
-                <iframe id="browserFrame" style="display: none;"></iframe>
+                <!-- iframe 保留节点供 sync/operation-source 引用，不再加载 URL，始终隐藏 -->
+                <iframe id="browserFrame" style="display: none !important;" title="已废弃"></iframe>
                 <div class="video-container" id="videoContainer">
                     <div class="video-status" id="videoStatusLabel" style="display: none;">正在播放房主画面</div>
                     <video id="videoStream" style="display: none;"></video>
                     <canvas id="canvasStream" style="display: none;"></canvas>
                     <div class="video-placeholder" id="videoPlaceholder">
                         <h3>等待画面流</h3>
-                        <p>房主设置网页后，画面将在这里显示</p>
+                        <p>房主开始共享后，画面将在这里显示</p>
                     </div>
-                </div>
-                <!-- 右侧竖条快捷操作：点赞、分享、成员入口 -->
-                <div class="room-quick-actions" id="roomQuickActions" data-right-sidebar="true">
-                    <button type="button" class="quick-action-btn" id="quickActionLike" title="点赞" aria-label="点赞">👍</button>
-                    <button type="button" class="quick-action-btn" id="quickActionShare" title="分享房间链接" aria-label="分享房间链接">🔗</button>
-                    <button type="button" class="quick-action-btn" id="quickActionMembers" title="成员列表" aria-label="打开成员列表">👥</button>
                 </div>
             </div>
         </div>
