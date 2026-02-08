@@ -16,12 +16,13 @@ test_command: "npm run build"
 
 ## Success Criteria
 
-- [ ] #1 新前端可本地启动且能访问占位首页或现有入口
-- [ ] #2 构建无报错；若迁移，与后端/WS 的对接方式已文档化或可连通
-- [ ] #3 目录结构符合任务 1 的架构约定
+- [x] #1 新前端可本地启动且能访问占位首页或现有入口
+- [x] #2 构建无报错；若迁移，与后端/WS 的对接方式已文档化或可连通
+- [x] #3 目录结构符合任务 1 的架构约定
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 根目录与 watch-together 的 build 脚本** — done when: 在仓库根目录执行 `npm run build` 无报错且退出码 0（当前栈为多页面 HTML + 模块化 JS，无 bundler，build 可为静态校验或通过即可）。
+2. **1.2 本地启动与占位首页** — done when: 前端可本地启动（如 `docker compose up watch-together` 或 watch-together 内 `npm start`），访问入口（如 `/` 或 `index.html`）可打开占位首页或现有创建房间页。
+3. **1.3 与后端/WS 对接文档化** — done when: 与 watch-together-server/WS 的对接方式在 README 或 docs 中已说明（API 基址、WS 地址、环境变量或现有 architecture-decisions 引用）。
+4. **2.1 目录结构符合架构约定** — done when: watch-together 目录与 `watch-together/docs/architecture-decisions.md` 第 4 节草图一致（index.html、join.html、js/、docs/ 等），必要时补充缺失项。

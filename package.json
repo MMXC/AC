@@ -1,1 +1,9 @@
-{}
+{
+  "name": "ac",
+  "private": true,
+  "description": "Watch Together monorepo",
+  "scripts": {
+    "build": "npm run build --prefix watch-together",
+    "start": "npm start --prefix watch-together"
+  }
+}

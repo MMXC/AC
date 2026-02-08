@@ -16,7 +16,17 @@
 npm install
 ```
 
-### 启动 Mock 服务器
+### 构建（静态校验，无 bundler）
+
+```bash
+npm run build
+```
+
+用于 CI/验收：检查入口与架构约定所需文件存在，通过则退出 0。
+
+### 本地启动
+
+**方式一：Mock 服务器（仅前端）**
 
 ```bash
 npm start
@@ -24,7 +34,21 @@ npm start
 npm run mock
 ```
 
-服务器将运行在 `http://localhost:3001`
+服务器将运行在 `http://localhost:3001`，访问 `/` 为创建房间页（占位首页）。
+
+**方式二：与真实后端一起运行（推荐）**
+
+在仓库根目录：
+
+```bash
+docker compose up -d watch-together watch-together-server
+```
+
+- 前端：`http://localhost:3001`（创建房间、加入房间、房间内页）
+- 后端 API：`http://localhost:3000`
+- WebSocket：`ws://localhost:3000`（由环境变量 `WS_BASE_URL` / `API_BASE_URL` 注入，见 `docker-compose.yml`）
+
+与后端/WS 的对接约定（REST + 双 WebSocket、数据获取策略）见 **`docs/architecture-decisions.md`**。
 
 ### 运行测试
 
