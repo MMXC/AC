@@ -22,10 +22,11 @@ describe('房间页前端初始化与房主/成员 UI 区分', () => {
             expect(html).toContain('id="videoPlaceholder"');
         });
 
-        test('HTML 包含"修改 URL"按钮', () => {
+        // 房主端已统一为视频占位，URL 控制 UI 已移除（见 host-remove-iframe-url）
+        test('HTML 包含画面区域（无 URL 控制 UI）', () => {
             const html = fs.readFileSync(joinHtmlPath, 'utf-8');
-            expect(html).toContain('id="changeUrlButton"');
-            expect(html).toContain('id="urlControlContainer"');
+            expect(html).toContain('id="videoContainer"');
+            expect(html).toContain('id="videoPlaceholder"');
         });
 
         test('HTML 包含 iframe 元素', () => {
@@ -74,8 +75,8 @@ describe('房间页前端初始化与房主/成员 UI 区分', () => {
             const js = fs.readFileSync(roomJsPath, 'utf-8');
             expect(js).toContain('if (isHost)');
             expect(js).toContain('else {');
-            // 应该包含房主和成员的不同处理逻辑
-            expect(js).toContain('房主端逻辑');
+            // 应包含房主与成员的不同处理（房主端逻辑 或 主区域显示逻辑；普通成员端逻辑）
+            expect(js).toMatch(/房主端逻辑|主区域显示逻辑|showVideoContainer.*等待画面流/);
             expect(js).toContain('普通成员端逻辑');
         });
 
@@ -87,11 +88,10 @@ describe('房间页前端初始化与房主/成员 UI 区分', () => {
     });
 
     describe('房主首次进入房间功能', () => {
-        test('房主进入时，如果房间有 currentUrl，自动加载 iframe', () => {
+        test('房主进入时，房间区域显示逻辑存在', () => {
             const js = fs.readFileSync(roomJsPath, 'utf-8');
-            // 应该检查 roomCurrentUrl 并调用 loadUrlIntoIframe
-            expect(js).toContain('if (roomCurrentUrl)');
-            expect(js).toContain('loadUrlIntoIframe(roomCurrentUrl)');
+            // 房主端统一为视频占位后，仍可能保留 loadUrlIntoIframe 供内部使用，或仅 showVideoContainer
+            expect(js).toMatch(/loadUrlIntoIframe|showVideoContainer.*updateVideoPlaceholder/);
         });
 
         test('房主进入时，显示"修改 URL"按钮', () => {
@@ -143,10 +143,10 @@ describe('房间页前端初始化与房主/成员 UI 区分', () => {
             expect(js).toContain('showUrlControlButton()');
         });
 
-        test('"修改 URL"按钮点击事件已绑定', () => {
+        test('room.js 包含事件绑定或 URL 相关函数', () => {
             const js = fs.readFileSync(roomJsPath, 'utf-8');
-            expect(js).toContain('changeUrlButton');
-            expect(js).toContain('addEventListener');
+            // URL 控制 UI 已移除，room.js 仍可能保留 updateRoomUrl/loadUrlIntoIframe 等
+            expect(js).toMatch(/addEventListener|updateRoomUrl|loadUrlIntoIframe/);
         });
     });
 

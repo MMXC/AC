@@ -17,6 +17,7 @@ const required = [
   "js/create-room.js",
   "docs/architecture-decisions.md",
   "docs/component-tree-and-data-flow.md",
+  "docs/performance-and-loading.md",
 ];
 
 let failed = false;
