@@ -1,9 +1,10 @@
 ---
 id: TASK-144
 title: UI 重制 - 房间页（观看与协作）
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-08 08:26'
+updated_date: '2026-02-08 10:07'
 labels: []
 dependencies: []
 ---
