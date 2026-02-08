@@ -1,9 +1,10 @@
 ---
 id: TASK-141
 title: 按组件组合拆分页面与数据获取
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-08 08:25'
+updated_date: '2026-02-08 09:05'
 labels: []
 dependencies: []
 ---
