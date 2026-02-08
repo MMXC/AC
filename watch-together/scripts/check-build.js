@@ -9,6 +9,8 @@ const path = require("path");
 const required = [
   "index.html",
   "join.html",
+  "css/design-tokens.css",
+  "css/layout.css",
   "js/room.js",
   "js/chat.js",
   "js/sync.js",

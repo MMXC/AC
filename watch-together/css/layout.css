@@ -1,0 +1,113 @@
+/**
+ * Global layout: Shell, Nav, Content
+ * design-system/MASTER.md — Layout & Responsive
+ * Breakpoints: 375px, 768px, 1024px, 1440px
+ */
+
+/* Shell: full-page layout */
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-background, #F8FAFC);
+  color: var(--color-text, #1E293B);
+  overflow-x: hidden;
+}
+
+/* Nav (header bar) */
+.shell__nav {
+  flex-shrink: 0;
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border, #E2E8F0);
+  padding: var(--space-md, 16px) var(--space-lg, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: var(--touch-target-min, 44px);
+}
+
+.shell__nav .shell__nav-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.shell__nav .shell__nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Content area: fills remaining space */
+.shell__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Main content can be a row (sidebar + area) on larger screens */
+.shell__main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Sidebar: fixed width on desktop, full width on small */
+.shell__sidebar {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 280px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shell__area {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: var(--space-md);
+}
+
+/* Responsive: stack sidebar above content on narrow */
+@media (max-width: 767px) {
+  .shell__main {
+    flex-direction: column;
+  }
+
+  .shell__sidebar {
+    max-width: none;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    max-height: 40vh;
+  }
+}
+
+@media (min-width: 768px) {
+  .shell__sidebar {
+    width: 280px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shell__area {
+    padding: var(--space-lg);
+  }
+}
+
+@media (min-width: 1440px) {
+  .shell__content {
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
