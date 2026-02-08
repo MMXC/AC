@@ -1,9 +1,10 @@
 ---
 id: TASK-142
 title: 包体与运行时性能优化
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-08 08:25'
+updated_date: '2026-02-08 09:13'
 labels: []
 dependencies: []
 ---
