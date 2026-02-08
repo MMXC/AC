@@ -49,7 +49,7 @@ Options:
   5. 继续下一个任务
 
 Docker 测试说明（test_command 含 docker compose 时）：
-  - 运行测试前会执行 docker compose build 再 up，默认无缓存构建，确保容器内为最新代码。
+  - 运行测试前会执行 docker compose build --no-cache 再 up，默认无缓存构建，确保容器内为最新代码。
   - 需加速（使用缓存）可设置：DOCKER_COMPOSE_USE_CACHE=1
   - 仅跳过 build（沿用已有镜像）可设置：DOCKER_COMPOSE_SKIP_BUILD=1
 

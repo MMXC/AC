@@ -1,9 +1,10 @@
 ---
 id: TASK-137
 title: 技术选型与架构约定
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-08 08:23'
+updated_date: '2026-02-08 08:31'
 labels: []
 dependencies: []
 ---
