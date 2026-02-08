@@ -51,9 +51,9 @@
 - **集成方式**：
   - **设计阶段**：选型颜色、字体、布局、动效时，从 ui-ux-pro-max 的 palettes、font pairings、layout 等建议中选取并文档化（如 `INDEX_DESIGN_NOTES.md` 已记录首页字体与配色）。
   - **实现阶段**：通过 CSS 变量（如 `--color-primary`、`--font-heading`）集中管理主题与间距，便于与 ui-ux-pro-max 的「设计系统」产出对齐；新组件需满足其 CRITICAL 类规则（如无障碍 contrast、focus、aria-label）。
-  - **持久化**：设计系统产出（色板、字级、间距 scale、z-index scale）持久化在仓库内，例如：
-    - 现有：`watch-together/INDEX_DESIGN_NOTES.md`、页面内 CSS 变量；
-    - 后续可增加：`watch-together/docs/design-tokens.md` 或与「使用-ui-ux-pro-max-生成并持久化设计系统」backlog 任务产出的文件统一。
+  - **持久化**：设计系统产出（色板、字级、间距 scale、z-index scale）持久化在仓库内：
+    - **设计系统主文件**：`design-system/MASTER.md`（由 task-138 / ui-ux-pro-max 生成），含 Pattern、Style、Colors、Typography、Effects、Anti-patterns；页面级覆盖：`design-system/watch-together/pages/<page>.md`。
+    - 现有：`watch-together/INDEX_DESIGN_NOTES.md`、页面内 CSS 变量；后续可增加 `watch-together/docs/design-tokens.md` 与 MASTER 对齐。
 - **评审**：UI/UX 相关任务完成时，可对照 ui-ux-pro-max 的 Rule Categories（Accessibility、Touch & Interaction、Layout & Responsive 等）做自检或评审清单。
 
 ### 3.2 与 backlog 的对应

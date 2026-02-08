@@ -1,28 +1,28 @@
 ---
-backlog_id: backlog-137
-task: 技术选型与架构约定
-test_command: "手动：评审架构文档与目录草图"
+backlog_id: backlog-138
+task: 使用 ui-ux-pro-max 生成并持久化设计系统
+test_command: "手动：检查 design-system/MASTER.md 存在且含 Pattern/Style/Colors/Typography/Effects/Anti-patterns"
 ---
 
-# Task: 技术选型与架构约定
+# Task: 使用 ui-ux-pro-max 生成并持久化设计系统
 
 ## Description
 
-确定 watch-together 前端重构的架构：是否迁移到 React/Next.js，或保留当前栈下采用组件化/模块化目录与构建；约定目录结构、路由与“页面 = 布局 + 可组合组件”的拆分方式；文档化选型理由与与 ui-ux-pro-max、vercel-react-best-practices 的对应关系。
+使用 ui-ux-pro-max 技能为 watch-together 生成完整设计系统（产品类型：实时协作/一起看；风格：现代、可访问、可深色）。执行 `--design-system --persist` 并写入 `design-system/MASTER.md`；如需页面级差异可生成 `design-system/pages/<page>.md`。在 newneed 或设计文档中引用设计系统路径。
 
-**Test Command**: `手动：评审架构文档与目录草图`
+**Test Command**: `手动：检查 design-system/MASTER.md 存在且含 Pattern/Style/Colors/Typography/Effects/Anti-patterns`
 
-**Test Command**: `手动：评审架构文档与目录草图`
+**Test Command**: `手动：检查 design-system/MASTER.md 存在且含 Pattern/Style/Colors/Typography/Effects/Anti-patterns`
 
 ## Success Criteria
 
-- [x] #1 架构决策（React/Next 迁移与否）已记录
-- [x] #2 组件化/可组合页面与数据获取策略已说明（可引用 vercel-react-best-practices）
-- [x] #3 与 ui-ux-pro-max 设计系统的集成方式已约定
+- [x] #1 design-system/MASTER.md 已生成且内容完整
+- [x] #2 设计系统在 newneed 或项目文档中有引用说明
+- [x] #3 与当前 watch-together 产品类型与风格一致
 
 ## Implementation Steps
 
-1. **1.1 架构决策文档** — done when: `watch-together/docs/architecture-decisions.md` 存在且包含「是否迁移 React/Next.js」的决策与理由。
-2. **1.2 组件化与数据获取策略** — done when: 同一文档中说明组件化/可组合页面与数据获取策略，并引用 vercel-react-best-practices（或当前栈下的类比实践）。
-3. **1.3 ui-ux-pro-max 集成约定** — done when: 文档中约定与 ui-ux-pro-max 设计系统的集成方式（设计规则、主题、无障碍等）。
-4. **2.1 目录结构草图** — done when: 文档或单独草图文件中给出 watch-together 前端目录结构（页面/布局/组件/资源划分）。
+1. **1.1 生成设计系统** — done when: 运行 ui-ux-pro-max `--design-system --persist` 生成 design-system 目录与 MASTER.md
+2. **1.2 统一 MASTER 路径** — done when: `design-system/MASTER.md` 存在且含 Pattern/Style/Colors/Typography/Effects/Anti-patterns
+3. **2.1 引用设计系统** — done when: newneed 或 watch-together 设计文档中写明 design-system/MASTER.md 路径
+4. **2.2 风格一致性** — done when: 设计系统产品类型为实时协作/一起看，风格含现代、可访问、可深色

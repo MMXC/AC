@@ -22,7 +22,7 @@
 
 - **组件式**: 以 React 组件为页面单元，按**组合优于继承**（vercel-react-best-practices + 常见规范）；页面由布局组件 + 功能组件组合而成，数据获取按“组件边界”并行（避免 waterfall）。
 - **插件式 / 按需加载**: 使用 **next/dynamic** 或等价 dynamic import 加载非首屏区块；第三方或非关键脚本在 hydration 后加载；路由或功能模块可拆为独立 chunk，实现“功能即插件”的加载策略。
-- **设计系统驱动**: 使用 **ui-ux-pro-max** 生成并持久化设计系统（`--design-system --persist`），页面与组件均引用同一套 MASTER + 页面级 override，保证一致性与可维护性。
+- **设计系统驱动**: 使用 **ui-ux-pro-max** 生成并持久化设计系统（`--design-system --persist`），页面与组件均引用同一套 MASTER + 页面级 override，保证一致性与可维护性。设计系统主文件：**`design-system/MASTER.md`**（页面级覆盖：`design-system/watch-together/pages/<page>.md`）。
 
 ---
 
