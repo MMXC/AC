@@ -2106,3 +2106,21 @@ Test Result: PASSED
 Exit Code: 0
 ═══════════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════════
+Test Run: 2026-02-08 16:51:55
+Command: npm run build
+═══════════════════════════════════════════════════════════════════
+
+> build
+> npm run build --prefix watch-together
+
+
+> watch-together@0.1.0 build
+> node scripts/check-build.js
+
+Build check OK: required entries present.
+
+Test Result: PASSED
+Exit Code: 0
+═══════════════════════════════════════════════════════════════════
+
