@@ -16,12 +16,13 @@ test_command: "手动：评审架构文档与目录草图"
 
 ## Success Criteria
 
-- [ ] #1 架构决策（React/Next 迁移与否）已记录
-- [ ] #2 组件化/可组合页面与数据获取策略已说明（可引用 vercel-react-best-practices）
-- [ ] #3 与 ui-ux-pro-max 设计系统的集成方式已约定
+- [x] #1 架构决策（React/Next 迁移与否）已记录
+- [x] #2 组件化/可组合页面与数据获取策略已说明（可引用 vercel-react-best-practices）
+- [x] #3 与 ui-ux-pro-max 设计系统的集成方式已约定
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 架构决策文档** — done when: `watch-together/docs/architecture-decisions.md` 存在且包含「是否迁移 React/Next.js」的决策与理由。
+2. **1.2 组件化与数据获取策略** — done when: 同一文档中说明组件化/可组合页面与数据获取策略，并引用 vercel-react-best-practices（或当前栈下的类比实践）。
+3. **1.3 ui-ux-pro-max 集成约定** — done when: 文档中约定与 ui-ux-pro-max 设计系统的集成方式（设计规则、主题、无障碍等）。
+4. **2.1 目录结构草图** — done when: 文档或单独草图文件中给出 watch-together 前端目录结构（页面/布局/组件/资源划分）。

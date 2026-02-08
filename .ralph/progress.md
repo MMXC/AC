@@ -5,7 +5,7 @@
 ## Summary
 
 - Iterations completed: 21
-- Current status: host-sync-state-send-offer-to-new-members 步骤 4 已完成，待手动验收（步骤 5）
+- Current status: backlog-137 技术选型与架构约定已完成，待手动评审架构文档与目录草图
 
 ## How This Works
 
@@ -14,6 +14,12 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-08 [Ralph Iteration 1 - backlog-137]
+**Session 1 completed** - 技术选型与架构约定（backlog-137）
+- **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 架构决策文档、1.2 组件化与数据获取、1.3 ui-ux-pro-max 集成、2.1 目录草图）及每步验收。
+- **Step 1.2–1.3、2.1 完成**：创建 `watch-together/docs/architecture-decisions.md`，包含：（1）架构决策：保留当前栈（多页面 HTML + 模块化 JS）、不迁移 React/Next，并记录理由与后续选项；（2）组件化/可组合页面与数据获取策略（页面=布局+可组合模块，REST+WebSocket），并引用 vercel-react-best-practices 的类比实践；（3）与 ui-ux-pro-max 设计系统的集成方式（规则引用、CSS 变量/设计 token、与 task-138/140 的对应）；（4）watch-together 目录结构草图与路由约定。
+- 三项成功标准已勾选；验收为「手动：评审架构文档与目录草图」，无自动化测试命令。
+
 ### 2026-02-03 [Ralph Iteration 4]
 **Session 4 completed** - TASK-131 自动化测试稳定通过（场景 2 仅在服务端异常时才视为失败）
 - 细化约定：确认当前任务聚焦 backlog-131（房主端成员列表实时更新），以 `skill:watch-together-webapp-testing TASK-131` 为主测试命令；从 backlog/task-131 与既有文档中提炼 Acceptance Criteria 与实现背景。
@@ -408,3 +414,6 @@ This is how Ralph maintains continuity across iterations.
 - **步骤 4**：room.js 房主进入房间后与成员端一致：hideUrlInputContainer、hideUrlControlButton、hideBrowserFrame、showVideoContainer，updateVideoPlaceholder('等待画面流','点击「开始共享」后，画面将在这里显示')。
 - **步骤 5**：room.js 移除 URL 输入框/加载网页/修改 URL 按钮的事件绑定（urlInput、loadUrlButton、changeUrlButton）。
 - **验收**：创建房间无 URL 输入→进房后房主与成员均只见视频占位→房主开始共享后画面在视频区域显示。
+
+### 2026-02-08 16:32:02
+**Session 1 started** (model: auto)
