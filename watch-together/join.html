@@ -405,6 +405,83 @@
             cursor: not-allowed;
         }
 
+        /* 侧栏「我的信息」：统一使用 design token，触摸目标与焦点合格 */
+        .user-info-label {
+            font-size: 0.9em;
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-sm);
+        }
+        .user-info-value {
+            font-size: 0.9em;
+            color: var(--color-text);
+        }
+        #userInfoDisplay .room-id-display {
+            font-size: 0.9em;
+        }
+        .nickname-input {
+            width: 100%;
+            padding: var(--space-md);
+            min-height: var(--touch-target-min);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            color: var(--color-text);
+            font-size: 0.9em;
+            font-family: inherit;
+            margin-bottom: var(--space-md);
+        }
+        .nickname-input:focus {
+            border-color: var(--color-input-border-focus);
+            box-shadow: 0 0 0 3px var(--color-focus-ring);
+        }
+        .nickname-input::placeholder {
+            color: var(--color-text-muted);
+        }
+        .join-room-button {
+            width: 100%;
+            padding: var(--space-md) var(--space-lg);
+            min-height: var(--touch-target-min);
+            background: var(--color-primary);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition-base);
+        }
+        .join-room-button:hover {
+            opacity: 0.9;
+        }
+        .join-room-button:focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+        .nickname-display-value {
+            color: var(--color-primary);
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+        }
+        .change-nickname-button {
+            width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            min-height: var(--touch-target-min);
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            color: var(--color-text);
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: background var(--transition-base);
+        }
+        .change-nickname-button:hover {
+            background: var(--color-border);
+        }
+        .change-nickname-button:focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
         /* 375px / 移动端视口适配：无横向滚动，侧栏抽屉，主内容区为主体 */
         @media (max-width: 480px) {
             body { min-width: 0; }
@@ -502,31 +579,36 @@
             </div>
             <div class="sidebar-section" id="userInfoSection">
                 <h2>我的信息</h2>
-                <div id="userInfoDisplay" style="margin-bottom: 15px;">
-                    <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">用户ID:</div>
-                    <div class="room-id-display" id="currentUserId" style="font-size: 0.9em;">生成中...</div>
+                <div id="userInfoDisplay" style="margin-bottom: var(--space-md);">
+                    <div class="user-info-label">用户ID:</div>
+                    <div class="room-id-display user-info-value" id="currentUserId">生成中...</div>
                 </div>
                 <div id="nicknameInputContainer" style="display: none;">
                     <input 
                         type="text" 
                         id="nicknameInput" 
+                        class="nickname-input"
                         placeholder="输入昵称（可选）" 
-                        style="width: 100%; padding: 8px; background: #3a3a3a; border: 1px solid #404040; border-radius: 4px; color: #fff; font-size: 0.9em; margin-bottom: 10px;"
                         maxlength="20"
+                        aria-label="输入昵称"
                     />
                     <button 
                         id="joinRoomButton" 
-                        style="width: 100%; padding: 8px; background: #4a9eff; border: none; border-radius: 4px; color: #fff; font-size: 0.9em; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+                        class="join-room-button"
+                        type="button"
+                        aria-label="加入房间"
                     >
                         加入房间
                     </button>
                 </div>
                 <div id="nicknameDisplay" style="display: none;">
-                    <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">昵称:</div>
-                    <div style="color: #4a9eff; font-weight: 600; margin-bottom: 10px;" id="currentNickname"></div>
+                    <div class="user-info-label">昵称:</div>
+                    <div class="nickname-display-value" id="currentNickname"></div>
                     <button 
                         id="changeNicknameButton" 
-                        style="width: 100%; padding: 6px; background: #3a3a3a; border: 1px solid #404040; border-radius: 4px; color: #fff; font-size: 0.85em; cursor: pointer; transition: background 0.2s;"
+                        class="change-nickname-button"
+                        type="button"
+                        aria-label="修改昵称"
                     >
                         修改昵称
                     </button>

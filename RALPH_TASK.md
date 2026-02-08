@@ -16,12 +16,14 @@ test_command: "skill:watch-together-webapp-testing refactor-8-ui-room"
 
 ## Success Criteria
 
-- [ ] #1 房间内观看、聊天、操作同步等功能与原有一致
-- [ ] #2 布局与组件符合设计系统；无横向滚动、焦点与触摸目标合格
-- [ ] #3 相关 E2E 或用例测试通过
+- [x] #1 房间内观看、聊天、操作同步等功能与原有一致
+- [x] #2 布局与组件符合设计系统；无横向滚动、焦点与触摸目标合格
+- [x] #3 相关 E2E 或用例测试通过
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 房间页布局与设计 Token** — 确认 join.html 已引用 design-tokens.css、layout.css，整体为 Shell（header + main，sidebar + area）；共享区、侧栏、聊天使用 CSS 变量（颜色、间距、圆角、触摸目标）。验收：npm run build 通过；房间页无横向滚动、主结构使用 token。
+2. **1.2 侧栏与成员列表** — 侧栏区块（房间信息、我的信息、成员列表、聊天标题）统一使用 design token；成员列表项、按钮触摸目标 ≥44px，焦点 :focus-visible 可见。验收：侧栏样式来自 token，无硬编码色值。
+3. **1.3 聊天与输入** — 聊天消息、输入框、发送按钮使用 token；输入框 focus 环、按钮 min-height 符合设计系统。验收：聊天区样式与 design-tokens.css 一致。
+4. **1.4 共享区与操作按钮** — 视频占位、开始/停止共享按钮、分享房间链接按钮使用 token 与 layout；无横向溢出。验收：共享区与按钮符合 MASTER 组件规范。
+5. **2.1 验收** — 运行 `npm run build` 通过；运行 `skill:watch-together-webapp-testing refactor-8-ui-room` 或 watch-together 单元测试通过；三项成功标准可勾选。
