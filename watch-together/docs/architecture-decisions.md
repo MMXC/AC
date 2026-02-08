@@ -39,7 +39,7 @@
   - **按需加载**：对非首屏必需的大块逻辑（若未来拆出）可采用动态 `import()`，对应 `bundle-dynamic-imports`。
   - 若未来迁移到 React/Next，将直接采用该 skill 中的 Server Components、SWR、Suspense 等规则。
 
-上述策略与引用的对应关系可在实现与评审时直接查阅 skill：`vercel-react-best-practices`。
+上述策略与引用的对应关系可在实现与评审时直接查阅 skill：`vercel-react-best-practices`。**包体与脚本加载**（无 barrel、关键路径 vs 延后脚本、列表 content-visibility）见 `docs/performance-and-loading.md`。
 
 ---
 

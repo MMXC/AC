@@ -190,7 +190,8 @@ describe('侧边栏信息', () => {
 
         test('侧边栏有合适的样式', () => {
             const html = fs.readFileSync(joinHtmlPath, 'utf-8');
-            expect(html).toContain('background: #2d2d2d');
+            // 接受设计 token 或旧硬编码颜色（backlog-142 后使用 var(--color-surface)）
+            expect(html).toMatch(/background:\s*(?:#2d2d2d|var\(--color-surface\))/);
             expect(html).toContain('border-right');
         });
 

@@ -85,6 +85,8 @@
             display: flex;
             align-items: center;
             transition: background-color var(--transition-base);
+            content-visibility: auto;
+            contain-intrinsic-size: 0 48px;
         }
 
         .member-item:hover {
@@ -142,6 +144,8 @@
             border-radius: var(--radius-md);
             font-size: 0.9em;
             border: 1px solid var(--color-border);
+            content-visibility: auto;
+            contain-intrinsic-size: 0 56px;
         }
 
         .chat-message-header {
@@ -578,14 +582,15 @@
         </div>
     </div>
     
+    <!-- 关键路径（首屏/连接）：room → webrtc-signaling → chat → sync；详见 docs/performance-and-loading.md -->
     <script src="/js/room.js"></script>
-    <!-- WebRTC 信令工具函数（提供 createOfferMessage / createAnswerMessage 等） -->
     <script src="/js/webrtc-signaling.js"></script>
     <script src="/js/chat.js"></script>
     <script src="/js/sync.js"></script>
-    <script src="/js/webrtc-manager.js"></script>
-    <script src="/js/screen-streaming.js"></script>
-    <script src="/js/video-player.js"></script>
-    <script src="/js/operation-source.js"></script>
+    <!-- 非首屏/重模块（defer）：webrtc-manager → screen-streaming → video-player → operation-source -->
+    <script src="/js/webrtc-manager.js" defer></script>
+    <script src="/js/screen-streaming.js" defer></script>
+    <script src="/js/video-player.js" defer></script>
+    <script src="/js/operation-source.js" defer></script>
 </body>
 </html>

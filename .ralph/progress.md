@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 25
-- Current status: backlog-141 按组件组合拆分页面与数据获取 已完成
+- Iterations completed: 26
+- Current status: backlog-142 包体与运行时性能优化 已完成
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-08 [Ralph Iteration 1 - backlog-142]
+**Session 1 completed** - 包体与运行时性能优化（backlog-142）
+- **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 关键路径与 barrel 审计、1.2 非首屏/重模块延后加载、1.3 列表 content-visibility、2.1 验收）及每步验收。
+- **Step 1.2–1.3 完成**：创建 `watch-together/docs/performance-and-loading.md`（无 barrel、关键路径 vs 延后脚本、列表 content-visibility）；join.html 标明关键路径脚本注释，对 webrtc-manager / screen-streaming / video-player / operation-source 使用 defer；对 .member-item 与 .chat-message 添加 content-visibility: auto 与 contain-intrinsic-size；architecture-decisions.md 引用 performance-and-loading.md；check-build.js 增加 docs/performance-and-loading.md 校验。
+- **Step 2.1 完成**：修正 sidebar-info.test.js 侧边栏样式断言（接受 var(--color-surface)）；修正 room-init.test.js 以匹配当前设计（URL 控制 UI 已移除、房主/成员逻辑注释变更）。
+- 验收：`npm run build` 通过；watch-together 单元测试（webrtc-signaling、screen-streaming、sidebar-info、room-init）共 129 个用例通过；三项成功标准已勾选。
+
 ### 2026-02-08 [Ralph Iteration 1 - backlog-141]
 **Session 1 completed** - 按组件组合拆分页面与数据获取（backlog-141）
 - **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 文档化组件树与数据流、1.2 创建房间页组件边界、1.3 房间页组件边界、2.1 数据获取无多余串行、2.2 验收）及每步验收。
@@ -456,4 +463,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-08 17:06:48
+**Session 1 started** (model: auto)
+
+### 2026-02-08 17:14:32
 **Session 1 started** (model: auto)
