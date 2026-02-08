@@ -1,5 +1,7 @@
 /**
  * 创建房间功能
+ * 对应页面组件：index.html 中 #createRoomForm、#result；数据流见 docs/component-tree-and-data-flow.md
+ * 数据获取：单次 POST /api/v1/rooms，无串行依赖。
  */
 
 // API 基础 URL（可以根据环境配置）

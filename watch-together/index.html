@@ -252,11 +252,13 @@
     </style>
 </head>
 <body>
+    <!-- 页面 = 布局 + 可组合组件；组件树与数据流见 docs/component-tree-and-data-flow.md -->
     <div class="container">
         <div class="container-inner">
             <h1>一起看</h1>
             <p class="subtitle">创建房间，与朋友一起观看</p>
 
+            <!-- 组件：创建房间表单；逻辑 create-room.js，单次 POST /api/v1/rooms -->
             <form id="createRoomForm">
                 <div class="form-group">
                     <label for="roomName">房间名称（可选）</label>
@@ -274,6 +276,7 @@
                 <div class="error" id="error"></div>
             </form>
 
+            <!-- 组件：创建结果（房间号、分享链接）；逻辑 create-room.js -->
             <div class="result" id="result">
                 <h3>房间创建成功！</h3>
                 <div class="room-info">

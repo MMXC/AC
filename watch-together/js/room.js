@@ -1,5 +1,6 @@
 /**
  * 房间页面功能
+ * 对应页面组件：join.html 头部、侧栏（房间信息/我的信息/成员列表）、进房/离开；数据流见 docs/component-tree-and-data-flow.md
  */
 
 // API 基础 URL：仅在此处初始化 window.API_BASE，避免与 operation-source.js 等重复声明
@@ -908,7 +909,8 @@ async function init() {
         return;
     }
 
-    // 验证房间是否存在
+    // 数据获取：有依赖的串行（vercel-react-best-practices）。必须先验证房间存在再加入，故 validateRoom → join 为有意串行；无独立可并行请求。
+    // 详见 docs/component-tree-and-data-flow.md
     const validation = await validateRoom(roomId);
     if (!validation.valid) {
         showError(validation.error || '房间不存在或已关闭');
