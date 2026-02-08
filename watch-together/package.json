@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node mock-server/server.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "mock": "node mock-server/server.js"
+    "mock": "node mock-server/server.js",
+    "build": "node scripts/check-build.js"
   },
   "keywords": [
     "watch-together",

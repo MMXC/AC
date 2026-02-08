@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 22
-- Current status: backlog-138 使用 ui-ux-pro-max 生成并持久化设计系统已完成
+- Iterations completed: 23
+- Current status: backlog-139 前端脚手架与基础结构已完成
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-08 [Ralph Iteration 1 - backlog-139]
+**Session 1 completed** - 前端脚手架与基础结构（backlog-139）
+- **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 build 脚本、1.2 本地启动与占位首页、1.3 与后端/WS 对接文档化、2.1 目录结构符合架构约定）及每步验收。
+- **Step 1.2–2.1 完成**：根目录 package.json 增加 `build`（委托 watch-together）、`start`；watch-together 增加 `build` 脚本（`scripts/check-build.js` 校验 index.html、join.html、js/*、docs/architecture-decisions.md 等）；README 补充「构建」「本地启动」及与后端/WS 对接说明（docker-compose 环境变量、引用 docs/architecture-decisions.md）；目录结构已与 architecture-decisions 第 4 节一致。
+- 验收：`npm run build` 在仓库根执行通过；本地可通过 `npm start`（watch-together）或 `docker compose up watch-together` 访问占位首页（创建房间页）。
+- 三项成功标准已勾选。
+
 ### 2026-02-08 [Ralph Iteration 1 - backlog-138]
 **Session 1 completed** - 使用 ui-ux-pro-max 生成并持久化设计系统（backlog-138）
 - **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 生成设计系统、1.2 统一 MASTER 路径、2.1 引用设计系统、2.2 风格一致性）及每步验收。
@@ -427,4 +434,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-08 16:39:23
+**Session 1 started** (model: auto)
+
+### 2026-02-08 16:47:18
 **Session 1 started** (model: auto)
