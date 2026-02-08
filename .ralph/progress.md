@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 23
-- Current status: backlog-139 前端脚手架与基础结构已完成
+- Iterations completed: 24
+- Current status: backlog-140 应用设计系统到布局与主题 已完成
 
 ## How This Works
 
@@ -14,6 +14,13 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-08 [Ralph Iteration 1 - backlog-140]
+**Session 1 completed** - 应用设计系统到布局与主题（backlog-140）
+- **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 设计 Token 文件、1.2 全局布局组件、1.3 应用 Token 到首页、1.4 应用布局与 Token 到房间页、2.1 a11y 与触摸规范）及每步验收。
+- **Step 1.2–2.1 完成**：创建 `watch-together/css/design-tokens.css`（MASTER 颜色、字体 Cinzel/Josefin Sans、间距、圆角、阴影、prefers-reduced-motion、:focus-visible、min 触摸目标 44px）；创建 `watch-together/css/layout.css`（Shell、shell__nav、shell__content、shell__main、shell__sidebar、shell__area，响应式 375/768/1024/1440）；`index.html` 引用 design-tokens.css 并改用 CSS 变量；`join.html` 引用 design-tokens.css 与 layout.css，采用 Shell 布局（header + main，sidebar + area），房间页使用 token；check-build.js 增加 css/design-tokens.css、css/layout.css 校验。
+- 验收：`npm run build` 通过；主题与 MASTER 一致（Primary #3B82F6、CTA #F97316、Background #F8FAFC、Typography Cinzel/Josefin Sans）；布局在窄屏下侧栏可折叠、无横向滚动；a11y 满足焦点可见、触摸目标 ≥44px、对比度与 Pre-Delivery 一致。
+- 三项成功标准已勾选。
+
 ### 2026-02-08 [Ralph Iteration 1 - backlog-139]
 **Session 1 completed** - 前端脚手架与基础结构（backlog-139）
 - **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 build 脚本、1.2 本地启动与占位首页、1.3 与后端/WS 对接文档化、2.1 目录结构符合架构约定）及每步验收。
@@ -437,4 +444,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-08 16:47:18
+**Session 1 started** (model: auto)
+
+### 2026-02-08 16:55:43
 **Session 1 started** (model: auto)
