@@ -1,9 +1,10 @@
 ---
 id: TASK-143
 title: UI 重制 - 创建房间页
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-08 08:25'
+updated_date: '2026-02-08 09:27'
 labels: []
 dependencies: []
 ---
