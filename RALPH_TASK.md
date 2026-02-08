@@ -16,12 +16,13 @@ test_command: "手动：检查 design-system/MASTER.md 存在且含 Pattern/Styl
 
 ## Success Criteria
 
-- [ ] #1 design-system/MASTER.md 已生成且内容完整
-- [ ] #2 设计系统在 newneed 或项目文档中有引用说明
-- [ ] #3 与当前 watch-together 产品类型与风格一致
+- [x] #1 design-system/MASTER.md 已生成且内容完整
+- [x] #2 设计系统在 newneed 或项目文档中有引用说明
+- [x] #3 与当前 watch-together 产品类型与风格一致
 
 ## Implementation Steps
 
-<!-- 细化约定时填写：步骤 + 每步验收，例如 -->
-<!-- 1.1 加路由 — done when: GET /api/v1/rooms 返回 200 -->
-<!-- 1.2 写 handler — done when: POST 入参校验失败返回 400 -->
+1. **1.1 生成设计系统** — done when: 运行 ui-ux-pro-max `--design-system --persist` 生成 design-system 目录与 MASTER.md
+2. **1.2 统一 MASTER 路径** — done when: `design-system/MASTER.md` 存在且含 Pattern/Style/Colors/Typography/Effects/Anti-patterns
+3. **2.1 引用设计系统** — done when: newneed 或 watch-together 设计文档中写明 design-system/MASTER.md 路径
+4. **2.2 风格一致性** — done when: 设计系统产品类型为实时协作/一起看，风格含现代、可访问、可深色
