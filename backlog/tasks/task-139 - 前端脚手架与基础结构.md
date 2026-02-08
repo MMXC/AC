@@ -1,9 +1,10 @@
 ---
 id: TASK-139
 title: 前端脚手架与基础结构
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-08 08:24'
+updated_date: '2026-02-08 08:46'
 labels: []
 dependencies: []
 ---
