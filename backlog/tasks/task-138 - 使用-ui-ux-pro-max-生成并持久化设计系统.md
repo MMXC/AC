@@ -1,9 +1,10 @@
 ---
 id: TASK-138
 title: 使用 ui-ux-pro-max 生成并持久化设计系统
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-08 08:23'
+updated_date: '2026-02-08 08:38'
 labels: []
 dependencies: []
 ---
