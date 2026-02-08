@@ -481,6 +481,7 @@
         }
     </style>
 </head>
+<!-- 页面 = Shell 布局 + 侧栏(房间信息/成员/聊天) + 共享区(视频)；组件树与数据流见 docs/component-tree-and-data-flow.md -->
 <body class="shell">
     <header class="header shell__nav">
         <h1 class="shell__nav-title">一起看</h1>
@@ -488,6 +489,7 @@
     </header>
 
     <div class="main-container shell__content shell__main">
+        <!-- 侧栏：房间信息 / 我的信息 / 成员列表 / 聊天；room.js + chat.js -->
         <aside class="sidebar shell__sidebar">
             <div class="sidebar-section">
                 <h2>房间信息</h2>
@@ -553,6 +555,7 @@
                 </div>
             </div>
         </aside>
+        <!-- 共享区：视频占位 / WebRTC 画面；video-player.js, screen-streaming.js, webrtc-manager.js -->
         <div class="browser-area shell__area">
             <div class="iframe-container">
                 <div class="loading" id="loading" style="display: none;">正在加载...</div>

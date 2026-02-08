@@ -27,7 +27,7 @@
 ### 2.1 当前模型：页面 = 布局 + 可组合模块
 
 - **布局**：每个页面对应一个 HTML 文件（如 `index.html`、`join.html`），负责页面骨架、主要区块（头部、主内容区、侧边栏、视频区、聊天区等）和脚本引用顺序。
-- **可组合模块**：按职责拆分的 JS 模块，在页面中通过 `<script type="module">` 或普通 `<script>` 按依赖顺序加载；模块通过 `window` 上的约定接口（如 `getMembersList`、`handleWebRTCSignalingMessage`）或自定义事件（如 `memberJoinedRoom`、`syncStateMembersUpdated`）组合，避免全局命名冲突并便于单测。
+- **可组合模块**：按职责拆分的 JS 模块，在页面中通过 `<script type="module">` 或普通 `<script>` 按依赖顺序加载；模块通过 `window` 上的约定接口（如 `getMembersList`、`handleWebRTCSignalingMessage`）或自定义事件（如 `memberJoinedRoom`、`syncStateMembersUpdated`）组合，避免全局命名冲突并便于单测。各页面的**组件树与数据流**见 `docs/component-tree-and-data-flow.md`，组件边界与数据依赖可追溯。
 
 ### 2.2 数据获取策略
 

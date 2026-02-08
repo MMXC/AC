@@ -4,8 +4,8 @@
 
 ## Summary
 
-- Iterations completed: 24
-- Current status: backlog-140 应用设计系统到布局与主题 已完成
+- Iterations completed: 25
+- Current status: backlog-141 按组件组合拆分页面与数据获取 已完成
 
 ## How This Works
 
@@ -14,6 +14,12 @@ When context is rotated (fresh agent), the new agent reads this file.
 This is how Ralph maintains continuity across iterations.
 
 ## Session History
+### 2026-02-08 [Ralph Iteration 1 - backlog-141]
+**Session 1 completed** - 按组件组合拆分页面与数据获取（backlog-141）
+- **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 文档化组件树与数据流、1.2 创建房间页组件边界、1.3 房间页组件边界、2.1 数据获取无多余串行、2.2 验收）及每步验收。
+- **Step 1.2–2.2 完成**：创建 `watch-together/docs/component-tree-and-data-flow.md`（index/join 组件树、脚本对应、数据流与请求顺序；validate→join 有意串行说明）；index.html / join.html 增加组件边界注释并引用该文档；room.js / create-room.js 增加数据流与组件对应注释；architecture-decisions.md 引用 component-tree-and-data-flow.md；check-build.js 增加 docs/component-tree-and-data-flow.md 校验。
+- 验收：`npm run build` 通过；数据获取无不必要串行（文档与注释可追溯）；三项成功标准已勾选。
+
 ### 2026-02-08 [Ralph Iteration 1 - backlog-140]
 **Session 1 completed** - 应用设计系统到布局与主题（backlog-140）
 - **Step 1.1 完成**：在 RALPH_TASK.md 中补充 Implementation Steps（1.1 设计 Token 文件、1.2 全局布局组件、1.3 应用 Token 到首页、1.4 应用布局与 Token 到房间页、2.1 a11y 与触摸规范）及每步验收。
@@ -447,4 +453,7 @@ This is how Ralph maintains continuity across iterations.
 **Session 1 started** (model: auto)
 
 ### 2026-02-08 16:55:43
+**Session 1 started** (model: auto)
+
+### 2026-02-08 17:06:48
 **Session 1 started** (model: auto)

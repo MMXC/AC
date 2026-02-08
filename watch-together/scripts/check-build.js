@@ -16,6 +16,7 @@ const required = [
   "js/sync.js",
   "js/create-room.js",
   "docs/architecture-decisions.md",
+  "docs/component-tree-and-data-flow.md",
 ];
 
 let failed = false;
